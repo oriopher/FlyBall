@@ -1,6 +1,9 @@
 import numpy as np
 import cv2
 
+
+THRESHOLD_SIZE = 7
+
 RED_LOWER_BOUNDS = (136, 87, 111)
 RED_UPPER_BOUNDS = (180, 255, 255)
 GREEN_LOWER_BOUNDS = (25, 52, 72)
@@ -45,7 +48,7 @@ def find_balloon_coordinates(img, lower_bound, upper_bound):
     mask = cv2.inRange(hsv, lower_bound, upper_bound)
 
     #define kernel size  
-    kernel = np.ones((7,7),np.uint8)
+    kernel = np.ones((THRESHOLD_SIZE,THRESHOLD_SIZE),np.uint8)
     # Remove unnecessary noise from mask
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
