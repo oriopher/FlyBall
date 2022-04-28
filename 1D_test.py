@@ -1,8 +1,16 @@
+from email.mime import image
 from pickle import FALSE, TRUE
 import numpy as np
 import cv2
 from djitellopy import Tello
-import time
+from time import sleep
+
+THRESHOLD_SIZE = 15
+BALLOON_H_RANGE = 20
+BALLOON_S_RANGE = 20
+BALLOON_V_RANGE = 20
+MEMORY = 30
+# efrat you know hsv change the ranges
 
 THRESHOLD_SIZE = 7
 
@@ -19,12 +27,42 @@ YELLOW_UPPER_BOUNDS = (80, 255, 255)
 NO_LOWER_BOUNDS = (0, 0, 0)
 NO_UPPER_BOUNDS = (255, 255, 255)
 
+balloon_upper_bound = NO_UPPER_BOUNDS # efrat moved it here so it wont reset with every iteration.
+balloon_lower_bound = NO_LOWER_BOUNDS
+drone_upper_bound = NO_UPPER_BOUNDS
+drone_lower_bound = NO_LOWER_BOUNDS
+
+def detect_balloon_color(frame):
+    y_shape = frame.shape[0]
+    x_shape = frame.shape[1]
+    crop_img = frame[int(y_shape/4) : int(3*y_shape/4) , int(x_shape/4) : int(3*x_shape/4)]
+    hsv = cv2.cvtColor(crop_img, cv2.COLOR_BGR2HSV)
+    h = hsv[:,:,0]
+    s = hsv[:,:,1]
+    v = hsv[:,:,2]
+    ball_color = (int(np.median(h)), int(np.median(s)), int(np.median(v)))
+    # min_color = (max(0,int(np.min(h))-BALLOON_H_RANGE), 
+    #                 max(0,int(np.min(s))-BALLOON_S_RANGE), 
+    #                 max(0,int(np.min(v))-BALLOON_V_RANGE))
+    # max_color = (min(255,int(np.max(h))+BALLOON_H_RANGE), 
+    #                 min(255,int(np.max(s))+BALLOON_S_RANGE), 
+    #                 min(255,int(np.max(v))+BALLOON_V_RANGE))
+    min_color = (max(0,ball_color[0]-BALLOON_H_RANGE), 
+                    max(0,ball_color[1]-BALLOON_S_RANGE), 
+                    max(0,ball_color[2]-BALLOON_V_RANGE))
+    max_color = (min(255,ball_color[0]+BALLOON_H_RANGE), 
+                    min(255,ball_color[1]+BALLOON_S_RANGE), 
+                    min(255,ball_color[2]+BALLOON_V_RANGE))
+    return min_color,max_color
+
+
 
 def play_ball(tello):
     vid = cv2.VideoCapture(0)
     tello.connect()
     tookoff = False
     started = False
+    #memory = 0 
 
 
     while True:
@@ -32,36 +70,41 @@ def play_ball(tello):
         ret, frame = vid.read()
 
         # recognize ball
-        x_ball, y_ball = find_object_coordinates(frame, PINK_LOWER_BOUNDS, PINK_UPPER_BOUNDS)
+        x_ball, y_ball = find_object_coordinates(frame, balloon_lower_bound, balloon_upper_bound)
         if x_ball != 0 and y_ball != 0:
             cv2.circle(frame, (int(x_ball), int(y_ball)), 15, (0, 100, 0), 3)
 
         # recognize drone
-        x_drone, y_drone = find_object_coordinates(frame, YELLOW_LOWER_BOUNDS, YELLOW_UPPER_BOUNDS) 
+        x_drone, y_drone = find_object_coordinates(frame, drone_lower_bound, drone_upper_bound) 
 
         if x_drone != 0 and y_drone != 0:
             cv2.circle(frame, (int(x_drone), int(y_drone)), 15, (0, 0, 100), 3)
-
+           # memory = 0
+        #elif started:
+          #  memory = memory + 1
+        
+       # if memory > MEMORY and started:
+          #  break
 
         if tookoff == True:
 
-            if started == False:
-                left_limit = 300
-                right_limit = 400
-            else:
-                left_limit = 150
-                right_limit = 480
+            # if started == False:
+            #     left_limit = 300
+            #     right_limit = 400
+            # else:
+            #     left_limit = 150
+            #     right_limit = 480
 
-            cv2.circle(frame, (int(left_limit), int(200)), 15, (100, 0, 0), 3)
-            cv2.circle(frame, (int(right_limit), int(200)), 15, (100, 0, 0), 3)
+            # cv2.circle(frame, (int(left_limit), int(200)), 15, (100, 0, 0), 3)
+            # cv2.circle(frame, (int(right_limit), int(200)), 15, (100, 0, 0), 3)
         
-            if x_drone > right_limit or x_drone < left_limit: # emergency stop the drone is getting out of the frame.
-                print("where are you going?")
-                x_drone, y_drone = find_object_coordinates(frame, BLUE_LOWER_BOUNDS, BLUE_UPPER_BOUNDS)
+            # if x_drone > right_limit or x_drone < left_limit: # emergency stop. the drone is getting out of the frame.
+            #     print("where are you going?")
+            #     x_drone, y_drone = find_object_coordinates(frame, BLUE_LOWER_BOUNDS, BLUE_UPPER_BOUNDS)
 
-                if x_drone > right_limit or x_drone < left_limit: # making sure it is correct
-                    print("Stay here!")
-                    break
+            #     if x_drone > right_limit or x_drone < left_limit: # making sure it is correct
+            #         print("Stay here!")
+            #         break
             if started == True:    
                 # move the drone towards the ball
                 trackBall_1D(tello, x_drone, y_drone, x_ball, y_ball)
@@ -74,12 +117,18 @@ def play_ball(tello):
         # the 't' button is set as the takeoff button
         if key & 0xFF == ord('t') and tookoff == False:
             tello.takeoff()
-            print(tello.get_battery())
+            print("battery = ", tello.get_battery(), "%")
             tookoff = True
 
         # the 's' button is set as the "starting to track ball" button
         if key & 0xFF == ord('s') and started == False and tookoff == True:
             started = True
+
+        if key & 0xFF == ord('b'):
+            balloon_lower_bound, balloon_upper_bound = detect_balloon_color(frame)
+
+        if key & 0xFF == ord('d'):
+            drone_lower_bound, drone_upper_bound = detect_balloon_color(frame)
 
         # the 'q' button is set as the quitting button
         if key & 0xFF == ord('q'):
@@ -125,20 +174,29 @@ def trackBall_1D(tello, x_drone, y_drone, x_ball, y_ball):
     y_ball_rel = y_ball - y_drone
     
 
-    if x_ball_rel < 150 :  # 150 pixels for safety. 
+    if x_ball_rel < -120:  # 150 pixels for safety. 
         left_right = 60  # ball is in left side of the drone (computer camera is opposite)
-
-    elif x_ball_rel > 150: # ball is in right side of the drone
+        
+    elif x_ball_rel > 120: # ball is in right side of the drone
         left_right = -60
 
-    else:   # drone is under the ball
+    elif x_ball_rel < -80:
+        left_right = 30
 
+    elif x_ball_rel > 80:
+        left_right = -30
+
+    elif x_ball_rel < -30:
+        left_right = 10
+
+    elif x_ball_rel > 30:
+        left_right = -10
+
+    else:   # drone is under the ball
+        left_right = 0
         # if y_ball_rel < 200:
         #     hit_ball(x_drone)
         #     return
-        
-        left_right = 0
-
     if tello.send_rc_control:
         tello.send_rc_control(left_right, for_back, up_down, 0)
 
@@ -147,12 +205,10 @@ def hit_ball(tello, x_ball_rel, y_ball_rel):
     # x and y coordinates are relative to the ball
      if tello.send_rc_control:
         tello.go_xyz_speed(x_ball_rel/3, 0, y_ball_rel/3, 100)
-        time.sleep(1.5)
+        sleep(1.5)
         tello.go_xyz_speed(0, 0, -y_ball_rel/3, 50)
-        time.sleep(1.5)
-
-
-
+        sleep(1.5)
+        
 
 if __name__ == "__main__":
     """tello = Tello()
@@ -163,4 +219,6 @@ if __name__ == "__main__":
     tello.land()"""
 
     tello = Tello()
-    play_ball(tello)
+
+    while True:
+        play_ball(tello)
