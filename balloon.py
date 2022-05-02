@@ -42,39 +42,59 @@ def detect_balloon_color(frame):
 
 
 def capture_video():
-    vid = cv2.VideoCapture(0)
+    vid_web = cv2.VideoCapture(0)
+    vid_phone = cv2.VideoCapture(1)
     i = 0
-    balloon_upper_bound = NO_UPPER_BOUNDS
-    balloon_lower_bound = NO_LOWER_BOUNDS
+    balloon_upper_bound_web = NO_UPPER_BOUNDS
+    balloon_lower_bound_web = NO_LOWER_BOUNDS
+
+    balloon_upper_bound_phone = NO_UPPER_BOUNDS
+    balloon_lower_bound_phone = NO_LOWER_BOUNDS
   
     while(True):  
         i = i+1
         # Capture the video frame by frame
-        ret, frame = vid.read()
+        ret_web, frame_web = vid_web.read()
+        ret_phone, frame_phone = vid_phone.read()
 
         if i%100 == 0:
-            print(1,balloon_lower_bound, balloon_upper_bound)
+            print(balloon_upper_bound_web, balloon_lower_bound_web)
     
         # Prosses frame
-        x_coor, y_coor = find_balloon_coordinates(frame, balloon_lower_bound, balloon_upper_bound)
+        x_coor, y_coor = find_balloon_coordinates(frame_web, balloon_lower_bound_web, balloon_upper_bound_web)
         if x_coor!=0 and y_coor!=0:
-            frame = cv2.circle(frame, (int(x_coor), int(y_coor)), 15, (0,0,100), 3)
+            frame_web = cv2.circle(frame_web, (int(x_coor), int(y_coor)), 15, (0,0,100), 3)
+
+
+        x_coor, y_coor = find_balloon_coordinates(frame_phone, balloon_lower_bound_phone, balloon_upper_bound_phone)
+        if x_coor!=0 and y_coor!=0:
+            frame_phone = cv2.circle(frame_phone, (int(x_coor), int(y_coor)), 15, (0,0,100), 3)
+
+        # y_shape = frame.shape[0]
+        # x_shape = frame.shape[1]
+        
+        # frame = cv2.rectangle(frame, (int(x_shape/4), int(y_shape/4)), (int(x_shape*3/4), int(y_shape*3/4)), (0,0,100), 3)
 
         # Display the resulting frame
-        cv2.imshow('frame', frame)
+        cv2.imshow('webcam', frame_web)
+
+        cv2.imshow('phone', frame_phone)
 
         key = cv2.waitKey(1)
-        # the 'b' button is set as the detect color of balloon
-        if key & 0xFF == ord('b'):
-            balloon_lower_bound, balloon_upper_bound = detect_balloon_color(frame)
-            print(2,balloon_lower_bound, balloon_upper_bound)
+        # the 'w' button is set as the detect color of balloon in the web cam
+        if key & 0xFF == ord('w'):
+            balloon_lower_bound_web, balloon_upper_bound_web = detect_balloon_color(frame_web)
+
+        # the 'p' button is set as the detect color of balloon in the phone cam
+        if key & 0xFF == ord('p'):
+            balloon_lower_bound_phone, balloon_upper_bound_phone = detect_balloon_color(frame_phone)
 
         # the 'q' button is set as the quitting button
         if key & 0xFF == ord('q'):
             break
     
     # After the loop release the cap object
-    vid.release()
+    vid_web.release()
     # Destroy all the windows
     cv2.destroyAllWindows()
 
@@ -89,6 +109,7 @@ def find_balloon_coordinates(img, lower_bound, upper_bound):
     # Remove unnecessary noise from mask
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+
 
     # target = cv2.bitwise_and(img, img, mask = mask)
     # cv2.imshow('target', target)
