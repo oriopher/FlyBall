@@ -74,7 +74,7 @@ def capture_video():
             frame_web = cv2.circle(frame_web, (int(x_coor_web), int(y_coor_web)), 15, (0,0,100), 3)
             # updating distance from camera
             if i > 1:
-                distance_phone += change_in_distance(distance_phone, x_coor_phone - x_coor_phone_old, frame_web.shape[1], w_theta)
+                distance_phone += change_in_distance(distance_web, x_coor_web - x_coor_web_old, frame_web.shape[1], w_theta)
             x_coor_web_old = x_coor_web
 
 
@@ -82,7 +82,7 @@ def capture_video():
         if x_coor_phone!=0 and y_coor_phone!=0:
             frame_phone = cv2.circle(frame_phone, (int(x_coor_phone), int(y_coor_phone)), 15, (0,0,100), 3)
             if i > 1:
-                distance_web += change_in_distance(distance_web, x_coor_web - x_coor_web_old, frame_phone.shape[1], p_theta)
+                distance_web += change_in_distance(distance_phone, x_coor_phone - x_coor_phone_old, frame_phone.shape[1], p_theta)
             x_coor_phone_old = x_coor_phone
 
         # y_shape = frame.shape[0]
