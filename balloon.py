@@ -4,7 +4,7 @@ import cv2
 THRESHOLD_SIZE = 15
 BALLOON_H_RANGE = 20
 BALLOON_S_RANGE = 20
-BALLOON_V_RANGE = 20
+BALLOON_V_RANGE = 150
 # efrat you know hsv change the ranges
 
 RED_LOWER_BOUNDS = (136, 87, 111)
@@ -20,7 +20,7 @@ NO_UPPER_BOUNDS = (255,255, 255)
 def detect_balloon_color(frame):
     y_shape = frame.shape[0]
     x_shape = frame.shape[1]
-    crop_img = frame[int(y_shape/4) : int(3*y_shape/4) , int(x_shape/4) : int(3*x_shape/4)]
+    crop_img = frame[int(y_shape/4) : int(3*y_shape/4), int(x_shape/4) : int(3*x_shape/4)]
     hsv = cv2.cvtColor(crop_img, cv2.COLOR_BGR2HSV)
     h = hsv[:,:,0]
     s = hsv[:,:,1]
@@ -32,18 +32,26 @@ def detect_balloon_color(frame):
     # max_color = (min(255,int(np.max(h))+BALLOON_H_RANGE), 
     #                 min(255,int(np.max(s))+BALLOON_S_RANGE), 
     #                 min(255,int(np.max(v))+BALLOON_V_RANGE))
-    min_color = (max(0,ball_color[0]-BALLOON_H_RANGE), 
-                    max(0,ball_color[1]-BALLOON_S_RANGE), 
-                    max(0,ball_color[2]-BALLOON_V_RANGE))
-    max_color = (min(255,ball_color[0]+BALLOON_H_RANGE), 
-                    min(255,ball_color[1]+BALLOON_S_RANGE), 
-                    min(255,ball_color[2]+BALLOON_V_RANGE))
-    return min_color,max_color
+    min_color = (max(0, ball_color[0] - BALLOON_H_RANGE), 
+                    max(0, ball_color[1] - BALLOON_S_RANGE), 
+                    max(20, ball_color[2] - BALLOON_V_RANGE))
+    max_color = (min(255, ball_color[0] + BALLOON_H_RANGE), 
+                    min(255, ball_color[1] + BALLOON_S_RANGE), 
+                    min(255, ball_color[2] + BALLOON_V_RANGE))
+    return min_color, max_color
 
 
 def capture_video():
     vid_web = cv2.VideoCapture(0)
     vid_phone = cv2.VideoCapture(1)
+
+    # the angle of the camera. to change according to used camera.
+    p_theta = 33
+    w_theta = 33
+
+    distance_web = float(input("Enter distance (in cm) from web cam: "))
+    distance_phone = float(input("Enter distance (in cm) from phone cam: "))
+
     i = 0
     balloon_upper_bound_web = NO_UPPER_BOUNDS
     balloon_lower_bound_web = NO_LOWER_BOUNDS
@@ -60,15 +68,22 @@ def capture_video():
         if i%100 == 0:
             print(balloon_upper_bound_web, balloon_lower_bound_web)
     
-        # Prosses frame
-        x_coor, y_coor = find_balloon_coordinates(frame_web, balloon_lower_bound_web, balloon_upper_bound_web)
-        if x_coor!=0 and y_coor!=0:
-            frame_web = cv2.circle(frame_web, (int(x_coor), int(y_coor)), 15, (0,0,100), 3)
+        # Process frame
+        x_coor_web, y_coor_web = find_balloon_coordinates(frame_web, balloon_lower_bound_web, balloon_upper_bound_web)
+        if x_coor_web!=0 and y_coor_web!=0:
+            frame_web = cv2.circle(frame_web, (int(x_coor_web), int(y_coor_web)), 15, (0,0,100), 3)
+            # updating distance from camera
+            if i > 1:
+                distance_phone += change_in_distance(distance_phone, x_coor_phone - x_coor_phone_old, frame_web.shape[1], w_theta)
+            x_coor_web_old = x_coor_web
 
 
-        x_coor, y_coor = find_balloon_coordinates(frame_phone, balloon_lower_bound_phone, balloon_upper_bound_phone)
-        if x_coor!=0 and y_coor!=0:
-            frame_phone = cv2.circle(frame_phone, (int(x_coor), int(y_coor)), 15, (0,0,100), 3)
+        x_coor_phone, y_coor_phone = find_balloon_coordinates(frame_phone, balloon_lower_bound_phone, balloon_upper_bound_phone)
+        if x_coor_phone!=0 and y_coor_phone!=0:
+            frame_phone = cv2.circle(frame_phone, (int(x_coor_phone), int(y_coor_phone)), 15, (0,0,100), 3)
+            if i > 1:
+                distance_web += change_in_distance(distance_web, x_coor_web - x_coor_web_old, frame_phone.shape[1], p_theta)
+            x_coor_phone_old = x_coor_phone
 
         # y_shape = frame.shape[0]
         # x_shape = frame.shape[1]
@@ -105,7 +120,7 @@ def find_balloon_coordinates(img, lower_bound, upper_bound):
     mask = cv2.inRange(hsv, lower_bound, upper_bound)
 
     #define kernel size  
-    kernel = np.ones((THRESHOLD_SIZE,THRESHOLD_SIZE),np.uint8)
+    kernel = np.ones((THRESHOLD_SIZE,THRESHOLD_SIZE), np.uint8)
     # Remove unnecessary noise from mask
     mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
@@ -122,6 +137,16 @@ def find_balloon_coordinates(img, lower_bound, upper_bound):
     y_coor = np.median(balloon_pixels[:,0])
 
     return x_coor, y_coor
+
+
+# return updated distance from cam1 using pixels diffrence in cam2 
+def change_in_distance(distance, pixels_diff, num_pixels, theta):
+    return pixels_diff * pixel_to_cm(distance, num_pixels, theta) # we have to decide about directions beacuse it dependes on sign
+
+
+# return how much cm in one pixel. (i wrote this function sepperatly beacuse it may be useful later)
+def pixel_to_cm(distance, num_pixels, theta):  # notice that theta is actually 0.5 of the total angle
+    return distance * 2 * np.tan(theta) / num_pixels
 
 
 if __name__ == "__main__":
