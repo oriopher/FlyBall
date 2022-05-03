@@ -1,5 +1,9 @@
+from cmath import phase
+from pickle import TRUE
 import numpy as np
 import cv2
+from time import sleep
+from numpy import tan, radians 
 
 THRESHOLD_SIZE = 15
 BALLOON_H_RANGE = 20
@@ -46,11 +50,14 @@ def capture_video():
     vid_phone = cv2.VideoCapture(1)
 
     # the angle of the camera. to change according to used camera.
-    p_theta = 33
-    w_theta = 33
+    p_theta = radians(33)
+    w_theta = radians(33)
 
-    distance_web = float(input("Enter distance (in cm) from web cam: "))
-    distance_phone = float(input("Enter distance (in cm) from phone cam: "))
+    #distance_web = float(input("Enter distance (in cm) from web cam: "))
+    #distance_phone = float(input("Enter distance (in cm) from phone cam: "))
+
+    distance_web = 60
+    distance_phone = 75
 
     i = 0
     balloon_upper_bound_web = NO_UPPER_BOUNDS
@@ -85,6 +92,9 @@ def capture_video():
                 distance_web += change_in_distance(distance_phone, x_coor_phone - x_coor_phone_old, frame_phone.shape[1], p_theta)
             x_coor_phone_old = x_coor_phone
 
+        print("web distance is now " + str(distance_web))
+        print("phone distance is now " + str(distance_phone))
+
         # y_shape = frame.shape[0]
         # x_shape = frame.shape[1]
         
@@ -99,10 +109,13 @@ def capture_video():
         # the 'w' button is set as the detect color of balloon in the web cam
         if key & 0xFF == ord('w'):
             balloon_lower_bound_web, balloon_upper_bound_web = detect_balloon_color(frame_web)
-
         # the 'p' button is set as the detect color of balloon in the phone cam
         if key & 0xFF == ord('p'):
             balloon_lower_bound_phone, balloon_upper_bound_phone = detect_balloon_color(frame_phone)
+            print("starting in 10, go to starting point!")
+            distance_phone = 75 
+            distance_web = 75
+            sleep(10)
 
         # the 'q' button is set as the quitting button
         if key & 0xFF == ord('q'):
@@ -141,7 +154,7 @@ def find_balloon_coordinates(img, lower_bound, upper_bound):
 
 # return updated distance from cam1 using pixels diffrence in cam2 
 def change_in_distance(distance, pixels_diff, num_pixels, theta):
-    return pixels_diff * pixel_to_cm(distance, num_pixels, theta) # we have to decide about directions beacuse it dependes on sign
+    return - pixels_diff * pixel_to_cm(distance, num_pixels, theta) # we have to decide about directions beacuse it dependes on sign
 
 
 # return how much cm in one pixel. (i wrote this function sepperatly beacuse it may be useful later)
