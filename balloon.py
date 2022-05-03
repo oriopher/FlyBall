@@ -9,7 +9,6 @@ THRESHOLD_SIZE = 15
 BALLOON_H_RANGE = 20
 BALLOON_S_RANGE = 20
 BALLOON_V_RANGE = 150
-# efrat you know hsv change the ranges
 
 RED_LOWER_BOUNDS = (136, 87, 111)
 RED_UPPER_BOUNDS = (180, 255, 255)
@@ -154,7 +153,11 @@ def find_balloon_coordinates(img, lower_bound, upper_bound):
 
 # return updated distance from cam1 using pixels diffrence in cam2 
 def change_in_distance(distance, pixels_diff, num_pixels, theta):
-    return - pixels_diff * pixel_to_cm(distance, num_pixels, theta) # we have to decide about directions beacuse it dependes on sign
+    MAX_CHANGE = 5
+    change = - pixels_diff * pixel_to_cm(distance, num_pixels, theta) # we have to decide about directions beacuse it dependes on sign
+    if (change <= MAX_CHANGE):
+        return change
+    return 0
 
 
 # return how much cm in one pixel. (i wrote this function sepperatly beacuse it may be useful later)
