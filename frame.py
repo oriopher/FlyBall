@@ -1,12 +1,12 @@
 import numpy as np
 import cv2
 
-THRESHOLD_SIZE = 10
-H_RANGE = 30
-S_RANGE = 40
+THRESHOLD_SIZE = 8
+H_RANGE = 20
+S_RANGE = 30
 V_RANGE = 150
 
-SEARCH_RANGE = 200 # pixels
+SEARCH_RANGE = 70 # pixels
 
 class Frame:
     def __init__(self, image):
@@ -19,10 +19,10 @@ class Frame:
     def detect_coordinates(self, bounds, x_old, y_old):
         x_min, x_max, y_min, y_max = 0, self.image.shape[1], 0, self.image.shape[0]
         if x_old!=0 and y_old!=0:
-            x_min = np.max(x_old - SEARCH_RANGE, 0)
-            x_max = np.min(x_old + SEARCH_RANGE, self.image.shape[1])
-            y_min = np.max(y_old - SEARCH_RANGE, 0)
-            y_max = np.min(y_old + SEARCH_RANGE, self.image.shape[0])
+            x_min = max(int(x_old - SEARCH_RANGE), x_min)
+            x_max = min(int(x_old + SEARCH_RANGE)+1, x_max)
+            y_min = max(int(y_old - SEARCH_RANGE), y_min)
+            y_max = min(int(y_old + SEARCH_RANGE)+1, y_max)
 
         detection_image = self.image[y_min:y_max, x_min:x_max]
 
@@ -71,12 +71,16 @@ class Frame:
         max_color = (min(255, ball_color[0] + H_RANGE), min(255, ball_color[1] + S_RANGE), min(255, ball_color[2] + V_RANGE))
         return [min_color, max_color]
 
-    def show_image(self, window_name, detection_sign = True):
+    def show_image(self, window_name, detection_sign = True, text_balloon = None, text_drone = None):
         show_img = self.image
         if detection_sign and self.x_balloon!=0 and self.y_balloon!=0:
-            show_img = cv2.circle(show_img, (int(self.x_balloon), int(self.y_balloon)), 15, (0,0,100), 3)
+            show_img = cv2.circle(show_img, (int(self.x_balloon), int(self.y_balloon)), 15, (0,0,0), 3)
+            if text_balloon:
+                show_img = cv2.putText(show_img, text_balloon, (int(self.x_balloon), int(self.y_balloon)), cv2.FONT_HERSHEY_DUPLEX, 2, (250,250,250), 2, cv2.LINE_AA)
         if detection_sign and self.x_drone!=0 and self.y_drone!=0:
-            show_img = cv2.circle(show_img, (int(self.x_drone), int(self.y_drone)), 15, (0,100,0), 3)
+            if text_drone:
+                show_img = cv2.putText(show_img, text_drone, (int(self.x_drone), int(self.y_drone)), cv2.FONT_HERSHEY_DUPLEX, 2, (250,250,250), 2, cv2.LINE_AA)
+            show_img = cv2.circle(show_img, (int(self.x_drone), int(self.y_drone)), 15, (0,0,0), 3)
 
         cv2.imshow(window_name, show_img)
 
