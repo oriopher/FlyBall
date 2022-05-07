@@ -1,14 +1,16 @@
 import numpy as np
 import cv2
 
-THRESHOLD_SIZE = 8
-H_RANGE = 20
-S_RANGE = 30
-V_RANGE = 150
-
-SEARCH_RANGE = 70 # pixels
 
 class Frame:
+
+    THRESHOLD_SIZE = 8 # pixels
+    H_RANGE = 20
+    S_RANGE = 30
+    V_RANGE = 150
+
+    SEARCH_RANGE = 70 # pixels
+
     def __init__(self, image):
         self.image = image
         self.x_drone = 0
@@ -19,10 +21,10 @@ class Frame:
     def detect_coordinates(self, bounds, x_old, y_old):
         x_min, x_max, y_min, y_max = 0, self.image.shape[1], 0, self.image.shape[0]
         if x_old!=0 and y_old!=0:
-            x_min = max(int(x_old - SEARCH_RANGE), x_min)
-            x_max = min(int(x_old + SEARCH_RANGE)+1, x_max)
-            y_min = max(int(y_old - SEARCH_RANGE), y_min)
-            y_max = min(int(y_old + SEARCH_RANGE)+1, y_max)
+            x_min = max(int(x_old - Frame.SEARCH_RANGE), x_min)
+            x_max = min(int(x_old + Frame.SEARCH_RANGE)+1, x_max)
+            y_min = max(int(y_old - Frame.SEARCH_RANGE), y_min)
+            y_max = min(int(y_old + Frame.SEARCH_RANGE)+1, y_max)
 
         detection_image = self.image[y_min:y_max, x_min:x_max]
 
@@ -31,7 +33,7 @@ class Frame:
         mask = cv2.inRange(hsv, bounds.lower, bounds.upper)
 
         #define kernel size  
-        kernel = np.ones((THRESHOLD_SIZE,THRESHOLD_SIZE), np.uint8)
+        kernel = np.ones((Frame.THRESHOLD_SIZE,Frame.THRESHOLD_SIZE), np.uint8)
         # Remove unnecessary noise from mask
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
         mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
@@ -67,8 +69,8 @@ class Frame:
         s = hsv[:,:,1]
         v = hsv[:,:,2]
         ball_color = (int(np.median(h)), int(np.median(s)), int(np.median(v)))
-        min_color = (max(0, ball_color[0] - H_RANGE), max(0, ball_color[1] - S_RANGE), max(20, ball_color[2] - V_RANGE))
-        max_color = (min(255, ball_color[0] + H_RANGE), min(255, ball_color[1] + S_RANGE), min(255, ball_color[2] + V_RANGE))
+        min_color = (max(0, ball_color[0] - Frame.H_RANGE), max(0, ball_color[1] - Frame.S_RANGE), max(20, ball_color[2] - Frame.V_RANGE))
+        max_color = (min(255, ball_color[0] + Frame.H_RANGE), min(255, ball_color[1] + Frame.S_RANGE), min(255, ball_color[2] + Frame.V_RANGE))
         return [min_color, max_color]
 
     def show_image(self, window_name, detection_sign = True, text_balloon = None, text_drone = None):
@@ -85,12 +87,53 @@ class Frame:
         cv2.imshow(window_name, show_img)
 
 
-class ColorBounds:
+class ColorBound:
 
-    def __init__(self, lower, upper):
+    NO_LOWER_BOUNDS = (0, 0, 0)
+    NO_UPPER_BOUNDS = (255,255, 255)
+
+    def __init__(self):
+        self.lower = ColorBound.NO_LOWER_BOUNDS
+        self.upper = ColorBound.NO_UPPER_BOUNDS
+
+    def change(self, lower, upper):
         self.lower = lower
         self.upper = upper
 
-    def change(self, lower, upper):
-        self.__init__(lower, upper)
 
+class ColorBounds:
+
+    def __init__(self):
+            self.ball_web = ColorBound()
+            self.ball_phone = ColorBound()
+            self.drone_web = ColorBound()
+            self.drone_phone = ColorBound()
+
+    def change_ball_web(self, lower, upper):
+        self.ball_web.change(lower, upper)
+
+    def change_ball_phone(self, lower, upper):
+        self.ball_phone.change(lower, upper)
+
+    def change_drone_web(self, lower, upper):
+        self.drone_web.change(lower, upper)
+
+    def change_drone_phone(self, lower, upper):
+        self.drone_phone.change(lower, upper)
+
+
+class Image3D:
+
+    def __init__(self, image_web, image_phone, phys_x=0, phys_y=0):
+        self.frame_web = Frame(image_web)
+        self.frame_phone = Frame(image_phone)
+        self.phys_x = phys_x
+        self.phys_y = phys_y
+
+    def calculate_distance(self, web_fov, phone_fov, d):
+        angle_web = np.pi/2 - web_fov/2 + web_fov * (1 - self.frame_web.x_balloon / self.frame_web.image.shape[1]) # left camera
+        angle_phone = np.pi/2 - phone_fov/2 + phone_fov * self.frame_phone.x_balloon # right camera
+
+        # web camera is at (0,0)
+        self.phys_x = d * np.tan(angle_phone) / (np.tan(angle_phone) + np.tan(angle_web))
+        self.phys_y = d * np.tan(angle_phone) * np.tan(angle_web) / (np.tan(angle_phone) + np.tan(angle_web))
