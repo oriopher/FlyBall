@@ -1,3 +1,5 @@
+import math
+from turtle import left
 import numpy as np
 import cv2
 from djitellopy import Tello
@@ -11,6 +13,8 @@ MEMORY = 30
 THRESHOLD_SIZE = 7
 
 DISTANCE = 200
+FOV_X = 67
+FOV_Y = 55
 
 RED_LOWER_BOUNDS = (136, 87, 111)
 RED_UPPER_BOUNDS = (180, 255, 255)
@@ -75,8 +79,9 @@ def detect_balloon_color(frame):
 
 
 def play_ball(tello, bounds):
-    vid = cv2.VideoCapture(0)
+    vid = cv2.VideoCapture(2)
     tello.connect()
+    print(tello.get_battery())
     tookoff = False
     started = False
     # memory = 0 
@@ -110,7 +115,7 @@ def play_ball(tello, bounds):
             # if memory > MEMORY and started:
                 #  break
             # move the drone towards the ball
-            track_ball_1d(tello, x_drone, y_drone, x_ball, y_ball, DISTANCE, frame.shape[1])
+            track_ball_1d(tello, x_drone, y_drone, x_ball, y_ball, DISTANCE, frame.shape[1], FOV_X, FOV_Y)
 
         # Display the resulting frame
         cv2.imshow('frame', frame)
@@ -175,28 +180,23 @@ def find_object_coordinates(img, lower_bound, upper_bound):
     return x_coor, y_coor
 
 
-def pixel_to_cm(pix_num, distance, num_pixels):
-    return pix_num
+def pixel_to_cm(pix_coor, distance, num_pixels, fov):
+    angle = fov / num_pixels * pix_coor - fov / 2    # Angle between the line that connects th drone and the cam and the distance axis
+    return distance * math.tan(np.radians(angle))
 
 
-def track_ball_1d(tello, x_drone, y_drone, x_ball, y_ball, distance, num_pixels):
-    # This function assumes that the drone cam is pointed at the camera, and that the computer cam is flipped.
+def quadratic_velocity(x_cm_rel):
     for_back = 0
     up_down = 0
-    x_pix_rel = x_ball - x_drone # x and y coordinates that are relative to the ball
-    y_pix_rel = y_ball - y_drone
-    a = 1/800
+    a = 5
     b = 19/40
-
-    x_cm_rel = pixel_to_cm(x_pix_rel, distance, num_pixels)
-    y_cm_rel = pixel_to_cm(y_pix_rel, distance, num_pixels)
 
     velocity = int(min(a*x_cm_rel**2 + b*x_cm_rel, 60))
 
-    if x_cm_rel < 0:  # 150 pixels for safety. 
-        left_right = -1*velocity  # ball is in left side of the drone
+    if x_cm_rel < 20:  # 150 pixels for safety. 
+        left_right = -velocity  # ball is in left side of the drone
         
-    elif x_pix_rel > 0: # ball is in right side of the drone
+    elif x_cm_rel > 20: # ball is in right side of the drone
         left_right = velocity
 
     else:   # drone is under the ball
@@ -204,6 +204,67 @@ def track_ball_1d(tello, x_drone, y_drone, x_ball, y_ball, distance, num_pixels)
         # if y_ball_rel < 200:
         #     hit_ball(x_drone)
         #     return
+
+    return left_right, for_back, up_down
+    
+
+
+def lin_velocity(x_cm_rel):
+    for_back = 0
+    up_down = 0
+    a = 1
+    b = 19/40
+
+    velocity = int(min(abs(a*x_cm_rel), 60))
+
+    if x_cm_rel > 5:  # 150 pixels for safety. 
+        left_right = velocity  # ball is in left side of the drone
+        
+    elif x_cm_rel < -5: # ball is in right side of the drone
+        left_right = -velocity
+
+    else:   
+        left_right = 0
+
+    return left_right, for_back, up_down
+
+
+def lin_velocity_with_acc(x_cm_rel):
+    for_back = 0
+    up_down = 0
+    a = 1
+    b = 0.5
+
+    velocity = int(min(abs(a*x_cm_rel), 60))
+    real_vel = tello.get_speed_x()
+
+    if x_cm_rel > 5 + b * real_vel:  # 150 pixels for safety. 
+        left_right = velocity  # ball is in left side of the drone
+        
+    elif x_cm_rel < -5 - b * real_vel: # ball is in right side of the drone
+        left_right = -velocity
+
+    else:   
+        left_right = 0
+
+    return left_right, for_back, up_down
+
+
+
+def track_ball_1d(tello, x_drone, y_drone, x_ball, y_ball, distance, num_pixels, fov_x, fov_y):
+    # This function assumes that the drone cam is pointed at the camera, and that the computer cam is flipped.
+    x_ball_cm = pixel_to_cm(x_ball, distance, num_pixels, fov_x) 
+    x_drone_cm = pixel_to_cm(x_drone, distance, num_pixels, fov_x) 
+     
+    a = 1/800
+    b = 19/40
+    
+    x_cm_rel = x_ball_cm - x_drone_cm
+    print("x_cm_rel-", x_cm_rel)
+    # y_cm_rel = pixel_to_cm(y_pix_rel, distance, num_pixels)
+
+    left_right, for_back, up_down = lin_velocity(x_cm_rel)
+    
     if tello.send_rc_control:
         tello.send_rc_control(left_right, for_back, up_down, 0)
 
@@ -219,7 +280,6 @@ def hit_ball(tello, x_ball_rel, y_ball_rel):
 
 if __name__ == "__main__":
     tello = Tello()
-
     balloon_upper_bound = NO_UPPER_BOUNDS
     balloon_lower_bound = NO_LOWER_BOUNDS
     drone_upper_bound = NO_UPPER_BOUNDS
