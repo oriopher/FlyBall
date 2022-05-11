@@ -34,7 +34,7 @@ def interactive_loop(key, image_3d, colors):
     return continue_loop
 
 
-def capture_video(cameras_distance, left, right):
+def capture_video(cameras_distance, left, right, method='parallel'):
     vid_left = cv2.VideoCapture(left.index)
     vid_right = cv2.VideoCapture(right.index)
 
@@ -61,7 +61,7 @@ def capture_video(cameras_distance, left, right):
             image_now.frame_left.detect_balloon(colors.ball_left, image_old.frame_left.x_balloon, image_old.frame_left.y_balloon)
             image_now.frame_right.detect_balloon(colors.ball_right, image_old.frame_right.x_balloon, image_old.frame_right.y_balloon)
             if image_now.frame_left.x_balloon!=0 and image_now.frame_right.x_balloon!=0:
-                image_now.calculate_distance(left, right, cameras_distance)
+                image_now.calculate_distance(left, right, cameras_distance, method=method)
                 text_balloon = "(%.0f, %.0f)" % (image_now.phys_x, image_now.phys_y)
 
         # Display the resulting frame
@@ -99,4 +99,4 @@ if __name__ == "__main__":
     distance = 46.5
     # Galaxy - FoV is 67 degrees
     # Lenovo - FoV is 61 degrees
-    capture_video(distance, web, phone)
+    capture_video(distance, web, phone, method='parallel')

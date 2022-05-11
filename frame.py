@@ -131,12 +131,17 @@ class Image3D:
         self.phys_x = phys_x
         self.phys_y = phys_y
 
-    def calculate_distance(self, left, right, d):
-        p_left = (self.frame_left.image.shape[1] / 2) / np.tan(left.fov / 2)  # left camera
+    def calculate_distance(self, left, right, d, method='parallel'):
+        p_left = (self.frame_left.image.shape[1] / 2) / np.tan(left.fov / 2)
         angle_left = np.pi / 2 - np.arctan2(left.flip*(self.frame_left.x_balloon - self.frame_left.image.shape[1] / 2), p_left)
-        p_right = (self.frame_right.image.shape[1] / 2) / np.tan(right.fov / 2)  # right camera
+        p_right = (self.frame_right.image.shape[1] / 2) / np.tan(right.fov / 2)
         angle_right = np.pi / 2 - np.arctan2(right.flip*(-self.frame_right.x_balloon + self.frame_right.image.shape[1] / 2), p_right)
-        # left camera is at (0,0)
-        self.phys_x = d * np.tan(angle_right) / (np.tan(angle_right) + np.tan(angle_left))
-        self.phys_y = self.phys_x * np.tan(angle_left)
+        if method == 'parallel':
+            # left camera is at (0,0) and right at (0,d)
+            self.phys_x = d * np.tan(angle_right) / (np.tan(angle_right) + np.tan(angle_left))
+            self.phys_y = self.phys_x * np.tan(angle_left)
+        elif method == 'perpendicular':
+            # left camera is at (0,0) and right at (d[0],d[1])
+            self.phys_x = (d[0] - d[1] * np.tan(angle_left)) / (1 - np.tan(angle_right) * np.tan(angle_left))
+            self.phys_y = self.phys_x * np.tan(angle_left)
         # print("a={}, b={}, x={}, y={}, w={}, p={}".format(np.degrees(angle_left), np.degrees(angle_right), self.phys_x, self.phys_y, self.frame_left.x_balloon, self.frame_right.x_balloon))
