@@ -86,6 +86,8 @@ def play_ball(tello, bounds):
     started = False
     # memory = 0 
     continue_test = True
+    missed_detection_counter = 0
+    i = 0
 
     balloon_lower_bound = bounds[0]
     balloon_upper_bound = bounds[1]
@@ -107,9 +109,13 @@ def play_ball(tello, bounds):
 
         if x_drone != 0 and y_drone != 0:
             cv2.circle(frame, (int(x_drone), int(y_drone)), 10, (0, 0, 100), 2)
-           # memory = 0
-        #elif started:
-          #  memory = memory + 1
+
+        # For safety if we do not see the drone for 20 frames the frogram will stop
+        # if tookoff and (x_drone <= 10 or x_drone >= frame.shape[1] - 10):
+        #     missed_detection_counter += 1
+        # if missed_detection_counter >= 20 and tookoff:
+        #     break
+
 
         if tookoff and started:
             # if memory > MEMORY and started:
@@ -123,13 +129,13 @@ def play_ball(tello, bounds):
         key = cv2.waitKey(1)
 
         # the 't' button is set as the takeoff button
-        if key & 0xFF == ord('t') and tookoff == False:
+        if key & 0xFF == ord('t') and not tookoff:
             tello.takeoff()
             print("battery = ", tello.get_battery(), "%")
             tookoff = True
 
         # the 's' button is set as the "starting to track ball" button
-        if key & 0xFF == ord('s') and started == False and tookoff == True:
+        if key & 0xFF == ord('s') and not started and tookoff:
             started = True
 
         if key & 0xFF == ord('b'):
@@ -142,7 +148,7 @@ def play_ball(tello, bounds):
         if key & 0xFF == ord('q'):
             continue_test = False
             break
-
+        # 'l' is exit normally
         if key & 0xFF == ord('l'):
             break
     
@@ -181,8 +187,8 @@ def find_object_coordinates(img, lower_bound, upper_bound):
 
 
 def pixel_to_cm(pix_coor, distance, num_pixels, fov):
-    angle = fov / num_pixels * pix_coor - fov / 2    # Angle between the line that connects th drone and the cam and the distance axis
-    return distance * math.tan(np.radians(angle))
+    p = num_pixels / 2 * math.tan(fov / 2)
+    return -distance / p * (pix_coor - num_pixels / 2)
 
 
 def quadratic_velocity(x_cm_rel):
@@ -218,10 +224,10 @@ def lin_velocity(x_cm_rel):
     velocity = int(min(abs(a*x_cm_rel), 60))
 
     if x_cm_rel > 5:  # 150 pixels for safety. 
-        left_right = velocity  # ball is in left side of the drone
+        left_right = -velocity  # ball is in left side of the drone
         
     elif x_cm_rel < -5: # ball is in right side of the drone
-        left_right = -velocity
+        left_right = +velocity
 
     else:   
         left_right = 0
@@ -230,22 +236,30 @@ def lin_velocity(x_cm_rel):
 
 
 def lin_velocity_with_acc(x_cm_rel):
+    #this function assumes the drone is looking at the same direction as the camera.
     for_back = 0
     up_down = 0
-    a = 1
-    b = 0.5
+    a = 1.5
+    b = 3
+    c = 0.5
 
-    velocity = int(min(abs(a*x_cm_rel), 60))
+    velocity = int(min(abs(a*x_cm_rel), 80))
     real_vel = tello.get_speed_x()
 
-    if x_cm_rel > 5 + b * real_vel:  # 150 pixels for safety. 
-        left_right = velocity  # ball is in left side of the drone
-        
-    elif x_cm_rel < -5 - b * real_vel: # ball is in right side of the drone
+    # ball is in left side of the drone and it's not too fast
+    if x_cm_rel > 5 and x_cm_rel > -b * real_vel:   # If the velocity is positive we would like to stop
         left_right = -velocity
 
-    else:   
-        left_right = 0
+    # ball is in right side of the drone and it's not too fast
+    elif x_cm_rel < -5 and x_cm_rel < -b * real_vel:    # If the velocity is negative we would like to stop
+        left_right = velocity
+
+    else:
+        if abs(real_vel) >= 10:
+            left_right = -real_vel
+        else:
+            left_right = 0
+        
 
     return left_right, for_back, up_down
 
@@ -255,18 +269,24 @@ def track_ball_1d(tello, x_drone, y_drone, x_ball, y_ball, distance, num_pixels,
     # This function assumes that the drone cam is pointed at the camera, and that the computer cam is flipped.
     x_ball_cm = pixel_to_cm(x_ball, distance, num_pixels, fov_x) 
     x_drone_cm = pixel_to_cm(x_drone, distance, num_pixels, fov_x) 
-     
-    a = 1/800
-    b = 19/40
+
     
     x_cm_rel = x_ball_cm - x_drone_cm
+    print("x_ball_cm: ", x_ball_cm, "x_drone_cm: ", x_drone_cm)
     print("x_cm_rel-", x_cm_rel)
     # y_cm_rel = pixel_to_cm(y_pix_rel, distance, num_pixels)
 
-    left_right, for_back, up_down = lin_velocity(x_cm_rel)
-    
+    left_right, for_back, up_down = 0,0,0
     if tello.send_rc_control:
-        tello.send_rc_control(left_right, for_back, up_down, 0)
+        if 20 <= x_cm_rel <= 30:
+            tello.send_rc_control(left_right, for_back, up_down, 0)
+            tello.move_right(int(x_cm_rel))
+        elif -30 <= x_cm_rel <= -20:
+            tello.send_rc_control(left_right, for_back, up_down, 0)
+            tello.move_left(int(-x_cm_rel))
+        else:
+            left_right, for_back, up_down = lin_velocity_with_acc(x_cm_rel)
+            tello.send_rc_control(left_right, for_back, up_down, 0)
 
 
 def hit_ball(tello, x_ball_rel, y_ball_rel):
