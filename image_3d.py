@@ -1,5 +1,8 @@
+from color_bounds import ColorBounds
 from frame import Frame
 import numpy as np
+
+from test_2d import Camera
 
 class Image3D:
 
@@ -12,7 +15,7 @@ class Image3D:
         self.phys_y_drone = phys_y_drone
 
 
-    def calculate_distance(self, left, right, d, x_left, x_right, method):
+    def calculate_distance(self, left: Camera, right: Camera, d: float, x_left, x_right, method):
         x, y = 0, 0
         p_left = (self.frame_left.image.shape[1] / 2) / np.tan(left.fov / 2)
         angle_left = np.pi / 2 - np.arctan2(left.flip*(x_left - self.frame_left.image.shape[1] / 2), p_left)
@@ -30,11 +33,29 @@ class Image3D:
         return x, y
 
     
-    def calculate_balloon_distance(self, left, right, d, method='parallel'):
+    def calculate_balloon_distance(self, left: Camera, right: Camera, d: float, method='parallel'):
         x_left, x_right = self.frame_left.x_balloon, self.frame_right.x_balloon
         self.phys_x_balloon, self.phys_y_balloon = self.calculate_distance(left, right, d, x_left, x_right, method)
 
 
-    def calculate_drone_distance(self, left, right, d, method='parallel'):
+    def calculate_drone_distance(self, left: Camera, right: Camera, d: float, method='parallel'):
         x_left, x_right = self.frame_left.x_drone, self.frame_right.x_drone
         self.phys_x_drone, self.phys_y_drone = self.calculate_distance(left, right, d, x_left, x_right, method)
+
+    
+    def detect_all(self, colors: ColorBounds, image_old):
+        self.frame_left.detect_balloon(colors.ball_left, image_old.frame_left.x_balloon, image_old.frame_left.y_balloon)
+        self.frame_right.detect_balloon(colors.ball_right, image_old.frame_right.x_balloon, image_old.frame_right.y_balloon)
+        self.frame_left.detect_drone(colors.drone_left, image_old.frame_left.x_drone, image_old.frame_left.y_drone)
+        self.frame_right.detect_drone(colors.drone_right, image_old.frame_right.x_drone, image_old.frame_right.y_drone)
+
+    def calculate_all_distances(self, left: Camera, right: Camera, d: float, method='parallel'):
+        balloon_exist, drone_exist = False, False
+        if self.frame_left.x_balloon!=0 and self.frame_right.x_balloon!=0:
+            balloon_exist = True
+            self.calculate_balloon_distance(left, right, d, method)
+        if self.frame_left.x_drone!=0 and self.frame_right.x_drone!=0:
+            drone_exist = True
+            self.calculate_drone_distance(left, right, d, method)
+
+        return balloon_exist, drone_exist
