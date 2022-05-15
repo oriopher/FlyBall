@@ -4,25 +4,16 @@ from color_bounds import ColorBounds
 from image_3d import Image3D
 from loop_status import Status
 from djitellopy import Tello
-
-
-class Camera:
-
-    def __init__(self, fov: float, index: int, is_flipped=False) -> None:
-        self.fov = np.radians(fov)
-        self.index = index
-        self.flip = -1 if is_flipped else 1
-        self.is_flipped = is_flipped
-
+from camera import Camera
 
 
 def lin_velocity_with_acc(cm_rel, tello, direction):
-    #this function assumes the drone is looking at the same direction as the camera.
+    #this function assumes the drone is looking at the cameras.
     a = 1.5
-    b = 3
+    b = 1
     c = 0.5
 
-    max_velocity = int(min(abs(a*cm_rel), 80))
+    velocity_pot = int(min(abs(a*cm_rel), 80))
     real_vel = 0
     if direction == 'x':
         real_vel = tello.get_speed_x()
@@ -31,17 +22,14 @@ def lin_velocity_with_acc(cm_rel, tello, direction):
 
     # ball is in left side of the drone and it's not too fast
     if cm_rel > 5 and cm_rel > -b * real_vel:   # If the velocity is positive we would like to stop
-        velocity = -max_velocity
+        velocity = -velocity_pot
 
     # ball is in right side of the drone and it's not too fast
     elif cm_rel < -5 and cm_rel < -b * real_vel:    # If the velocity is negative we would like to stop
-        velocity = max_velocity
+        velocity = velocity_pot
 
     else:
-        if abs(real_vel) >= 10:
-            velocity = -real_vel
-        else:
-            velocity = 0
+        velocity = 0
         
     return velocity
 
@@ -60,16 +48,16 @@ def track_2d(image_3d: Image3D, tello: Tello):
     if tello.send_rc_control:
         if 20 <= x_cm_rel <= 30:
             tello.send_rc_control(left_right, for_back, up_down, 0)
-            tello.move_right(int(x_cm_rel))
+            # tello.move_right(int(x_cm_rel))
         elif -30 <= x_cm_rel <= -20:
             tello.send_rc_control(left_right, for_back, up_down, 0)
-            tello.move_left(int(x_cm_rel))
+            # tello.move_left(int(x_cm_rel))
         elif 20 <= y_cm_rel <= 30:
             tello.send_rc_control(left_right, for_back, up_down, 0)
-            tello.move_forward(int(y_cm_rel))
+            # tello.move_forward(int(y_cm_rel))
         elif -30 <= y_cm_rel <= -20:
             tello.send_rc_control(left_right, for_back, up_down, 0)
-            tello.move_back(int(y_cm_rel))
+            # tello.move_back(int(y_cm_rel))
         else:
             left_right = lin_velocity_with_acc(x_cm_rel, tello, 'x')
             for_back = lin_velocity_with_acc(y_cm_rel, tello, 'y')
@@ -79,25 +67,25 @@ def track_2d(image_3d: Image3D, tello: Tello):
 def interactive_loop(frame_counter: int, image_3d: Image3D, colors: ColorBounds, loop_status: Status) -> bool:
     key = cv2.waitKey(1) & 0xFF
 
-    detect_balloon_left_time = 150
-    detect_balloon_right_time = 300
-    detect_drone_left_time = 450
-    detect_drone_right_time = 600
-    takeoff_time = 1000
-    start_track_time = 1200
+    # detect_balloon_left_time = 200
+    # detect_balloon_right_time = 400
+    # detect_drone_left_time = 600
+    # detect_drone_right_time = 800
+    # takeoff_time = 1000
+    # start_track_time = 1200
 
-    if frame_counter == detect_balloon_left_time:
-        print("detecting balloon color left")
-        key = ord('v')
-    if frame_counter == detect_balloon_right_time:
-        print("detecting balloon color right")
-        key = ord('n') 
-    if frame_counter == detect_drone_left_time:
-        print("detecting drone color left")
-        key = ord('s')
-    if frame_counter == detect_drone_right_time:
-        print("detecting drone color right")
-        key = ord('f') 
+    # if frame_counter == detect_balloon_left_time:
+    #     print("detecting balloon color left")
+    #     key = ord('v')
+    # if frame_counter == detect_balloon_right_time:
+    #     print("detecting balloon color right")
+    #     key = ord('n') 
+    # if frame_counter == detect_drone_left_time:
+    #     print("detecting drone color left")
+    #     key = ord('s')
+    # if frame_counter == detect_drone_right_time:
+    #     print("detecting drone color right")
+    #     key = ord('f') 
 
     # the 'v' button is set as the detect color of balloon in the left cam
     if key == ord('v'):
@@ -155,6 +143,7 @@ def capture_video(tello: Tello, cameras_distance: float, left: Camera, right: Ca
         ret_right, image_right = vid_right.read()
 
         image_left = cv2.flip(image_left, 1)
+        image_right = cv2.flip(image_right, 1)
         image_now = Image3D(image_left, image_right)
         text_balloon = None
         text_drone = None
@@ -171,7 +160,7 @@ def capture_video(tello: Tello, cameras_distance: float, left: Camera, right: Ca
             text_drone = "(%.0f, %.0f)" % (image_now.phys_x_drone, image_now.phys_y_drone)
 
         # Display the resulting frame
-        image_now.frame_left.show_image("left")
+        image_now.frame_left.show_image("left", text_balloon=text_balloon, text_drone=text_drone)
         image_now.frame_right.show_image("right", text_balloon=text_balloon, text_drone=text_drone)
 
         if loop_status.tookoff and not tookoff:
@@ -210,10 +199,10 @@ if __name__ == "__main__":
     colors = ColorBounds()
     continue_test = True
 
-    web = Camera(51.3, 0, True)
-    phone = Camera(66.9, 2, False)
-    distance = 46.5
+    web = Camera(61, 0, True)
+    phone = Camera(67, 1, True)
+    distance = 62.2
     # Galaxy - FoV is 67 degrees
     # Lenovo - FoV is 61 degrees
     while continue_test:
-        continue_test, colors = capture_video(tello, distance, web, phone, colors, method='parallel')
+        continue_test, colors = capture_video(tello, distance, phone, web, colors, method='parallel')

@@ -1,8 +1,8 @@
 from color_bounds import ColorBounds
 from frame import Frame
 import numpy as np
+from camera import Camera
 
-from test_2d import Camera
 
 class Image3D:
 

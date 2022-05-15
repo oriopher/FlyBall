@@ -4,8 +4,8 @@ import cv2
 
 class Frame:
     THRESHOLD_SIZE = 8  # pixels
-    H_RANGE = 20
-    S_RANGE = 30
+    H_RANGE = 30
+    S_RANGE = 50
     V_RANGE = 150
 
     SEARCH_RANGE = 70  # pixels

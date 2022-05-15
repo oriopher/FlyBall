@@ -7,7 +7,7 @@ class LoopStatus:
         self.continue_loop = True
 
     def takeoff(self):
-        self.takeoff = True
+        self.tookoff = True
 
     def start(self):
         if self.tookoff:
