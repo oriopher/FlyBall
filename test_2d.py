@@ -15,11 +15,68 @@ class Camera:
         self.is_flipped = is_flipped
 
 
-def track_2d(image_3d: Image3D):
-    pass
+
+def lin_velocity_with_acc(cm_rel, tello, direction):
+    #this function assumes the drone is looking at the same direction as the camera.
+    a = 1.5
+    b = 3
+    c = 0.5
+
+    max_velocity = int(min(abs(a*cm_rel), 80))
+    real_vel = 0
+    if direction == 'x':
+        real_vel = tello.get_speed_x()
+    elif direction == 'y':
+        real_vel = tello.get_speed_y()
+
+    # ball is in left side of the drone and it's not too fast
+    if cm_rel > 5 and cm_rel > -b * real_vel:   # If the velocity is positive we would like to stop
+        velocity = -max_velocity
+
+    # ball is in right side of the drone and it's not too fast
+    elif cm_rel < -5 and cm_rel < -b * real_vel:    # If the velocity is negative we would like to stop
+        velocity = max_velocity
+
+    else:
+        if abs(real_vel) >= 10:
+            velocity = -real_vel
+        else:
+            velocity = 0
+        
+    return velocity
 
 
-def interactive_loop(frame_counter: int, image_3d: Image3D, colors: ColorBounds, loop_status: Status) -> None:
+
+def track_2d(image_3d: Image3D, tello: Tello):
+    x_cm_rel = image_3d.phys_x_balloon - image_3d.phys_x_drone
+    print("x_ball_cm: ", image_3d.phys_x_balloon, "x_drone_cm: ", image_3d.phys_x_drone)
+    print("x_cm_rel: ", x_cm_rel)
+
+    y_cm_rel = image_3d.phys_y_balloon - image_3d.phys_y_drone
+    print("y_ball_cm: ", image_3d.phys_y_balloon, "y_drone_cm: ", image_3d.phys_y_drone)
+    print("y_cm_rel: ", y_cm_rel)
+
+    left_right, for_back, up_down = 0, 0, 0
+    if tello.send_rc_control:
+        if 20 <= x_cm_rel <= 30:
+            tello.send_rc_control(left_right, for_back, up_down, 0)
+            tello.move_right(int(x_cm_rel))
+        elif -30 <= x_cm_rel <= -20:
+            tello.send_rc_control(left_right, for_back, up_down, 0)
+            tello.move_left(int(x_cm_rel))
+        elif 20 <= y_cm_rel <= 30:
+            tello.send_rc_control(left_right, for_back, up_down, 0)
+            tello.move_forward(int(y_cm_rel))
+        elif -30 <= y_cm_rel <= -20:
+            tello.send_rc_control(left_right, for_back, up_down, 0)
+            tello.move_back(int(y_cm_rel))
+        else:
+            left_right = lin_velocity_with_acc(x_cm_rel, tello, 'x')
+            for_back = lin_velocity_with_acc(y_cm_rel, tello, 'y')
+            tello.send_rc_control(left_right, for_back, up_down, 0)
+
+
+def interactive_loop(frame_counter: int, image_3d: Image3D, colors: ColorBounds, loop_status: Status) -> bool:
     key = cv2.waitKey(1) & 0xFF
 
     detect_balloon_left_time = 150
@@ -71,21 +128,24 @@ def interactive_loop(frame_counter: int, image_3d: Image3D, colors: ColorBounds,
     # the 'q' button is set as the quitting button
     elif key == ord('q'):
         loop_status.stop_loop()
+        return False
+
+    # the 'l' button is set as the landing button
+    elif key == ord('l'):
+        loop_status.stop_loop()
+
+    return True
 
 
-def capture_video(cameras_distance: float, left: Camera, right: Camera, method='parallel') -> None:
+def capture_video(tello: Tello, cameras_distance: float, left: Camera, right: Camera, colors: ColorBounds, method='parallel'):
     vid_left = cv2.VideoCapture(left.index)
     vid_right = cv2.VideoCapture(right.index)
-
-    tello = Tello()
-    tello.connect()
-    print("battery = ", tello.get_battery(), "%")
 
     frame_counter = 0
     image_old = None
     tookoff = False
+    continue_test = True
 
-    colors = ColorBounds()
     loop_status = Status()
 
     while(True):
@@ -119,11 +179,11 @@ def capture_video(cameras_distance: float, left: Camera, right: Camera, method='
             tookoff = True
 
         if loop_status.start_track:
-            track_2d(image_now)
+            track_2d(image_now, tello)
 
         image_old = image_now
    
-        interactive_loop(frame_counter, image_now, colors, loop_status)
+        continue_test = interactive_loop(frame_counter, image_now, colors, loop_status)
         if not loop_status.continue_loop:
             break
   
@@ -134,6 +194,8 @@ def capture_video(cameras_distance: float, left: Camera, right: Camera, method='
     # Destroy all the windows
     cv2.destroyAllWindows()
 
+    return continue_test, colors
+
 
 # return how much cm in one pixel.
 def pixels_to_cm(distance, num_pixels, fov_angle):  
@@ -141,9 +203,17 @@ def pixels_to_cm(distance, num_pixels, fov_angle):
 
 
 if __name__ == "__main__":
+    tello = Tello()
+    tello.connect()
+    print("battery = ", tello.get_battery(), "%")
+
+    colors = ColorBounds()
+    continue_test = True
+
     web = Camera(51.3, 0, True)
     phone = Camera(66.9, 2, False)
     distance = 46.5
     # Galaxy - FoV is 67 degrees
     # Lenovo - FoV is 61 degrees
-    capture_video(distance, web, phone, method='parallel')
+    while continue_test:
+        continue_test, colors = capture_video(tello, distance, web, phone, colors, method='parallel')
