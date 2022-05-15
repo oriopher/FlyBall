@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-import time
+
 
 class Frame:
     THRESHOLD_SIZE = 8  # pixels
@@ -87,61 +87,3 @@ class Frame:
             show_img = cv2.circle(show_img, (int(self.x_drone), int(self.y_drone)), 15, (0, 0, 0), 3)
 
         cv2.imshow(window_name, show_img)
-
-
-class ColorBound:
-    NO_LOWER_BOUNDS = (0, 0, 0)
-    NO_UPPER_BOUNDS = (255, 255, 255)
-
-    def __init__(self):
-        self.lower = ColorBound.NO_LOWER_BOUNDS
-        self.upper = ColorBound.NO_UPPER_BOUNDS
-
-    def change(self, lower, upper):
-        self.lower = lower
-        self.upper = upper
-
-
-class ColorBounds:
-
-    def __init__(self):
-        self.ball_left = ColorBound()
-        self.ball_right = ColorBound()
-        self.drone_left = ColorBound()
-        self.drone_right = ColorBound()
-
-    def change_ball_left(self, lower, upper):
-        self.ball_left.change(lower, upper)
-
-    def change_ball_right(self, lower, upper):
-        self.ball_right.change(lower, upper)
-
-    def change_drone_left(self, lower, upper):
-        self.drone_left.change(lower, upper)
-
-    def change_drone_right(self, lower, upper):
-        self.drone_right.change(lower, upper)
-
-
-class Image3D:
-
-    def __init__(self, image_left, image_right, phys_x=0, phys_y=0):
-        self.frame_left = Frame(image_left)
-        self.frame_right = Frame(image_right)
-        self.phys_x = phys_x
-        self.phys_y = phys_y
-
-    def calculate_distance(self, left, right, d, method='parallel'):
-        p_left = (self.frame_left.image.shape[1] / 2) / np.tan(left.fov / 2)
-        angle_left = np.pi / 2 - np.arctan2(left.flip*(self.frame_left.x_balloon - self.frame_left.image.shape[1] / 2), p_left)
-        p_right = (self.frame_right.image.shape[1] / 2) / np.tan(right.fov / 2)
-        angle_right = np.pi / 2 - np.arctan2(right.flip*(-self.frame_right.x_balloon + self.frame_right.image.shape[1] / 2), p_right)
-        if method == 'parallel':
-            # left camera is at (0,0) and right at (0,d)
-            self.phys_x = d * np.tan(angle_right) / (np.tan(angle_right) + np.tan(angle_left))
-            self.phys_y = self.phys_x * np.tan(angle_left)
-        elif method == 'perpendicular':
-            # left camera is at (0,0) and right at (d[0],d[1])
-            self.phys_x = (d[0] - d[1] * np.tan(angle_left)) / (1 - np.tan(angle_right) * np.tan(angle_left))
-            self.phys_y = self.phys_x * np.tan(angle_left)
-        # print("a={}, b={}, x={}, y={}, w={}, p={}".format(np.degrees(angle_left), np.degrees(angle_right), self.phys_x, self.phys_y, self.frame_left.x_balloon, self.frame_right.x_balloon))

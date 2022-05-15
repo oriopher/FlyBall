@@ -1,10 +1,7 @@
 import numpy as np
 import cv2
-from frame import Frame, ColorBounds, Image3D
-
-MAX_CHANGE = 5
-NO_LOWER_BOUNDS = (0, 0, 0)
-NO_UPPER_BOUNDS = (255,255, 255)
+from color_bounds import ColorBounds
+from image_3d import Image3D
 
 
 class Camera:
@@ -61,8 +58,8 @@ def capture_video(cameras_distance, left, right, method='parallel'):
             image_now.frame_left.detect_balloon(colors.ball_left, image_old.frame_left.x_balloon, image_old.frame_left.y_balloon)
             image_now.frame_right.detect_balloon(colors.ball_right, image_old.frame_right.x_balloon, image_old.frame_right.y_balloon)
             if image_now.frame_left.x_balloon!=0 and image_now.frame_right.x_balloon!=0:
-                image_now.calculate_distance(left, right, cameras_distance, method=method)
-                text_balloon = "(%.0f, %.0f)" % (image_now.phys_x, image_now.phys_y)
+                image_now.calculate_balloon_distance(left, right, cameras_distance, method=method)
+                text_balloon = "(%.0f, %.0f)" % (image_now.phys_x_balloon, image_now.phys_y_balloon)
 
         # Display the resulting frame
         image_now.frame_left.show_image("left")
