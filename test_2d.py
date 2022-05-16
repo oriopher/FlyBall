@@ -6,6 +6,8 @@ from loop_status import Status
 from djitellopy import Tello
 from camera import Camera
 
+ORI_WEB = Camera(51.3, 0, False)
+ORI_PHONE = Camera(66.9, 2, False)
 
 def lin_velocity_with_acc(cm_rel, tello, direction):
     #this function assumes the drone is looking at the cameras.
@@ -46,25 +48,25 @@ def track_2d(image_3d: Image3D, tello: Tello):
 
     left_right, for_back, up_down = 0, 0, 0
     if tello.send_rc_control:
-        if 20 <= x_cm_rel <= 30:
-            tello.send_rc_control(left_right, for_back, up_down, 0)
-            # tello.move_right(int(x_cm_rel))
-        elif -30 <= x_cm_rel <= -20:
-            tello.send_rc_control(left_right, for_back, up_down, 0)
-            # tello.move_left(int(x_cm_rel))
-        elif 20 <= y_cm_rel <= 30:
-            tello.send_rc_control(left_right, for_back, up_down, 0)
-            # tello.move_forward(int(y_cm_rel))
-        elif -30 <= y_cm_rel <= -20:
-            tello.send_rc_control(left_right, for_back, up_down, 0)
-            # tello.move_back(int(y_cm_rel))
-        else:
-            left_right = lin_velocity_with_acc(x_cm_rel, tello, 'x')
-            for_back = lin_velocity_with_acc(y_cm_rel, tello, 'y')
-            tello.send_rc_control(left_right, for_back, up_down, 0)
+        # if 20 <= x_cm_rel <= 30:
+        #     tello.send_rc_control(left_right, for_back, up_down, 0)
+        #     # tello.move_right(int(x_cm_rel))
+        # elif -30 <= x_cm_rel <= -20:
+        #     tello.send_rc_control(left_right, for_back, up_down, 0)
+        #     # tello.move_left(int(x_cm_rel))
+        # elif 20 <= y_cm_rel <= 30:
+        #     tello.send_rc_control(left_right, for_back, up_down, 0)
+        #     # tello.move_forward(int(y_cm_rel))
+        # elif -30 <= y_cm_rel <= -20:
+        #     tello.send_rc_control(left_right, for_back, up_down, 0)
+        #     # tello.move_back(int(y_cm_rel))
+        # else:
+        left_right = lin_velocity_with_acc(x_cm_rel, tello, 'x')
+        for_back = lin_velocity_with_acc(y_cm_rel, tello, 'y')
+        tello.send_rc_control(left_right, for_back, up_down, 0)
 
 
-def interactive_loop(frame_counter: int, image_3d: Image3D, colors: ColorBounds, loop_status: Status) -> bool:
+def interactive_loop(frame_counter: int, image_3d: Image3D, colors: ColorBounds, loop_status: Status, tello: Tello) -> bool:
     key = cv2.waitKey(1) & 0xFF
 
     # detect_balloon_left_time = 200
@@ -86,6 +88,10 @@ def interactive_loop(frame_counter: int, image_3d: Image3D, colors: ColorBounds,
     # if frame_counter == detect_drone_right_time:
     #     print("detecting drone color right")
     #     key = ord('f') 
+
+    # the 'c' button reconnects to the drone
+    if key == ord('c'):
+        tello.connect()
 
     # the 'v' button is set as the detect color of balloon in the left cam
     if key == ord('v'):
@@ -172,7 +178,7 @@ def capture_video(tello: Tello, cameras_distance: float, left: Camera, right: Ca
 
         image_old = image_now
    
-        continue_test = interactive_loop(frame_counter, image_now, colors, loop_status)
+        continue_test = interactive_loop(frame_counter, image_now, colors, loop_status, tello)
         if not loop_status.continue_loop:
             break
   
@@ -201,8 +207,8 @@ if __name__ == "__main__":
 
     web = Camera(61, 0, True)
     phone = Camera(67, 1, True)
-    distance = 62.2
+    distance = 92
     # Galaxy - FoV is 67 degrees
     # Lenovo - FoV is 61 degrees
     while continue_test:
-        continue_test, colors = capture_video(tello, distance, phone, web, colors, method='parallel')
+        continue_test, colors = capture_video(tello, distance, ORI_WEB, ORI_PHONE, colors, method='parallel')
