@@ -132,7 +132,7 @@ def interactive_loop(frame_counter: int, image_3d: Image3D, colors: ColorBounds,
     return True
 
 
-def capture_video(tello: Tello, cameras_distance: float, left: Camera, right: Camera, colors: ColorBounds, method='parallel'):
+def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, colors: ColorBounds, method='parallel'):
     vid_left = cv2.VideoCapture(left.index)
     vid_right = cv2.VideoCapture(right.index)
 
@@ -208,7 +208,7 @@ if __name__ == "__main__":
 
     web = Camera(61, 0, True)
     phone = Camera(67, 1, True)
-    distance = 87
+    distance = 59
     # Galaxy - FoV is 67 degrees
     # Lenovo - FoV is 61 degrees
     while continue_test:
