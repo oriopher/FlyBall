@@ -15,12 +15,12 @@ def lin_velocity_with_acc(cm_rel, tello, direction):
     b = 1
     c = 0.5
 
-    velocity_pot = int(min(abs(a*cm_rel), 80))
+    velocity_pot = int(min(abs(a*cm_rel), 30))
     real_vel = 0
-    if direction == 'x':
-        real_vel = tello.get_speed_x()
-    elif direction == 'y':
-        real_vel = tello.get_speed_y()
+    # if direction == 'x':
+    #     real_vel = tello.get_speed_x()
+    # elif direction == 'y':
+    #     real_vel = tello.get_speed_y()
 
     # ball is in left side of the drone and it's not too fast
     if cm_rel > 5 and cm_rel > -b * real_vel:   # If the velocity is positive we would like to stop
@@ -62,7 +62,7 @@ def track_2d(image_3d: Image3D, tello: Tello):
         #     # tello.move_back(int(y_cm_rel))
         # else:
         left_right = lin_velocity_with_acc(x_cm_rel, tello, 'x')
-        for_back = lin_velocity_with_acc(y_cm_rel, tello, 'y')
+        for_back = -1 * lin_velocity_with_acc(y_cm_rel, tello, 'y')
         tello.send_rc_control(left_right, for_back, up_down, 0)
 
 
@@ -92,6 +92,7 @@ def interactive_loop(frame_counter: int, image_3d: Image3D, colors: ColorBounds,
     # the 'c' button reconnects to the drone
     if key == ord('c'):
         tello.connect()
+        loop_status.reset()
 
     # the 'v' button is set as the detect color of balloon in the left cam
     if key == ord('v'):
@@ -207,8 +208,8 @@ if __name__ == "__main__":
 
     web = Camera(61, 0, True)
     phone = Camera(67, 1, True)
-    distance = 92
+    distance = 87
     # Galaxy - FoV is 67 degrees
     # Lenovo - FoV is 61 degrees
     while continue_test:
-        continue_test, colors = capture_video(tello, distance, ORI_WEB, ORI_PHONE, colors, method='parallel')
+        continue_test, colors = capture_video(tello, distance, ORI_PHONE, ORI_WEB, colors, method='parallel')

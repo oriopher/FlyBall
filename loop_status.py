@@ -16,6 +16,9 @@ class LoopStatus:
     def stop_loop(self):
         self.continue_loop = False
 
+    def reset(self):
+        self.__init__()
+
 
 class Status(LoopStatus):
     _instance = None
