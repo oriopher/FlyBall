@@ -12,7 +12,7 @@ BALLOON_V_RANGE = 150
 MEMORY = 30
 THRESHOLD_SIZE = 7
 
-DISTANCE = 200
+DISTANCE = 170
 FOV_X = 67
 FOV_Y = 55
 
@@ -187,8 +187,11 @@ def find_object_coordinates(img, lower_bound, upper_bound):
 
 
 def pixel_to_cm(pix_coor, distance, num_pixels, fov):
-    p = num_pixels / 2 * math.tan(fov / 2)
+    p = num_pixels  / 2 * math.tan(fov / 2)
     return -distance / p * (pix_coor - num_pixels / 2)
+
+
+# def get_speed_from_cam(coor_last_frame, coor_this_frame):
 
 
 def quadratic_velocity(x_cm_rel):
@@ -240,11 +243,12 @@ def lin_velocity_with_acc(x_cm_rel):
     for_back = 0
     up_down = 0
     a = 1.5
-    b = 3
+    b = 1.5
     c = 0.5
 
     velocity = int(min(abs(a*x_cm_rel), 80))
-    real_vel = tello.get_speed_x()
+    real_vel = tello.get_speed_x() * 8  # after multiplying the speed is in cm/s
+    print("real_vel: ", real_vel)
 
     # ball is in left side of the drone and it's not too fast
     if x_cm_rel > 5 and x_cm_rel > -b * real_vel:   # If the velocity is positive we would like to stop
@@ -256,10 +260,9 @@ def lin_velocity_with_acc(x_cm_rel):
 
     else:
         if abs(real_vel) >= 10:
-            left_right = -real_vel
+            left_right = -real_vel / abs(real_vel) * 50
         else:
             left_right = 0
-        
 
     return left_right, for_back, up_down
 
@@ -273,20 +276,20 @@ def track_ball_1d(tello, x_drone, y_drone, x_ball, y_ball, distance, num_pixels,
     
     x_cm_rel = x_ball_cm - x_drone_cm
     print("x_ball_cm: ", x_ball_cm, "x_drone_cm: ", x_drone_cm)
-    print("x_cm_rel-", x_cm_rel)
+    print("x_cm_rel: ", x_cm_rel)
     # y_cm_rel = pixel_to_cm(y_pix_rel, distance, num_pixels)
 
     left_right, for_back, up_down = 0,0,0
     if tello.send_rc_control:
-        if 20 <= x_cm_rel <= 30:
-            tello.send_rc_control(left_right, for_back, up_down, 0)
-            tello.move_right(int(x_cm_rel))
-        elif -30 <= x_cm_rel <= -20:
-            tello.send_rc_control(left_right, for_back, up_down, 0)
-            tello.move_left(int(-x_cm_rel))
-        else:
-            left_right, for_back, up_down = lin_velocity_with_acc(x_cm_rel)
-            tello.send_rc_control(left_right, for_back, up_down, 0)
+        # if 20 <= x_cm_rel <= 30:
+        #     tello.send_rc_control(left_right, for_back, up_down, 0)
+        #     tello.move_right(int(x_cm_rel))
+        # elif -30 <= x_cm_rel <= -20:
+        #     tello.send_rc_control(left_right, for_back, up_down, 0)
+        #     tello.move_left(int(-x_cm_rel))
+        # else:
+        left_right, for_back, up_down = lin_velocity_with_acc(x_cm_rel)
+        tello.send_rc_control(left_right, for_back, up_down, 0)
 
 
 def hit_ball(tello, x_ball_rel, y_ball_rel):
