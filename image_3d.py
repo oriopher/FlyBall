@@ -2,6 +2,7 @@ from color_bounds import ColorBounds
 from frame import Frame
 import numpy as np
 from camera import Camera
+import datetime
 
 
 class Image3D:
@@ -15,6 +16,11 @@ class Image3D:
         self.phys_y_balloon = phys_y_balloon
         self.phys_x_drone = phys_x_drone
         self.phys_y_drone = phys_y_drone
+        self.velocity_x_balloon = 0
+        self.velocity_y_balloon = 0
+        self.velocity_x_drone = 0
+        self.velocity_y_drone = 0
+        self.time = datetime.datetime.now()
 
 
     def calculate_distance(self, left: Camera, right: Camera, d, x_left, x_right, method):
@@ -63,3 +69,12 @@ class Image3D:
             self.calculate_drone_distance(left, right, d, method)
 
         return balloon_exist, drone_exist
+
+    def calculate_velocities(self, image_old):
+        diff_time = self.time - image_old.time
+        diff_time_sec = diff_time.microseconds * 1e-6 + diff_time.milliseconds * 1e-3
+        self.velocity_x_balloon = (self.phys_x_balloon - image_old.phys_x_balloon) / diff_time_sec
+        self.velocity_y_balloon = (self.phys_y_balloon - image_old.phys_y_balloon) / diff_time_sec
+        self.velocity_x_drone = (self.phys_x_drone - image_old.phys_x_drone) / diff_time_sec
+        self.velocity_y_drone = (self.phys_y_drone - image_old.phys_y_drone) / diff_time_sec
+

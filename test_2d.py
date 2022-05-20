@@ -166,6 +166,8 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
                 image_now.phys_x_drone, image_now.phys_y_drone = image_old.phys_x_drone, image_old.phys_y_drone
             text_drone = "(%.0f, %.0f)" % (image_now.phys_x_drone, image_now.phys_y_drone)
 
+            image_now.calculate_velocities(image_old)
+    
         # Display the resulting frame
         image_now.frame_left.show_image("left", text_balloon=text_balloon, text_drone=text_drone)
         image_now.frame_right.show_image("right", text_balloon=text_balloon, text_drone=text_drone)
