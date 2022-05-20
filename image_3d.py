@@ -7,7 +7,9 @@ import datetime
 
 class Image3D:
 
-    SEARCH_RANGE_SCALE = 50/300  # when balloon is 300 cm from cameras, search range is 50 px
+    SEARCH_RANGE_SCALE_A = -0.3
+    SEARCH_RANGE_SCALE_B = 140
+    
 
     def __init__(self, image_left, image_right, phys_x_balloon=0, phys_y_balloon=0, phys_x_drone=0, phys_y_drone=0):
         self.frame_left = Frame(image_left)
@@ -50,10 +52,13 @@ class Image3D:
         x_left, x_right = self.frame_left.x_drone, self.frame_right.x_drone
         self.phys_x_drone, self.phys_y_drone = self.calculate_distance(left, right, d, x_left, x_right, method)
 
+
+    def search_range_scale(self, distance):
+        return Image3D.SEARCH_RANGE_SCALE_A * distance + Image3D.SEARCH_RANGE_SCALE_B
     
     def detect_all(self, colors: ColorBounds, image_old):
-        search_range_balloon = Image3D.SEARCH_RANGE_SCALE * image_old.phys_y_balloon
-        search_range_drone = Image3D.SEARCH_RANGE_SCALE * image_old.phys_y_drone
+        search_range_balloon = self.search_range_scale(image_old.phys_y_balloon)
+        search_range_drone = self.search_range_scale(image_old.phys_y_drone)
         self.frame_left.detect_balloon(colors.ball_left, search_range_balloon, image_old.frame_left.x_balloon, image_old.frame_left.y_balloon)
         self.frame_right.detect_balloon(colors.ball_right, search_range_balloon, image_old.frame_right.x_balloon, image_old.frame_right.y_balloon)
         self.frame_left.detect_drone(colors.drone_left, search_range_drone, image_old.frame_left.x_drone, image_old.frame_left.y_drone)
