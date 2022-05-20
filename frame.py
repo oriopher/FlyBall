@@ -17,13 +17,13 @@ class Frame:
         self.x_balloon = 0
         self.y_balloon = 0
 
-    def detect_coordinates(self, bounds, x_old, y_old):
+    def detect_coordinates(self, bounds, x_old, y_old, search_range):
         x_min, x_max, y_min, y_max = 0, self.image.shape[1], 0, self.image.shape[0]
         if x_old != 0 and y_old != 0:
-            x_min = max(int(x_old - Frame.SEARCH_RANGE), x_min)
-            x_max = min(int(x_old + Frame.SEARCH_RANGE) + 1, x_max)
-            y_min = max(int(y_old - Frame.SEARCH_RANGE), y_min)
-            y_max = min(int(y_old + Frame.SEARCH_RANGE) + 1, y_max)
+            x_min = max(int(x_old - search_range), x_min)
+            x_max = min(int(x_old + search_range) + 1, x_max)
+            y_min = max(int(y_old - search_range), y_min)
+            y_max = min(int(y_old + search_range) + 1, y_max)
 
         detection_image = self.image[y_min:y_max, x_min:x_max]
 
@@ -43,18 +43,18 @@ class Frame:
         balloon_pixels = np.argwhere(mask)
         if len(balloon_pixels) == 0:
             return 0, 0
-        x_coor = np.median(balloon_pixels[:, 1])
-        y_coor = np.median(balloon_pixels[:, 0])
+        x_coor = np.mean(balloon_pixels[:, 1]) 
+        y_coor = np.mean(balloon_pixels[:, 0])
 
         return x_coor + x_min, y_coor + y_min
 
-    def detect_balloon(self, bounds, x_old=0, y_old=0):
-        x_coor, y_coor = self.detect_coordinates(bounds, x_old, y_old)
+    def detect_balloon(self, bounds, search_range, x_old=0, y_old=0):
+        x_coor, y_coor = self.detect_coordinates(bounds, x_old, y_old, search_range)
         self.x_balloon = x_coor
         self.y_balloon = y_coor
 
-    def detect_drone(self, bounds, x_old=0, y_old=0):
-        x_coor, y_coor = self.detect_coordinates(bounds, x_old, y_old)
+    def detect_drone(self, bounds, search_range, x_old=0, y_old=0):
+        x_coor, y_coor = self.detect_coordinates(bounds, x_old, y_old, search_range)
         self.x_drone = x_coor
         self.y_drone = y_coor
 
