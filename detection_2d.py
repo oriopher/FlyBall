@@ -2,14 +2,7 @@ import numpy as np
 import cv2
 from color_bounds import ColorBounds
 from image_3d import Image3D
-
-
-class Camera:
-
-    def __init__(self, fov, index, is_flipped=False):
-        self.fov = np.radians(fov)
-        self.index = index
-        self.flip = -1 if is_flipped else 1
+from camera import Camera
 
 
 def interactive_loop(key, image_3d, colors):
@@ -35,14 +28,12 @@ def capture_video(cameras_distance, left, right, method='parallel'):
     vid_left = cv2.VideoCapture(left.index)
     vid_right = cv2.VideoCapture(right.index)
 
-    detect_left_time = 150
-    detect_right_time = 300
-
+    detect_left_time = 70
+    detect_right_time = 140
     frame_counter = 0
-
     image_old = None
-
     colors = ColorBounds()
+
     while(True):
         frame_counter = frame_counter+1
         # Capture the video frame by frame
@@ -50,16 +41,19 @@ def capture_video(cameras_distance, left, right, method='parallel'):
         ret_right, image_right = vid_right.read()
 
         image_left = cv2.flip(image_left, 1)
+        image_right = cv2.flip(image_right, 1)
         image_now = Image3D(image_left, image_right)
         text_balloon = None
     
         # Process frames
         if frame_counter>1:
-            image_now.frame_left.detect_balloon(colors.ball_left, image_old.frame_left.x_balloon, image_old.frame_left.y_balloon)
-            image_now.frame_right.detect_balloon(colors.ball_right, image_old.frame_right.x_balloon, image_old.frame_right.y_balloon)
-            if image_now.frame_left.x_balloon!=0 and image_now.frame_right.x_balloon!=0:
-                image_now.calculate_balloon_distance(left, right, cameras_distance, method=method)
-                text_balloon = "(%.0f, %.0f)" % (image_now.phys_x_balloon, image_now.phys_y_balloon)
+            image_now.detect_all(colors, image_old)
+            balloon_exist, drone_exist = image_now.calculate_all_distances(left, right, cameras_distance, method=method)
+            if not balloon_exist:
+                image_now.phys_x_balloon, image_now.phys_y_balloon = image_old.phys_x_balloon, image_old.phys_y_balloon
+            text_balloon = "(%.0f, %.0f)" % (image_now.phys_x_balloon, image_now.phys_y_balloon)
+            if not drone_exist:
+                image_now.phys_x_drone, image_now.phys_y_drone = image_old.phys_x_drone, image_old.phys_y_drone
 
         # Display the resulting frame
         image_now.frame_left.show_image("left")
@@ -69,11 +63,11 @@ def capture_video(cameras_distance, left, right, method='parallel'):
 
         key = cv2.waitKey(1) & 0xFF
         if frame_counter == detect_left_time:
-            print("detecting ballon color left")
-            key = ord('w')
+            print("detecting balloon color left")
+            key = ord('l')
         if frame_counter == detect_right_time:
-            print("detecting ballon color right")
-            key = ord('p')    
+            print("detecting balloon color right")
+            key = ord('r')    
         continue_loop = interactive_loop(key, image_now, colors)
         if not continue_loop:
             break
@@ -91,9 +85,9 @@ def pixels_to_cm(distance, num_pixels, fov_angle):
 
 
 if __name__ == "__main__":
-    web = Camera(51.3, 0, True)
-    phone = Camera(66.9, 2, False)
-    distance = 46.5
+    web = Camera(61, 0, True)
+    phone = Camera(67, 1, True)
+    distance = 82
     # Galaxy - FoV is 67 degrees
     # Lenovo - FoV is 61 degrees
     capture_video(distance, web, phone, method='parallel')

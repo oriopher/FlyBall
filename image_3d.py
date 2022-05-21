@@ -7,7 +7,7 @@ import datetime
 
 class Image3D:
 
-    SEARCH_RANGE_SCALE_A = -0.3
+    SEARCH_RANGE_SCALE_A = -0.25
     SEARCH_RANGE_SCALE_B = 140
     
 
@@ -54,7 +54,10 @@ class Image3D:
 
 
     def search_range_scale(self, distance):
-        return Image3D.SEARCH_RANGE_SCALE_A * distance + Image3D.SEARCH_RANGE_SCALE_B
+        if distance<50 or distance>500:
+            return 0
+        search = Image3D.SEARCH_RANGE_SCALE_A * distance + Image3D.SEARCH_RANGE_SCALE_B
+        return min(max(search,40),200)
     
     def detect_all(self, colors: ColorBounds, image_old):
         search_range_balloon = self.search_range_scale(image_old.phys_y_balloon)

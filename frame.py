@@ -4,8 +4,8 @@ import cv2
 
 class Frame:
     THRESHOLD_SIZE = 8  # pixels
-    H_RANGE = 25
-    S_RANGE = 50
+    H_RANGE = 15
+    S_RANGE = 30
     V_RANGE = 170
 
     SEARCH_RANGE = 50  # pixels
@@ -19,7 +19,7 @@ class Frame:
 
     def detect_coordinates(self, bounds, x_old, y_old, search_range):
         x_min, x_max, y_min, y_max = 0, self.image.shape[1], 0, self.image.shape[0]
-        if x_old != 0 and y_old != 0:
+        if x_old != 0 and y_old != 0 and search_range!=0:
             x_min = max(int(x_old - search_range), x_min)
             x_max = min(int(x_old + search_range) + 1, x_max)
             y_min = max(int(y_old - search_range), y_min)
