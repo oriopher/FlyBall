@@ -52,17 +52,17 @@ class Frame:
         x_coor, y_coor = self.detect_coordinates(bounds, x_old, y_old, search_range)
         self.x_balloon = x_coor
         self.y_balloon = y_coor
-        if x_old!=0 and y_old!=0:
-            self.x_balloon = 0.5 * self.x_balloon + 0.5 * x_old
-            self.y_balloon = 0.5 * self.y_balloon + 0.5 * y_old
+        # if x_old!=0 and y_old!=0:
+        #     self.x_balloon = 0.5 * self.x_balloon + 0.5 * x_old
+        #     self.y_balloon = 0.5 * self.y_balloon + 0.5 * y_old
 
     def detect_drone(self, bounds, search_range, x_old=0, y_old=0):
         x_coor, y_coor = self.detect_coordinates(bounds, x_old, y_old, search_range)
         self.x_drone = x_coor
         self.y_drone = y_coor
-        if x_old!=0 and y_old!=0:
-            self.x_balloon = 0.5 * self.x_balloon + 0.5 * x_old
-            self.y_balloon = 0.5 * self.y_balloon + 0.5 * y_old
+        # if x_old!=0 and y_old!=0:
+        #     self.x_balloon = 0.5 * self.x_balloon + 0.5 * x_old
+        #     self.y_balloon = 0.5 * self.y_balloon + 0.5 * y_old
 
     def detect_color(self):
         y_shape = self.image.shape[0]

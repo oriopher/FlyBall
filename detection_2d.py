@@ -35,12 +35,10 @@ def capture_video(cameras_distance, left, right, method='parallel'):
     vid_left = cv2.VideoCapture(left.index)
     vid_right = cv2.VideoCapture(right.index)
 
-    detect_left_time = 150
-    detect_right_time = 300
-
     frame_counter = 0
 
     image_old = None
+    image_list = [None] * 10
 
     colors = ColorBounds()
     while(True):
@@ -50,30 +48,32 @@ def capture_video(cameras_distance, left, right, method='parallel'):
         ret_right, image_right = vid_right.read()
 
         image_left = cv2.flip(image_left, 1)
+        image_right = cv2.flip(image_right, 1)
         image_now = Image3D(image_left, image_right)
         text_balloon = None
     
         # Process frames
-        if frame_counter>1:
+        if frame_counter>len(image_list):
             image_now.frame_left.detect_balloon(colors.ball_left, image_old.frame_left.x_balloon, image_old.frame_left.y_balloon)
             image_now.frame_right.detect_balloon(colors.ball_right, image_old.frame_right.x_balloon, image_old.frame_right.y_balloon)
             if image_now.frame_left.x_balloon!=0 and image_now.frame_right.x_balloon!=0:
                 image_now.calculate_balloon_distance(left, right, cameras_distance, method=method)
                 text_balloon = "(%.0f, %.0f)" % (image_now.phys_x_balloon, image_now.phys_y_balloon)
 
+            image_now.calculate_velocities(image_list[0])
+            text_balloon = "(%.0f, %.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon)
+
         # Display the resulting frame
         image_now.frame_left.show_image("left")
         image_now.frame_right.show_image("right", text_balloon=text_balloon)
 
+        image_list = image_list[1:]
+        image_list.append(image_now)
         image_old = image_now
+        if frame_counter%10 == 0:
+            print(image_now.time)
 
-        key = cv2.waitKey(1) & 0xFF
-        if frame_counter == detect_left_time:
-            print("detecting ballon color left")
-            key = ord('w')
-        if frame_counter == detect_right_time:
-            print("detecting ballon color right")
-            key = ord('p')    
+        key = cv2.waitKey(1) & 0xFF   
         continue_loop = interactive_loop(key, image_now, colors)
         if not continue_loop:
             break
@@ -91,9 +91,9 @@ def pixels_to_cm(distance, num_pixels, fov_angle):
 
 
 if __name__ == "__main__":
-    web = Camera(51.3, 0, True)
-    phone = Camera(66.9, 2, False)
-    distance = 46.5
+    web = Camera(61, 0, True)
+    phone = Camera(67, 1, True)
+    distance = 45
     # Galaxy - FoV is 67 degrees
     # Lenovo - FoV is 61 degrees
-    capture_video(distance, web, phone, method='parallel')
+    capture_video(distance, phone, web, method='parallel')
