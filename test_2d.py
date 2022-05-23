@@ -38,15 +38,41 @@ def lin_velocity_with_acc(cm_rel, tello, direction):
     return velocity
 
 
+def lin_velocity_with_control(cm_rel, real_velocity):
+    #this function assumes the drone is looking at the cameras.
+
+    velocity_pot = int(min(abs(cm_rel), 50))
+
+    # if drone is too fast, stop earlier
+    if cm_rel < 15 and cm_rel > 10 and (real_velocity > 10 or real_velocity < -10):
+        velocity = 0
+
+    # drone is not too fast, continue in original speed
+    elif cm_rel < 15 and cm_rel > 10:
+        velocity = real_velocity
+
+    # if drone is too fast and close to the baloon, set negative velocity
+    elif cm_rel < 10  and (real_velocity > 10 or real_velocity < -10):
+        velocity = -real_velocity
+
+    elif cm_rel > 10:
+        velocity = velocity_pot
+
+    # if we got here, drone is close to the baloon with low speed
+    else:
+        velocity = 0
+        
+    return velocity
+
 
 def track_2d(image_3d: Image3D, tello: Tello):
     x_cm_rel = image_3d.phys_x_balloon - image_3d.phys_x_drone
-    print("x_ball_cm: ", image_3d.phys_x_balloon, "x_drone_cm: ", image_3d.phys_x_drone)
-    print("x_cm_rel: ", x_cm_rel)
+    #print("x_ball_cm: ", image_3d.phys_x_balloon, "x_drone_cm: ", image_3d.phys_x_drone)
+    #print("x_cm_rel: ", x_cm_rel)
 
     y_cm_rel = image_3d.phys_y_balloon - image_3d.phys_y_drone
-    print("y_ball_cm: ", image_3d.phys_y_balloon, "y_drone_cm: ", image_3d.phys_y_drone)
-    print("y_cm_rel: ", y_cm_rel)
+    #print("y_ball_cm: ", image_3d.phys_y_balloon, "y_drone_cm: ", image_3d.phys_y_drone)
+    #print("y_cm_rel: ", y_cm_rel)
 
     left_right, for_back, up_down = 0, 0, 0
     if tello.send_rc_control:
@@ -163,7 +189,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         text_drone = None
     
         # Process frames
-        if frame_counter>len(old_images):
+        if frame_counter > len(old_images):
             image_now.detect_all(colors, image_old)
             balloon_exist, drone_exist = image_now.calculate_all_distances(left, right, cameras_distance, method=method)
             if not balloon_exist:
