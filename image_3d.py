@@ -80,7 +80,7 @@ class Image3D:
 
     def calculate_velocities(self, image_old):
         diff_time = self.time - image_old.time
-        diff_time_sec = diff_time.microseconds * 1e-6 + diff_time.milliseconds * 1e-3
+        diff_time_sec = diff_time.total_seconds()
         self.velocity_x_balloon = (self.phys_x_balloon - image_old.phys_x_balloon) / diff_time_sec
         self.velocity_y_balloon = (self.phys_y_balloon - image_old.phys_y_balloon) / diff_time_sec
         self.velocity_x_drone = (self.phys_x_drone - image_old.phys_x_drone) / diff_time_sec
