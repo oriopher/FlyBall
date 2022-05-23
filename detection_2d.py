@@ -60,18 +60,15 @@ def capture_video(cameras_distance, left, right, method='parallel'):
                 image_now.calculate_balloon_distance(left, right, cameras_distance, method=method)
                 text_balloon = "(%.0f, %.0f)" % (image_now.phys_x_balloon, image_now.phys_y_balloon)
 
-            image_now.calculate_velocities(image_list[0])
+            image_now.calculate_velocities(image_list[frame_counter % len(image_list)])
             text_balloon = "(%.0f, %.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon)
 
         # Display the resulting frame
         image_now.frame_left.show_image("left")
         image_now.frame_right.show_image("right", text_balloon=text_balloon)
 
-        image_list = image_list[1:]
-        image_list.append(image_now)
+        image_list[frame_counter % len(image_list)] = image_now
         image_old = image_now
-        if frame_counter%10 == 0:
-            print(image_now.time)
 
         key = cv2.waitKey(1) & 0xFF   
         continue_loop = interactive_loop(key, image_now, colors)

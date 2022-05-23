@@ -8,6 +8,8 @@ from camera import Camera
 
 ORI_WEB = Camera(51.3, 0, False)
 ORI_PHONE = Camera(66.9, 2, False)
+MAYA_WEB = Camera(61, 0, True)
+NIR_PHONE = Camera(67, 1, True)
 
 def lin_velocity_with_acc(cm_rel, tello, direction):
     #this function assumes the drone is looking at the cameras.
@@ -142,6 +144,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
     continue_test = True
 
     loop_status = Status()
+    old_images = [None]*10
 
     while(True):
         frame_counter = frame_counter+1
@@ -149,24 +152,28 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         ret_left, image_left = vid_left.read()
         ret_right, image_right = vid_right.read()
 
-        image_left = cv2.flip(image_left, 1)
-        image_right = cv2.flip(image_right, 1)
+        if image_left == None or image_right == None:
+            continue
+        if left.is_flipped:
+            image_left = cv2.flip(image_left, 1)
+        if right.is_flipped:
+            image_right = cv2.flip(image_right, 1)
         image_now = Image3D(image_left, image_right)
         text_balloon = None
         text_drone = None
     
         # Process frames
-        if frame_counter>1:
+        if frame_counter>len(old_images):
             image_now.detect_all(colors, image_old)
             balloon_exist, drone_exist = image_now.calculate_all_distances(left, right, cameras_distance, method=method)
             if not balloon_exist:
                 image_now.phys_x_balloon, image_now.phys_y_balloon = image_old.phys_x_balloon, image_old.phys_y_balloon
-            text_balloon = "(%.0f, %.0f)" % (image_now.phys_x_balloon, image_now.phys_y_balloon)
             if not drone_exist:
                 image_now.phys_x_drone, image_now.phys_y_drone = image_old.phys_x_drone, image_old.phys_y_drone
-            text_drone = "(%.0f, %.0f)" % (image_now.phys_x_drone, image_now.phys_y_drone)
 
-            image_now.calculate_velocities(image_old)
+            image_now.calculate_velocities(old_images[frame_counter % len(old_images)])
+            text_balloon = "(%.0f, %.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon)
+            text_drone = "(%.0f, %.0f)" % (image_now.velocity_x_drone, image_now.velocity_y_drone)
     
         # Display the resulting frame
         image_now.frame_left.show_image("left", text_balloon=text_balloon, text_drone=text_drone)
@@ -179,6 +186,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         if loop_status.start_track:
             track_2d(image_now, tello)
 
+        old_images[frame_counter % len(old_images)] = image_now
         image_old = image_now
    
         continue_test = interactive_loop(frame_counter, image_now, colors, loop_status, tello)
@@ -208,10 +216,8 @@ if __name__ == "__main__":
     colors = ColorBounds()
     continue_test = True
 
-    web = Camera(61, 0, True)
-    phone = Camera(67, 1, True)
+    web = ORI_WEB
+    phone = ORI_PHONE
     distance = 59
-    # Galaxy - FoV is 67 degrees
-    # Lenovo - FoV is 61 degrees
     while continue_test:
         continue_test, colors = capture_video(tello, distance, ORI_PHONE, ORI_WEB, colors, method='parallel')
