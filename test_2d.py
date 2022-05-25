@@ -178,8 +178,6 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         ret_left, image_left = vid_left.read()
         ret_right, image_right = vid_right.read()
 
-        if image_left == None or image_right == None:
-            continue
         if left.is_flipped:
             image_left = cv2.flip(image_left, 1)
         if right.is_flipped:
@@ -197,7 +195,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
             if not drone_exist:
                 image_now.phys_x_drone, image_now.phys_y_drone = image_old.phys_x_drone, image_old.phys_y_drone
 
-            image_now.calculate_velocities(old_images[frame_counter % len(old_images)])
+            image_now.calculate_mean_velocities(old_images)
             text_balloon = "(%.0f, %.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon)
             text_drone = "(%.0f, %.0f)" % (image_now.velocity_x_drone, image_now.velocity_y_drone)
     

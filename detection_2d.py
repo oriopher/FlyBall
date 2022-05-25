@@ -2,14 +2,7 @@ import numpy as np
 import cv2
 from color_bounds import ColorBounds
 from image_3d import Image3D
-
-
-class Camera:
-
-    def __init__(self, fov, index, is_flipped=False):
-        self.fov = np.radians(fov)
-        self.index = index
-        self.flip = -1 if is_flipped else 1
+from camera import Camera
 
 
 def interactive_loop(key, image_3d, colors):
@@ -31,7 +24,7 @@ def interactive_loop(key, image_3d, colors):
     return continue_loop
 
 
-def capture_video(cameras_distance, left, right, method='parallel'):
+def capture_video(cameras_distance, left: Camera, right: Camera, method='parallel'):
     vid_left = cv2.VideoCapture(left.index)
     vid_right = cv2.VideoCapture(right.index)
 
@@ -47,8 +40,10 @@ def capture_video(cameras_distance, left, right, method='parallel'):
         ret_left, image_left = vid_left.read()
         ret_right, image_right = vid_right.read()
 
-        image_left = cv2.flip(image_left, 1)
-        image_right = cv2.flip(image_right, 1)
+        if left.is_flipped:
+            image_left = cv2.flip(image_left, 1)
+        if right.is_flipped:
+            image_right = cv2.flip(image_right, 1)
         image_now = Image3D(image_left, image_right)
         text_balloon = None
     
@@ -60,11 +55,11 @@ def capture_video(cameras_distance, left, right, method='parallel'):
                 image_now.calculate_balloon_distance(left, right, cameras_distance, method=method)
                 text_balloon = "(%.0f, %.0f)" % (image_now.phys_x_balloon, image_now.phys_y_balloon)
 
-            image_now.calculate_velocities(image_list[frame_counter % len(image_list)])
+            image_now.calculate_mean_velocities(image_list)
             text_balloon = "(%.0f, %.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon)
 
         # Display the resulting frame
-        image_now.frame_left.show_image("left")
+        image_now.frame_left.show_image("left", text_balloon=text_balloon)
         image_now.frame_right.show_image("right", text_balloon=text_balloon)
 
         image_list[frame_counter % len(image_list)] = image_now
@@ -90,7 +85,7 @@ def pixels_to_cm(distance, num_pixels, fov_angle):
 if __name__ == "__main__":
     web = Camera(61, 0, True)
     phone = Camera(67, 1, True)
-    distance = 45
+    distance = 50
     # Galaxy - FoV is 67 degrees
     # Lenovo - FoV is 61 degrees
     capture_video(distance, phone, web, method='parallel')

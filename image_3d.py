@@ -73,11 +73,28 @@ class Image3D:
 
         return balloon_exist, drone_exist
 
-    def calculate_velocities(self, image_old):
-        diff_time = self.time - image_old.time
+    def calculate_velocities(self, other_image):
+        diff_time = self.time - other_image.time
         diff_time_sec = diff_time.total_seconds()
-        self.velocity_x_balloon = (self.phys_x_balloon - image_old.phys_x_balloon) / diff_time_sec
-        self.velocity_y_balloon = (self.phys_y_balloon - image_old.phys_y_balloon) / diff_time_sec
-        self.velocity_x_drone = (self.phys_x_drone - image_old.phys_x_drone) / diff_time_sec
-        self.velocity_y_drone = (self.phys_y_drone - image_old.phys_y_drone) / diff_time_sec
+
+        velocity_x_balloon = (self.phys_x_balloon - other_image.phys_x_balloon) / diff_time_sec
+        velocity_y_balloon = (self.phys_y_balloon - other_image.phys_y_balloon) / diff_time_sec
+        velocity_x_drone = (self.phys_x_drone - other_image.phys_x_drone) / diff_time_sec
+        velocity_y_drone = (self.phys_y_drone - other_image.phys_y_drone) / diff_time_sec
+
+        return velocity_x_balloon, velocity_y_balloon, velocity_x_drone, velocity_y_drone
+
+    def calculate_mean_velocities(self, images_list):
+        x_balloon_vel = np.zeros(len(images_list))
+        y_balloon_vel = np.zeros(len(images_list))
+        x_drone_vel = np.zeros(len(images_list))
+        y_drone_vel = np.zeros(len(images_list))
+
+        for i in range(len(images_list)):
+            x_balloon_vel[i], y_balloon_vel[i], x_drone_vel[i], y_drone_vel[i] = self.calculate_velocities(images_list[i])
+
+        self.velocity_x_balloon = np.mean(x_balloon_vel)
+        self.velocity_y_balloon = np.mean(y_balloon_vel)
+        self.velocity_x_drone = np.mean(x_drone_vel)
+        self.velocity_y_drone = np.mean(y_drone_vel)
 
