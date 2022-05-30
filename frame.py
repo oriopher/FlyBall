@@ -18,7 +18,7 @@ class Frame:
         self.y_balloon = 0
 
     def detect_coordinates(self, bounds, x_old, y_old, search_range):
-        search_range = max(20, search_range)
+        search_range = max(1, search_range)
         x_min, x_max, y_min, y_max = 0, self.image.shape[1], 0, self.image.shape[0]
         if x_old != 0 and y_old != 0:
             x_min = max(int(x_old - search_range), x_min)

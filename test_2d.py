@@ -7,11 +7,11 @@ from djitellopy import Tello
 from camera import Camera
 
 ORI_WEB = Camera(51.3, 0, False)
-ORI_PHONE = Camera(66.9, 2, True)
-NIR_PHONE = Camera(67, 3, True)
+ORI_PHONE = Camera(66.9, 3, True)
+NIR_PHONE = Camera(67, 2, True)
 MAYA_WEB = Camera(61, 0, True)
 
-def lin_velocity_with_acc(cm_rel, tello, direction, real_vel):
+def lin_velocity_with_acc(cm_rel, real_vel):
     #this function assumes the drone is looking at the cameras.
     a = 1.5
     b = 1
@@ -36,29 +36,36 @@ def lin_velocity_with_acc(cm_rel, tello, direction, real_vel):
 
 def lin_velocity_with_control(cm_rel, real_velocity):
     #this function assumes the drone is looking at the cameras.
-
-    velocity_pot = int(min(abs(cm_rel), 50))
+    MAX_VEL = 50
+    UPPER_LIMIT = 15
+    LOWER_LIMIT = 10
+    VELOCITY_LIMIT = 10
+    STOPPING_VEL = 10
+    velocity_pot = int(min(abs(cm_rel), MAX_VEL))
 
     # if drone is too fast, stop earlier
-    if cm_rel < 15 and cm_rel > 10 and (real_velocity > 10 or real_velocity < -10):
+    if UPPER_LIMIT > abs(cm_rel) > LOWER_LIMIT and abs(real_velocity) > VELOCITY_LIMIT:
         velocity = 0
 
     # drone is not too fast, continue in original speed
-    elif cm_rel < 15 and cm_rel > 10:
+    elif UPPER_LIMIT > abs(cm_rel) > LOWER_LIMIT:
         velocity = real_velocity
 
     # if drone is too fast and close to the baloon, set negative velocity
-    elif cm_rel < 10  and (real_velocity > 10 or real_velocity < -10):
-        velocity = -real_velocity
+    elif abs(cm_rel) < LOWER_LIMIT and abs(real_velocity) > VELOCITY_LIMIT:
+        velocity = -np.sign(real_velocity)*STOPPING_VEL
 
-    elif cm_rel > 10:
+    elif cm_rel > UPPER_LIMIT:
         velocity = velocity_pot
+
+    elif cm_rel < -UPPER_LIMIT:
+        velocity = -velocity_pot
 
     # if we got here, drone is close to the baloon with low speed
     else:
         velocity = 0
 
-    return velocity
+    return int(velocity)
 
 
 def track_2d(image_3d: Image3D, tello: Tello):
@@ -85,8 +92,8 @@ def track_2d(image_3d: Image3D, tello: Tello):
         #     tello.send_rc_control(left_right, for_back, up_down, 0)
         #     # tello.move_back(int(y_cm_rel))
         # else:
-        left_right = lin_velocity_with_acc(x_cm_rel, tello, 'x', image_3d.velocity_x_balloon)
-        for_back =  lin_velocity_with_acc(y_cm_rel, tello, 'y', image_3d.velocity_x_balloon)
+        left_right = -lin_velocity_with_control(x_cm_rel, image_3d.velocity_x_balloon)
+        for_back = -lin_velocity_with_control(y_cm_rel, image_3d.velocity_x_balloon)
         tello.send_rc_control(left_right, for_back, up_down, 0)
 
 
@@ -236,7 +243,7 @@ if __name__ == "__main__":
     colors = ColorBounds()
     continue_test = True
 
-    distance = 59.5
+    distance = 61.5
     # Galaxy - FoV is 67 degrees
     # Lenovo - FoV is 61 degrees
     while continue_test:
