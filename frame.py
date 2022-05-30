@@ -18,6 +18,7 @@ class Frame:
         self.y_balloon = 0
 
     def detect_coordinates(self, bounds, x_old, y_old, search_range):
+        search_range = max(20, search_range)
         x_min, x_max, y_min, y_max = 0, self.image.shape[1], 0, self.image.shape[0]
         if x_old != 0 and y_old != 0:
             x_min = max(int(x_old - search_range), x_min)
@@ -26,7 +27,6 @@ class Frame:
             y_max = min(int(y_old + search_range) + 1, y_max)
 
         detection_image = self.image[y_min:y_max, x_min:x_max]
-
         # convert to hsv
         hsv = cv2.cvtColor(detection_image, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, bounds.lower, bounds.upper)
