@@ -41,7 +41,7 @@ def lin_velocity_with_control(cm_rel, real_velocity):
     LOWER_LIMIT = 10
     VELOCITY_LIMIT = 10
     STOPPING_VEL = 10
-    velocity_pot = int(min(abs(cm_rel), MAX_VEL))
+    velocity_pot = int(min(abs(cm_rel - 15), MAX_VEL))
 
     # if drone is too fast, stop earlier
     if UPPER_LIMIT > abs(cm_rel) > LOWER_LIMIT and abs(real_velocity) > VELOCITY_LIMIT:
