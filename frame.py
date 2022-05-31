@@ -5,7 +5,7 @@ import cv2
 class Frame:
     THRESHOLD_SIZE = 8  # pixels
     H_RANGE = 15
-    S_RANGE = 30
+    S_RANGE = 35
     V_RANGE = 170
 
     SEARCH_RANGE = 50  # pixels
@@ -79,17 +79,17 @@ class Frame:
                      min(255, ball_color[2] + Frame.V_RANGE))
         return [min_color, max_color]
 
-    def show_image(self, window_name, detection_sign=True, text_balloon=None, text_drone=None):
+    def show_image(self, window_name, detection_sign=True, text_balloon=None, text_drone=None, text_color=(250, 250, 250)):
         show_img = self.image
         if detection_sign and self.x_balloon != 0 and self.y_balloon != 0:
             show_img = cv2.circle(show_img, (int(self.x_balloon), int(self.y_balloon)), 15, (0, 0, 0), 3)
             if text_balloon:
                 show_img = cv2.putText(show_img, text_balloon, (int(self.x_balloon), int(self.y_balloon)),
-                                       cv2.FONT_HERSHEY_DUPLEX, 1, (250, 250, 250), 2, cv2.LINE_AA)
+                                       cv2.FONT_HERSHEY_DUPLEX, 1, text_color, 2, cv2.LINE_AA)
         if detection_sign and self.x_drone != 0 and self.y_drone != 0:
             if text_drone:
                 show_img = cv2.putText(show_img, text_drone, (int(self.x_drone), int(self.y_drone)),
-                                       cv2.FONT_HERSHEY_DUPLEX, 1, (250, 250, 250), 2, cv2.LINE_AA)
+                                       cv2.FONT_HERSHEY_DUPLEX, 1, text_color, 2, cv2.LINE_AA)
             show_img = cv2.circle(show_img, (int(self.x_drone), int(self.y_drone)), 15, (0, 0, 0), 3)
 
         cv2.imshow(window_name, show_img)

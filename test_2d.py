@@ -7,9 +7,9 @@ from djitellopy import Tello
 from camera import Camera
 
 ORI_WEB = Camera(51.3, 0, False)
-ORI_PHONE = Camera(66.9, 3, True)
+ORI_PHONE = Camera(66.9, 0, True)
 NIR_PHONE = Camera(67, 2, True)
-MAYA_WEB = Camera(61, 0, True)
+MAYA_WEB = Camera(61, 1, True)
 
 def lin_velocity_with_acc(cm_rel, real_vel):
     #this function assumes the drone is looking at the cameras.
@@ -36,12 +36,18 @@ def lin_velocity_with_acc(cm_rel, real_vel):
 
 def lin_velocity_with_control(cm_rel, real_velocity):
     #this function assumes the drone is looking at the cameras.
-    MAX_VEL = 50
-    UPPER_LIMIT = 15
+    MAX_VEL = 55
+    UPPER_LIMIT = 35
     LOWER_LIMIT = 10
     VELOCITY_LIMIT = 10
-    STOPPING_VEL = 10
-    velocity_pot = int(min(abs(cm_rel - 15), MAX_VEL))
+    STOPPING_VEL = 5
+    A_UPPER = 1
+    A_LOWER = 0.3
+    B = -5
+
+    velocity_pot_upper = int(min(abs(A_UPPER * cm_rel + B), MAX_VEL))
+    velocity_pot_lower = int(min(abs(A_LOWER * cm_rel + B), MAX_VEL))
+    
 
     # if drone is too fast, stop earlier
     if UPPER_LIMIT > abs(cm_rel) > LOWER_LIMIT and abs(real_velocity) > VELOCITY_LIMIT:
@@ -49,17 +55,17 @@ def lin_velocity_with_control(cm_rel, real_velocity):
 
     # drone is not too fast, continue in original speed
     elif UPPER_LIMIT > abs(cm_rel) > LOWER_LIMIT:
-        velocity = real_velocity
+        velocity = np.sign(real_velocity)*velocity_pot_lower
 
     # if drone is too fast and close to the baloon, set negative velocity
     elif abs(cm_rel) < LOWER_LIMIT and abs(real_velocity) > VELOCITY_LIMIT:
         velocity = -np.sign(real_velocity)*STOPPING_VEL
 
     elif cm_rel > UPPER_LIMIT:
-        velocity = velocity_pot
+        velocity = velocity_pot_upper
 
     elif cm_rel < -UPPER_LIMIT:
-        velocity = -velocity_pot
+        velocity = -velocity_pot_upper
 
     # if we got here, drone is close to the baloon with low speed
     else:
@@ -199,14 +205,19 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
                 image_now.phys_x_drone, image_now.phys_y_drone = image_old.phys_x_drone, image_old.phys_y_drone
 
             image_now.calculate_mean_velocities(old_images)
-            text_balloon = "(%.0f, %.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon)
-            text_drone = "(%.0f, %.0f)" % (image_now.velocity_x_drone, image_now.velocity_y_drone)
+        
+        text_balloon_coor = "c(%.0f, %.0f)" % (image_now.phys_x_balloon, image_now.phys_y_balloon)
+        text_drone_coor = "c(%.0f, %.0f)" % (image_now.phys_x_drone, image_now.phys_y_drone)
+        text_balloon_vel = "v(%.0f, %.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon)
+        text_drone_vel = "v(%.0f, %.0f)" % (image_now.velocity_x_drone, image_now.velocity_y_drone)
     
         # Display the resulting frame
-        image_now.frame_left.show_image("left", text_balloon=text_balloon, text_drone=text_drone)
-        image_now.frame_right.show_image("right", text_balloon=text_balloon, text_drone=text_drone)
+        image_now.frame_left.show_image("left", text_balloon=text_balloon_coor, text_drone=text_drone_coor, text_color=(240,240,240))
+        image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(200,50,50))
 
         if loop_status.tookoff and not tookoff:
+            tello.connect()
+            print("battery = ", tello.get_battery(), "%")
             tello.takeoff()
             tookoff = True
 
@@ -221,6 +232,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
             break
   
     tello.land()
+    print("battery = ", tello.get_battery(), "%")
     # After the loop release the cap object
     vid_left.release()
     vid_right.release()
@@ -237,14 +249,12 @@ def pixels_to_cm(distance, num_pixels, fov_angle):
 
 if __name__ == "__main__":
     tello = Tello()
-    tello.connect()
-    print("battery = ", tello.get_battery(), "%")
 
     colors = ColorBounds()
     continue_test = True
 
-    distance = 61.5
+    distance = 48
     # Galaxy - FoV is 67 degrees
     # Lenovo - FoV is 61 degrees
     while continue_test:
-        continue_test, colors = capture_video(tello, distance, ORI_PHONE, NIR_PHONE, colors, method='parallel')
+        continue_test, colors = capture_video(tello, distance, MAYA_WEB, ORI_PHONE, colors, method='parallel')
