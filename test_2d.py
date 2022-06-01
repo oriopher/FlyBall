@@ -7,8 +7,8 @@ from djitellopy import Tello
 from camera import Camera
 
 ORI_WEB = Camera(51.3, 0, False)
-ORI_PHONE = Camera(66.9, 0, True)
-NIR_PHONE = Camera(67, 2, True)
+ORI_PHONE = Camera(66.9, 2, True)
+NIR_PHONE = Camera(67, 1, True)
 MAYA_WEB = Camera(61, 1, True)
 
 def lin_velocity_with_acc(cm_rel, real_vel):
@@ -34,19 +34,40 @@ def lin_velocity_with_acc(cm_rel, real_vel):
     return velocity
 
 
+def lin_velocity_with_two_params(cm_rel, real_velocity):
+    #this function assumes the drone is looking at the cameras.
+    MAX_VEL = 80
+    A = 1.5
+    B = 1
+    VELOCITY_LIMIT = 20
+    STOPPING_VEL = 40
+
+    limit = B * real_velocity
+    velocity_pot = int(min(A*(abs(cm_rel) - limit), MAX_VEL))
+    
+    if (abs(cm_rel) < limit and abs(real_velocity) > VELOCITY_LIMIT):
+            velocity = -np.sign(real_velocity) * STOPPING_VEL
+    
+    else:
+        velocity = -np.sign(cm_rel) * velocity_pot
+
+
+    return int(velocity)
+ 
+
+
 def lin_velocity_with_control(cm_rel, real_velocity):
     #this function assumes the drone is looking at the cameras.
-    MAX_VEL = 55
-    UPPER_LIMIT = 35
-    LOWER_LIMIT = 10
-    VELOCITY_LIMIT = 10
-    STOPPING_VEL = 5
-    A_UPPER = 1
-    A_LOWER = 0.3
-    B = -5
+    MAX_VEL = 80
+    UPPER_LIMIT = 20
+    LOWER_LIMIT = 5
+    VELOCITY_LIMIT = 20
+    STOPPING_VEL = 10
+    A_UPPER = 1.5
+    A_LOWER = 0.7
 
-    velocity_pot_upper = int(min(abs(A_UPPER * cm_rel + B), MAX_VEL))
-    velocity_pot_lower = int(min(abs(A_LOWER * cm_rel + B), MAX_VEL))
+    velocity_pot_upper = int(min(A_UPPER*(abs(cm_rel) - LOWER_LIMIT), MAX_VEL))
+    velocity_pot_lower = int(min(A_LOWER*(abs(cm_rel) - LOWER_LIMIT), MAX_VEL))
     
 
     # if drone is too fast, stop earlier
@@ -55,17 +76,15 @@ def lin_velocity_with_control(cm_rel, real_velocity):
 
     # drone is not too fast, continue in original speed
     elif UPPER_LIMIT > abs(cm_rel) > LOWER_LIMIT:
-        velocity = np.sign(real_velocity)*velocity_pot_lower
+        # velocity = np.sign(real_velocity)*velocity_pot_lower
+        velocity = -np.sign(cm_rel)*velocity_pot_lower
 
     # if drone is too fast and close to the baloon, set negative velocity
     elif abs(cm_rel) < LOWER_LIMIT and abs(real_velocity) > VELOCITY_LIMIT:
         velocity = -np.sign(real_velocity)*STOPPING_VEL
 
-    elif cm_rel > UPPER_LIMIT:
-        velocity = velocity_pot_upper
-
-    elif cm_rel < -UPPER_LIMIT:
-        velocity = -velocity_pot_upper
+    elif abs(cm_rel) > UPPER_LIMIT:
+        velocity = np.sign(cm_rel)*velocity_pot_upper
 
     # if we got here, drone is close to the baloon with low speed
     else:
@@ -99,32 +118,12 @@ def track_2d(image_3d: Image3D, tello: Tello):
         #     # tello.move_back(int(y_cm_rel))
         # else:
         left_right = -lin_velocity_with_control(x_cm_rel, image_3d.velocity_x_balloon)
-        for_back = -lin_velocity_with_control(y_cm_rel, image_3d.velocity_x_balloon)
+        for_back = -lin_velocity_with_control(y_cm_rel, image_3d.velocity_y_balloon)
         tello.send_rc_control(left_right, for_back, up_down, 0)
 
 
 def interactive_loop(frame_counter: int, image_3d: Image3D, colors: ColorBounds, loop_status: Status, tello: Tello) -> bool:
     key = cv2.waitKey(1) & 0xFF
-
-    # detect_balloon_left_time = 200
-    # detect_balloon_right_time = 400
-    # detect_drone_left_time = 600
-    # detect_drone_right_time = 800
-    # takeoff_time = 1000
-    # start_track_time = 1200
-
-    # if frame_counter == detect_balloon_left_time:
-    #     print("detecting balloon color left")
-    #     key = ord('v')
-    # if frame_counter == detect_balloon_right_time:
-    #     print("detecting balloon color right")
-    #     key = ord('n') 
-    # if frame_counter == detect_drone_left_time:
-    #     print("detecting drone color left")
-    #     key = ord('s')
-    # if frame_counter == detect_drone_right_time:
-    #     print("detecting drone color right")
-    #     key = ord('f') 
 
     # the 'c' button reconnects to the drone
     if key == ord('c'):
@@ -230,9 +229,10 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         continue_test = interactive_loop(frame_counter, image_now, colors, loop_status, tello)
         if not loop_status.continue_loop:
             break
-  
-    tello.land()
-    print("battery = ", tello.get_battery(), "%")
+    
+    if loop_status.tookoff:
+        tello.land()
+        print("battery = ", tello.get_battery(), "%")
     # After the loop release the cap object
     vid_left.release()
     vid_right.release()
@@ -253,8 +253,11 @@ if __name__ == "__main__":
     colors = ColorBounds()
     continue_test = True
 
-    distance = 48
+    left = ORI_PHONE
+    right = NIR_PHONE
+
+    distance = 55
     # Galaxy - FoV is 67 degrees
     # Lenovo - FoV is 61 degrees
     while continue_test:
-        continue_test, colors = capture_video(tello, distance, MAYA_WEB, ORI_PHONE, colors, method='parallel')
+        continue_test, colors = capture_video(tello, distance, left, right, colors, method='parallel')
