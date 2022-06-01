@@ -155,6 +155,9 @@ def interactive_loop(frame_counter: int, image_3d: Image3D, colors: ColorBounds,
     elif key == ord("h"):
         hit_ball(image_3d, tello)
 
+    elif key == ord("w"):
+        tello.flip_forward()
+
     return True
 
 
