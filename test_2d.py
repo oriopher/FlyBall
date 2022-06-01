@@ -10,6 +10,7 @@ ORI_WEB = Camera(51.3, 0, False)
 ORI_PHONE = Camera(66.9, 2, True)
 NIR_PHONE = Camera(67, 1, True)
 MAYA_WEB = Camera(61, 1, True)
+EFRAT_WEB = Camera(61, 0, True)
 
 def lin_velocity_with_acc(cm_rel, real_vel):
     #this function assumes the drone is looking at the cameras.
@@ -108,6 +109,20 @@ def track_2d(image_3d: Image3D, tello: Tello):
         tello.send_rc_control(left_right, for_back, up_down, 0)
 
 
+def hit_ball(image, tello):
+    UPPER_LIMIT = 170
+    LOWER_LIMIT = 30
+    XY_LIMIT = 7
+    
+    x_rel = int(image.phys_x_balloon - image.phys_x_drone)
+    y_rel = int(image.phys_y_balloon - image.phys_y_drone)
+    z_rel = int(image.phys_z_balloon - image.phys_z_drone)
+
+    if abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT and LOWER_LIMIT < z_rel < UPPER_LIMIT:
+        tello.go_xyz_speed(x_rel, y_rel, z_rel, 100)
+        tello.go_xyz_speed(0, 0, -z_rel, 100)
+
+
 def interactive_loop(frame_counter: int, image_3d: Image3D, colors: ColorBounds, loop_status: Status, tello: Tello) -> bool:
     key = cv2.waitKey(1) & 0xFF
 
@@ -198,10 +213,10 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
 
             image_now.calculate_mean_velocities(old_images)
         
-        text_balloon_coor = "c(%.0f, %.0f)" % (image_now.phys_x_balloon, image_now.phys_y_balloon)
-        text_drone_coor = "c(%.0f, %.0f)" % (image_now.phys_x_drone, image_now.phys_y_drone)
-        text_balloon_vel = "v(%.0f, %.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon)
-        text_drone_vel = "v(%.0f, %.0f)" % (image_now.velocity_x_drone, image_now.velocity_y_drone)
+        text_balloon_coor = "c(%.0f,%.0f,%.0f)" % (image_now.phys_x_balloon, image_now.phys_y_balloon, image_now.phys_z_balloon)
+        text_drone_coor = "c(%.0f,%.0f,%.0f)" % (image_now.phys_x_drone, image_now.phys_y_drone, image_now.phys_z_drone)
+        text_balloon_vel = "v(%.0f,%.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon)
+        text_drone_vel = "v(%.0f,%.0f)" % (image_now.velocity_x_drone, image_now.velocity_y_drone)
     
         # Display the resulting frame
         image_now.frame_left.show_image("left", text_balloon=text_balloon_coor, text_drone=text_drone_coor, text_color=(240,240,240))
@@ -235,19 +250,6 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
 
     return continue_test, colors
 
-def hit_ball(image, tello):
-    UPPER_LIMIT = 120
-    LOWER_LIMIT = 30
-    XY_LIMIT = 3
-
-    x_rel = int(abs(image.phys_x_balloon - image.phys_x_drone))
-    y_rel = int(abs(image.phys_y_balloon - image.phys_y_drone))
-    z_rel = int(image.phys_z_balloon - image.phys_z_drone)
-
-    if x_rel < XY_LIMIT and y_rel < XY_LIMIT and z_rel < UPPER_LIMIT and z_rel > LOWER_LIMIT:
-        tello.go_xyz_speed(0, 0, z_rel, 60)
-        tello.go_xyz_speed(0, 0, -z_rel, 60)
-
 
 # return how much cm in one pixel.
 def pixels_to_cm(distance, num_pixels, fov_angle):  
@@ -260,11 +262,9 @@ if __name__ == "__main__":
     colors = ColorBounds()
     continue_test = True
 
-    left = ORI_WEB
-    right = ORI_PHONE
+    left = NIR_PHONE
+    right = EFRAT_WEB
 
     distance = 55
-    # Galaxy - FoV is 67 degrees
-    # Lenovo - FoV is 61 degrees
     while continue_test:
         continue_test, colors = capture_video(tello, distance, left, right, colors, method='parallel')

@@ -50,7 +50,7 @@ class Image3D:
         # Will return the height in cm. Requires y in cm. assum
         n_pixels = self.frame_right.image.shape[0]  # Number of pixels in z axis.
         p = (n_pixels / 2) / np.tan(cam.fov / 2)
-        return y_cm * (z_pix - n_pixels / 2) / p
+        return y_cm * (n_pixels / 2 - z_pix) / p
 
     def calculate_balloon_distance(self, left: Camera, right: Camera, d, method='parallel'):
         x_left, x_right = self.frame_left.x_balloon, self.frame_right.x_balloon
