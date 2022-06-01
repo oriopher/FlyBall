@@ -233,8 +233,8 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
     return continue_test, colors
 
 def hit_ball(image, tello):
-    UPPER_LIMIT = 100
-    LOWER_LIMIT = 60
+    UPPER_LIMIT = 120
+    LOWER_LIMIT = 30
     XY_LIMIT = 3
 
     x_rel = int(abs(image.phys_x_balloon - image.phys_x_drone))
@@ -242,8 +242,8 @@ def hit_ball(image, tello):
     z_rel = int(image.phys_z_balloon - image.phys_z_drone)
 
     if x_rel < XY_LIMIT and y_rel < XY_LIMIT and z_rel < UPPER_LIMIT and z_rel > LOWER_LIMIT:
-        tello.go_xyz_speed(0, 0, z_rel, 100)
-        tello.go_xyz_speed(0, 0, -z_rel, 100)
+        tello.go_xyz_speed(0, 0, z_rel, 60)
+        tello.go_xyz_speed(0, 0, -z_rel, 60)
 
 
 # return how much cm in one pixel.
@@ -257,8 +257,8 @@ if __name__ == "__main__":
     colors = ColorBounds()
     continue_test = True
 
-    left = ORI_PHONE
-    right = NIR_PHONE
+    left = ORI_WEB
+    right = ORI_PHONE
 
     distance = 55
     # Galaxy - FoV is 67 degrees
