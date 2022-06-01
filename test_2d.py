@@ -178,13 +178,14 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
 
         if loop_status.start_track:
             track_2d(image_now, tello)
+            hit_ball(image_now, tello)
 
         image_old = image_now
    
         continue_test = interactive_loop(frame_counter, image_now, colors, loop_status, tello)
         if not loop_status.continue_loop:
             break
-  
+
     tello.land()
     # After the loop release the cap object
     vid_left.release()
@@ -193,6 +194,19 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
     cv2.destroyAllWindows()
 
     return continue_test, colors
+
+def hit_ball(image, tello):
+    UPPER_LIMIT = 100
+    LOWER_LIMIT = 60
+    XY_LIMIT = 3
+
+    x_rel = int(abs(image.phys_x_balloon - image.phys_x_drone))
+    y_rel = int(abs(image.phys_y_balloon - image.phys_y_drone))
+    z_rel = int(image.phys_z_balloon - image.phys_z_drone)
+
+    if x_rel < XY_LIMIT and y_rel < XY_LIMIT and z_rel < UPPER_LIMIT and z_rel > LOWER_LIMIT:
+        tello.go_xyz_speed(0, 0, z_rel, 100)
+        tello.go_xyz_speed(0, 0, -z_rel, 100)
 
 
 # return how much cm in one pixel.
