@@ -55,7 +55,6 @@ def lin_velocity_with_two_params(cm_rel, real_velocity):
     return int(velocity)
  
 
-
 def lin_velocity_with_control(cm_rel, real_velocity):
     #this function assumes the drone is looking at the cameras.
     MAX_VEL = 80
@@ -152,6 +151,10 @@ def interactive_loop(frame_counter: int, image_3d: Image3D, colors: ColorBounds,
     elif key == ord('l'):
         loop_status.stop_loop()
 
+    # the 'h' button is set as the hitting balloon method
+    elif key == ord("h"):
+        hit_ball(image_3d, tello)
+
     return True
 
 
@@ -209,7 +212,6 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
 
         if loop_status.start_track:
             track_2d(image_now, tello)
-            hit_ball(image_now, tello)
 
         old_images[frame_counter % len(old_images)] = image_now
         image_old = image_now
