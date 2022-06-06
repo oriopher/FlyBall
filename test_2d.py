@@ -12,6 +12,8 @@ NIR_PHONE = Camera(67, 1, True)
 MAYA_WEB = Camera(61, 1, True)
 EFRAT_WEB = Camera(61, 0, True)
 
+COLORS_FILENAME = "color_bounds.txt"
+
 def lin_velocity_with_acc(cm_rel, real_vel):
     #this function assumes the drone is looking at the cameras.
     a = 1.5
@@ -123,7 +125,7 @@ def hit_ball(image, tello):
         tello.go_xyz_speed(0, 0, -z_rel, 100)
 
 
-def interactive_loop(frame_counter: int, image_3d: Image3D, colors: ColorBounds, loop_status: Status, tello: Tello) -> bool:
+def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status, tello: Tello) -> bool:
     key = cv2.waitKey(1) & 0xFF
 
     # the 'c' button reconnects to the drone
@@ -172,6 +174,14 @@ def interactive_loop(frame_counter: int, image_3d: Image3D, colors: ColorBounds,
 
     elif key == ord("w"):
         tello.flip_forward()
+
+    # the 'j' button is set as the save colors to file
+    elif key == ord('j'):
+        colors.write_colors(COLORS_FILENAME)
+
+    # the 'k' button is set as the read colors from file
+    elif key == ord('k'):
+        colors.read_colors(COLORS_FILENAME)
 
     return True
 
@@ -234,7 +244,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         old_images[frame_counter % len(old_images)] = image_now
         image_old = image_now
    
-        continue_test = interactive_loop(frame_counter, image_now, colors, loop_status, tello)
+        continue_test = interactive_loop(image_now, colors, loop_status, tello)
         if not loop_status.continue_loop:
             break
     

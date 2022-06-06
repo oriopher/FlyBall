@@ -1,3 +1,4 @@
+import os
 
 class ColorBound:
     NO_LOWER_BOUNDS = (0, 0, 0)
@@ -10,6 +11,16 @@ class ColorBound:
     def change(self, lower, upper):
         self.lower = lower
         self.upper = upper
+
+    def __str__(self):
+        return "%.0f,%.0f,%.0f\n%.0f,%.0f,%.0f\n" % \
+            (self.lower[0], self.lower[1], self.lower[2],self.upper[0], self.upper[1], self.upper[2])
+
+    def str_to_color_bound(self, lower, upper):
+        lower = lower.split(',')
+        upper = upper.split(',')
+        self.lower = (int(lower[0]), int(lower[1]), int(lower[2]))
+        self.upper = (int(upper[0]), int(upper[1]), int(upper[2]))
 
 
 class ColorBounds:
@@ -32,3 +43,23 @@ class ColorBounds:
     def change_drone_right(self, lower, upper):
         self.drone_right.change(lower, upper)
 
+    def write_colors(self, filename):
+        file_text = str(self.ball_left) + str(self.ball_right) + str(self.drone_left) + str(self.drone_right)
+
+        if os.path.exists(filename):
+            os.remove(filename)
+        with open(filename, 'w') as f:
+            f.write(file_text)
+
+    def read_colors(self, filename):
+        if not os.path.exists(filename):
+            print("ERROR: colors file does not exist")
+            return
+        
+        with open(filename, 'r') as f:
+            lines = f.readlines()
+
+        self.ball_left.str_to_color_bound(lines[0].split(','), lines[1])
+        self.ball_right.str_to_color_bound(lines[2], lines[3])
+        self.drone_left.str_to_color_bound(lines[4], lines[5])
+        self.drone_right.str_to_color_bound(lines[6], lines[7])
