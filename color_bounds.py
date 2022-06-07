@@ -50,6 +50,7 @@ class ColorBounds:
             os.remove(filename)
         with open(filename, 'w') as f:
             f.write(file_text)
+            print("Colors Saved")
 
     def read_colors(self, filename):
         if not os.path.exists(filename):
@@ -59,7 +60,8 @@ class ColorBounds:
         with open(filename, 'r') as f:
             lines = f.readlines()
 
-        self.ball_left.str_to_color_bound(lines[0].split(','), lines[1])
+        self.ball_left.str_to_color_bound(lines[0], lines[1])
         self.ball_right.str_to_color_bound(lines[2], lines[3])
         self.drone_left.str_to_color_bound(lines[4], lines[5])
         self.drone_right.str_to_color_bound(lines[6], lines[7])
+        print("Colors Loaded")

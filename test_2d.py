@@ -5,11 +5,12 @@ from image_3d import Image3D
 from loop_status import Status
 from djitellopy import Tello
 from camera import Camera
+from time import sleep
 
 ORI_WEB = Camera(51.3, 0, False)
 ORI_PHONE = Camera(66.9, 2, True)
 NIR_PHONE = Camera(67, 1, True)
-MAYA_WEB = Camera(61, 1, True)
+MAYA_WEB = Camera(61, 0, True)
 EFRAT_WEB = Camera(61, 0, True)
 
 COLORS_FILENAME = "color_bounds.txt"
@@ -37,9 +38,9 @@ def lin_velocity_with_acc(cm_rel, real_vel):
     return velocity
 
 
-def lin_velocity_with_two_params(cm_rel, real_velocity):
+def lin_velocity_with_two_params(cm_rel, real_velocity, direction):
     #this function assumes the drone is looking at the cameras.
-    MAX_VEL = 80
+    MAX_VEL = 40
     A = 1.5
     B = 1
     VELOCITY_LIMIT = 20
@@ -54,8 +55,10 @@ def lin_velocity_with_two_params(cm_rel, real_velocity):
     else:
         velocity = -np.sign(cm_rel) * velocity_pot
 
-
-    return int(velocity)
+    if direction == 'x':
+        return int(velocity)
+    elif direction == 'y':
+        return int(velocity)
  
 
 def lin_velocity_with_control(cm_rel, real_velocity):
@@ -106,23 +109,65 @@ def track_2d(image_3d: Image3D, tello: Tello):
 
     left_right, for_back, up_down = 0, 0, 0
     if tello.send_rc_control:
-        left_right = -lin_velocity_with_control(x_cm_rel, image_3d.velocity_x_balloon)
-        for_back = -lin_velocity_with_control(y_cm_rel, image_3d.velocity_y_balloon)
+        left_right = lin_velocity_with_two_params(x_cm_rel, image_3d.velocity_x_balloon, 'x')
+        for_back = lin_velocity_with_two_params(y_cm_rel, image_3d.velocity_y_balloon, 'y')
         tello.send_rc_control(left_right, for_back, up_down, 0)
 
 
-def hit_ball(image, tello):
+def hit_ball(image: Image3D, tello: Tello):
     UPPER_LIMIT = 170
     LOWER_LIMIT = 30
-    XY_LIMIT = 7
+    XY_LIMIT = 20
+    A = 1.2
     
     x_rel = int(image.phys_x_balloon - image.phys_x_drone)
     y_rel = int(image.phys_y_balloon - image.phys_y_drone)
     z_rel = int(image.phys_z_balloon - image.phys_z_drone)
 
     if abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT and LOWER_LIMIT < z_rel < UPPER_LIMIT:
-        tello.go_xyz_speed(x_rel, y_rel, z_rel, 100)
-        tello.go_xyz_speed(0, 0, -z_rel, 100)
+        if tello.send_rc_control:
+            tello.go_xyz_speed(int(x_rel*A), int(y_rel*A), int(z_rel*A), 100)
+            while not tello.send_rc_control:
+                continue
+            tello.go_xyz_speed(0, 0, -int(z_rel), 100)
+        return True
+    return False
+
+
+def hit_ball_rc(image_3d: Image3D, tello: Tello, loop_status: Status):
+    UPPER_LIMIT = 170
+    LOWER_LIMIT = 0
+    XY_LIMIT = 20
+    Z_LIMIT = 5
+
+    x_rel = int(image_3d.phys_x_balloon - image_3d.phys_x_drone)
+    y_rel = int(image_3d.phys_y_balloon - image_3d.phys_y_drone)
+    z_rel = int(image_3d.phys_z_balloon - image_3d.phys_z_drone)
+
+    if abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT and LOWER_LIMIT < z_rel < UPPER_LIMIT:
+        if image_3d.phys_z_drone > loop_status.hit_height - Z_LIMIT:
+            left_right, for_back = 0, 0
+            up_down = -100
+            while not tello.send_rc_control:
+                continue
+            tello.send_rc_control(left_right, for_back, up_down, 0)
+
+            sleep(1)
+            up_down = 0
+            while not tello.send_rc_control:
+                continue
+            tello.send_rc_control(left_right, for_back, up_down, 0)
+            loop_status.hit_mode_off()
+            return
+
+        left_right = lin_velocity_with_two_params(x_rel, image_3d.velocity_x_balloon, 'x')
+        for_back = lin_velocity_with_two_params(y_rel, image_3d.velocity_y_balloon, 'y')
+        up_down = 100
+        while not tello.send_rc_control:
+            continue
+        tello.send_rc_control(left_right, for_back, up_down, 0)
+
+
 
 
 def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status, tello: Tello) -> bool:
@@ -137,21 +182,25 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status
     if key == ord('v'):
         lower, upper = image_3d.frame_left.detect_color()
         colors.ball_left.change(lower, upper)
+        print("color bounds changed")
 
     # the 'n' button is set as the detect color of balloon in the right cam
     elif key == ord('n'):
         lower, upper = image_3d.frame_right.detect_color()
         colors.ball_right.change(lower, upper)
+        print("color bounds changed")
 
     # the 's' button is set as the detect color of drone in the left cam
     elif key == ord('s'):
         lower, upper = image_3d.frame_left.detect_color()
         colors.drone_left.change(lower, upper)
+        print("color bounds changed")
 
     # the 'f' button is set as the detect color of drone in the right cam
     elif key == ord('f'):
         lower, upper = image_3d.frame_right.detect_color()
         colors.drone_right.change(lower, upper)
+        print("color bounds changed")
 
     elif key == ord('t'):
         loop_status.takeoff()
@@ -170,13 +219,13 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status
 
     # the 'h' button is set as the hitting balloon method
     elif key == ord("h"):
-        hit_ball(image_3d, tello)
+        loop_status.hit_mode_on(image_3d.phys_z_balloon)
 
     elif key == ord("w"):
         tello.flip_forward()
 
-    # the 'j' button is set as the save colors to file
-    elif key == ord('j'):
+    # the 'p' button is set as the save colors to file
+    elif key == ord('p'):
         colors.write_colors(COLORS_FILENAME)
 
     # the 'k' button is set as the read colors from file
@@ -238,8 +287,14 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
             tello.takeoff()
             tookoff = True
 
-        if loop_status.start_track:
+        if loop_status.hit_mode():
+            hit_ball_rc(image_now, tello, loop_status)
+        elif loop_status.start_track:
             track_2d(image_now, tello)
+
+        # if loop_status.hit_mode() and hit_ball(image_now, tello):
+        #     loop_status.hit_mode_off()
+
 
         old_images[frame_counter % len(old_images)] = image_now
         image_old = image_now
@@ -272,9 +327,9 @@ if __name__ == "__main__":
     colors = ColorBounds()
     continue_test = True
 
-    left = NIR_PHONE
-    right = EFRAT_WEB
+    left = MAYA_WEB
+    right = NIR_PHONE
 
-    distance = 55
+    distance = 75
     while continue_test:
         continue_test, colors = capture_video(tello, distance, left, right, colors, method='parallel')

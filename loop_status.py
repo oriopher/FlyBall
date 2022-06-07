@@ -5,6 +5,8 @@ class LoopStatus:
         self.tookoff = False
         self.start_track = False
         self.continue_loop = True
+        self.hit = False
+        self.hit_height = 0
 
     def takeoff(self):
         self.tookoff = True
@@ -18,6 +20,17 @@ class LoopStatus:
 
     def reset(self):
         self.__init__()
+
+    def hit_mode_on(self, height):
+        if self.start_track:
+            self.hit = True
+            self.hit_height = height
+    
+    def hit_mode_off(self):
+        self.hit = False
+
+    def hit_mode(self):
+        return self.hit
 
 
 class Status(LoopStatus):
