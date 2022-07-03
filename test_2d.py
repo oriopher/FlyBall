@@ -8,12 +8,15 @@ from camera import Camera
 from time import sleep
 
 ORI_WEB = Camera(51.3, 0, False)
-ORI_PHONE = Camera(66.9, 2, True)
-NIR_PHONE = Camera(67, 1, True)
+ORI_PHONE = Camera(66.9, 0, True)
+NIR_PHONE = Camera(67, 1, False)
 MAYA_WEB = Camera(61, 0, True)
 EFRAT_WEB = Camera(61, 0, True)
 
 COLORS_FILENAME = "color_bounds.txt"
+
+FLOOR_HEIGHT = -50
+DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
 
 def lin_velocity_with_acc(cm_rel, real_vel):
     #this function assumes the drone is looking at the cameras.
@@ -61,6 +64,18 @@ def lin_velocity_with_two_params(cm_rel, real_velocity, direction):
         return int(velocity)
  
 
+
+def lin_velocity_z(cm_rel):
+    #this function assumes the drone is looking at the cameras.
+    MAX_VEL = 20
+    A = 1.5
+
+    velocity_pot = int(min(A*(abs(cm_rel)), MAX_VEL))
+    velocity = -np.sign(cm_rel) * velocity_pot
+
+    return int(velocity)
+
+
 def lin_velocity_with_control(cm_rel, real_velocity):
     #this function assumes the drone is looking at the cameras.
     MAX_VEL = 80
@@ -107,10 +122,13 @@ def track_2d(image_3d: Image3D, tello: Tello):
     #print("y_ball_cm: ", image_3d.phys_y_balloon, "y_drone_cm: ", image_3d.phys_y_drone)
     #print("y_cm_rel: ", y_cm_rel)
 
+    z_cm_rel = DRONE_DEFAULT_HEIGHT - image_3d.phys_z_drone
+
     left_right, for_back, up_down = 0, 0, 0
     if tello.send_rc_control:
         left_right = lin_velocity_with_two_params(x_cm_rel, image_3d.velocity_x_balloon, 'x')
         for_back = lin_velocity_with_two_params(y_cm_rel, image_3d.velocity_y_balloon, 'y')
+        # up_down = lin_velocity_z(z_cm_rel)
         tello.send_rc_control(left_right, for_back, up_down, 0)
 
 
@@ -138,14 +156,14 @@ def hit_ball_rc(image_3d: Image3D, tello: Tello, loop_status: Status):
     UPPER_LIMIT = 170
     LOWER_LIMIT = 0
     XY_LIMIT = 20
-    Z_LIMIT = 5
+    Z_LIMIT = 15
 
     x_rel = int(image_3d.phys_x_balloon - image_3d.phys_x_drone)
     y_rel = int(image_3d.phys_y_balloon - image_3d.phys_y_drone)
-    z_rel = int(image_3d.phys_z_balloon - image_3d.phys_z_drone)
+    z_rel = int(loop_status.hit_height - image_3d.phys_z_drone)
 
     if abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT and LOWER_LIMIT < z_rel < UPPER_LIMIT:
-        if image_3d.phys_z_drone > loop_status.hit_height - Z_LIMIT:
+        if z_rel < Z_LIMIT:
             left_right, for_back = 0, 0
             up_down = -100
             while not tello.send_rc_control:
@@ -253,10 +271,10 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         ret_left, image_left = vid_left.read()
         ret_right, image_right = vid_right.read()
 
-        if left.is_flipped:
-            image_left = cv2.flip(image_left, 1)
-        if right.is_flipped:
-            image_right = cv2.flip(image_right, 1)
+        # if left.is_flipped:
+        #     image_left = cv2.flip(image_left, 1)
+        # if right.is_flipped:
+        #     image_right = cv2.flip(image_right, 1)
         image_now = Image3D(image_left, image_right)
         text_balloon = None
         text_drone = None
@@ -327,9 +345,9 @@ if __name__ == "__main__":
     colors = ColorBounds()
     continue_test = True
 
-    left = MAYA_WEB
+    left = ORI_PHONE
     right = NIR_PHONE
 
-    distance = 75
+    distance = 66
     while continue_test:
         continue_test, colors = capture_video(tello, distance, left, right, colors, method='parallel')
