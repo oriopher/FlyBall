@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from color_bounds import ColorBounds
 from image_3d import Image3D
+from borders import Borders
 from loop_status import Status
 from djitellopy import Tello
 from camera import Camera
@@ -17,6 +18,23 @@ COLORS_FILENAME = "color_bounds.txt"
 
 FLOOR_HEIGHT = -50
 DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
+
+
+def seek_middle(image_3d: Image3D, tello: Tello):
+    x_cm_rel = borders.X_MIDDLE - image_3d.phys_x_drone
+    #print("x_ball_cm: ", image_3d.phys_x_balloon, "x_drone_cm: ", image_3d.phys_x_drone)
+    #print("x_cm_rel: ", x_cm_rel)
+
+    y_cm_rel = borders.Y_MIDDLE - image_3d.phys_y_drone
+    #print("y_ball_cm: ", image_3d.phys_y_balloon, "y_drone_cm: ", image_3d.phys_y_drone)
+    #print("y_cm_rel: ", y_cm_rel)
+
+    left_right, for_back, up_down = 0, 0, 0
+    if tello.send_rc_control:
+        left_right = lin_velocity_with_two_params(x_cm_rel, image_3d.velocity_x_balloon, 'x')
+        for_back = lin_velocity_with_two_params(y_cm_rel, image_3d.velocity_y_balloon, 'y')
+        tello.send_rc_control(left_right, for_back, up_down, 0)
+
 
 def lin_velocity_with_acc(cm_rel, real_vel):
     #this function assumes the drone is looking at the cameras.
@@ -187,8 +205,7 @@ def hit_ball_rc(image_3d: Image3D, tello: Tello, loop_status: Status):
 
 
 
-
-def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status, tello: Tello) -> bool:
+def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status, borders: Borders, tello: Tello) -> bool:
     key = cv2.waitKey(1) & 0xFF
 
     # the 'c' button reconnects to the drone
@@ -250,6 +267,11 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status
     elif key == ord('k'):
         colors.read_colors(COLORS_FILENAME)
 
+    # the 'j' button is set as the saving the borders. can save 4 coordinates
+    elif key == ord('j'):
+        borders.set_image(image_3d)
+        print("saved the " + str(borders.index + 1) + " coordinate")
+
     return True
 
 
@@ -305,14 +327,24 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
             tello.takeoff()
             tookoff = True
 
+        # balloon is out of borders. drone is seeking the middle until the balloon is back
+        if not borders.in_borders(image_now):
+            loop_status.start_track = False
+            seek_middle(image_now, tello)
+
+        # balloon returned to the play area, we can continue to play
+        #if borders.in_borders(image_now) and not loop_status.start_track:
+        #   loop_status.out_of_borders = False
+        #   loop_status.start_track = True
+
         if loop_status.hit_mode():
             hit_ball_rc(image_now, tello, loop_status)
+
         elif loop_status.start_track:
             track_2d(image_now, tello)
 
         # if loop_status.hit_mode() and hit_ball(image_now, tello):
         #     loop_status.hit_mode_off()
-
 
         old_images[frame_counter % len(old_images)] = image_now
         image_old = image_now
@@ -343,6 +375,7 @@ if __name__ == "__main__":
     tello = Tello()
 
     colors = ColorBounds()
+    borders = Borders()
     continue_test = True
 
     left = ORI_PHONE
