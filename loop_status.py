@@ -1,4 +1,4 @@
-
+from enum import Enum
 class LoopStatus:
 
     def __init__(self):
@@ -7,6 +7,7 @@ class LoopStatus:
         self.continue_loop = True
         self.hit = False
         self.hit_height = 0
+        self.prediction = 0 # 0 - disabled, 1 - starting, 2 - printing and testing predictions
 
     def takeoff(self):
         self.tookoff = True
@@ -31,6 +32,18 @@ class LoopStatus:
 
     def hit_mode(self):
         return self.hit
+
+    def start_predictions(self):
+        self.prediction = 1
+    
+    def test_predictions(self):
+        self.prediction = 2
+
+    def stop_predictions(self):
+        self.prediction = 0
+    
+    def get_predict_stat(self):
+        return self.prediction
 
 
 class Status(LoopStatus):

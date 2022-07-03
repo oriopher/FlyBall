@@ -7,6 +7,7 @@ from loop_status import Status
 from djitellopy import Tello
 from camera import Camera
 from time import sleep
+from prediction import BallPredictor
 
 ORI_WEB = Camera(51.3, 0, False)
 ORI_PHONE = Camera(66.9, 2, True)
@@ -48,15 +49,37 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status
     elif key == ord('k'):
         colors.read_colors(COLORS_FILENAME)
 
+    # the 'z' button is set as the start predictions
+    elif key == ord('z'):
+        loop_status.start_predictions()
+
+    # the 'k' button is set as the stop predictions
+    elif key == ord('x'):
+        loop_status.stop_predictions()
+
     return True
 
 
 def predict(image : Image3D):
-    predictions = np.zeros((100, 2))
-    predictor = BallPredictor(image)
-    for i in range(len(predictions)):
-        sad = 1
+    NUM_PREDICTIONS = 101
+    LATEST_TIME = 1 # in seconds, relative to image.time.
 
+    predictions = np.zeros((NUM_PREDICTIONS, 4)) # every row is a prediction with (time, x, y, z)
+    predictor = BallPredictor(image)
+    time_interval = LATEST_TIME / (len(predictions) - 1)   
+    for i in range(len(predictions)):
+        predictions[i][0] = image.time + time_interval * i 
+        predictions[i][1], predictions[i][2], predictions[i][3] = predictor.get_prediction(time_interval * i )
+    
+    return predictions
+
+
+def print_prediction_test(predictions, results):
+    diff = np.zeros(np.shape(predictions))
+    diff = results - predictions
+    printable = np.concatenate((predictions, results, diff), axis = 1)
+    title = np.array(["pred time", "x", "y", "z", "res time", "x", "y", "z", "diff time", "x", "y", "z"])
+    print(np.concatenate((title, printable)))
 
 
 def capture_video( cameras_distance, left: Camera, right: Camera, colors: ColorBounds, method='parallel'):
@@ -65,11 +88,11 @@ def capture_video( cameras_distance, left: Camera, right: Camera, colors: ColorB
 
     frame_counter = 0
     image_old = None
-    tookoff = False
     continue_test = True
 
     loop_status = Status()
     old_images = [None]*10
+
 
     while(True):
         frame_counter = frame_counter+1
@@ -82,8 +105,6 @@ def capture_video( cameras_distance, left: Camera, right: Camera, colors: ColorB
         if right.is_flipped:
             image_right = cv2.flip(image_right, 1)
         image_now = Image3D(image_left, image_right)
-        text_balloon = None
-        text_drone = None
     
         # Process frames
         if frame_counter > len(old_images):
@@ -95,6 +116,25 @@ def capture_video( cameras_distance, left: Camera, right: Camera, colors: ColorB
                 image_now.phys_x_drone, image_now.phys_y_drone = image_old.phys_x_drone, image_old.phys_y_drone
 
             image_now.calculate_mean_velocities(old_images)
+
+        if loop_status.get_predict_stat() == 1: # start prediction
+            predictions = predict(image_now)
+            head = 0
+            results = np.zeros(predictions.shape)
+            loop_status.test_predictions()
+
+        if loop_status.get_predict_stat() == 2: # test prediction
+            if predictions[head][0] > image_now.time:
+                if (abs(head[0] - image_now.time) < abs(head[0] - image_old.time)):
+                    results[head] = image_now.time, image_now.phys_x_balloon, image_now.phys_y_balloon, image_now.phys_z_balloon
+                else:
+                    results[head] = image_old.time, image_old.phys_x_balloon, image_old.phys_y_balloon, image_old.phys_z_balloon
+                head += 1
+
+            if head == len(predictions) - 1:
+                print_prediction_test(predictions, results)
+                loop_status.stop_predictions()
+
         
         text_balloon_coor = "c(%.0f,%.0f,%.0f)" % (image_now.phys_x_balloon, image_now.phys_y_balloon, image_now.phys_z_balloon)
         text_balloon_vel = "v(%.0f,%.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon)
@@ -103,8 +143,7 @@ def capture_video( cameras_distance, left: Camera, right: Camera, colors: ColorB
         image_now.frame_left.show_image("left", text_balloon=text_balloon_coor, text_color=(240,240,240))
         image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_color=(200,50,50))
 
-        # if loop_status.hit_mode() and hit_ball(image_now, tello):
-        #     loop_status.hit_mode_off()
+        
 
 
         old_images[frame_counter % len(old_images)] = image_now

@@ -9,7 +9,7 @@ from time import sleep
 
 ORI_WEB = Camera(51.3, 0, False)
 ORI_PHONE = Camera(66.9, 2, True)
-NIR_PHONE = Camera(67, 1, True)
+NIR_PHONE = Camera(67, 0, True)
 MAYA_WEB = Camera(61, 0, True)
 EFRAT_WEB = Camera(61, 0, True)
 
@@ -327,7 +327,7 @@ if __name__ == "__main__":
     colors = ColorBounds()
     continue_test = True
 
-    left = MAYA_WEB
+    left = ORI_PHONE
     right = NIR_PHONE
 
     distance = 75
