@@ -17,6 +17,11 @@ class Borders:
         self.y_upper_border = 0
         self.x_middle = 0
         self.y_middle = 0
+        self.coor1 = [0, 0]
+        self.coor2 = [0, 0]
+        self.coor3 = [0, 0]
+        self.coor4 = [0, 0]
+
         self.set_borders = False
 
 
@@ -31,10 +36,15 @@ class Borders:
 
 
     def calc_borders(self):
-        self.m_left, self.b_left = self.calc_linear_eq(self.images[3], self.images[1])
-        self.m_right, self.b_right = self.calc_linear_eq(self.images[2], self.images[0])            
-        self.y_upper_border = min(self.images[3].phys_y_balloon, self.images[2].phys_y_balloon)    
-        self.y_low_border = max(self.images[1].phys_y_balloon, self.images[0].phys_y_balloon)
+        self.coor1 = [self.images[0].phys_x_balloon, self.images[0].phys_y_balloon]
+        self.coor2 = [self.images[1].phys_x_balloon, self.images[1].phys_y_balloon]
+        self.coor3 = [self.images[2].phys_x_balloon, self.images[2].phys_y_balloon]
+        self.coor4 = [self.images[3].phys_x_balloon, self.images[3].phys_y_balloon]
+
+        self.m_left, self.b_left = self.calc_linear_eq(self.coor4, self.coor2)
+        self.m_right, self.b_right = self.calc_linear_eq(self.coor3, self.coor1)            
+        self.y_upper_border = min(self.coor3[1], self.coor4[1])    
+        self.y_low_border = max(self.coor1[1], self.coor2[1])
 
         # calculate the middle coordinates
         self.y_middle = (self.y_upper_border - self.y_upper_border) / 2
@@ -43,13 +53,9 @@ class Borders:
         self.x_middle = (x_right + x_left) / 2
 
 
-    def calc_linear_eq(self, image_1: Image3D, image_2: Image3D):
-        x2 = image_2.phys_x_balloon        
-        y2 = image_2.phys_y_balloon
-        x1 = image_1.phys_x_balloon        
-        y1 = image_1.phys_y_balloon
-        m = (y2 - y1) / (x2 - x1)
-        b = y2 - m * x2  
+    def calc_linear_eq(self, coor1, coor2):
+        m = (coor2[1] - coor1[1]) / (coor2[0] - coor1[0])
+        b = coor2[1] - m * coor2[0]  
         return m, b
 
 
@@ -74,22 +80,17 @@ class Borders:
     
     def draw_borders(self, show_img, left_cam: camera):
         if self.set_borders:
-            x4 = self.images[3].phys_x_balloon
-            x3 = self.images[2].phys_x_balloon
-            x2 = self.images[1].phys_x_balloon
-            x1 = self.images[0].phys_x_balloon
             image = self.images[0].frame_left.image
-        
-            show_img = cv2.line(show_img, utils.phys_to_left_pix(x4, self.y_upper_border, test_2d.FLOOR_HEIGHT, image, left_cam), utils.phys_to_left_pix(x3, self.y_upper_border, test_2d.FLOOR_HEIGHT, image, left_cam), (0, 255, 0), thickness=2)
-            show_img = cv2.line(show_img, utils.phys_to_left_pix(x2, self.y_low_border, test_2d.FLOOR_HEIGHT, image, left_cam), utils.phys_to_left_pix(x1, self.y_low_border, test_2d.FLOOR_HEIGHT, image, left_cam), (0, 255, 0), thickness=2)
-            show_img = cv2.line(show_img, utils.phys_to_left_pix(x3, self.y_upper_border, test_2d.FLOOR_HEIGHT, image, left_cam), utils.phys_to_left_pix(x1, self.y_low_border, test_2d.FLOOR_HEIGHT, image, left_cam), (0, 255, 0), thickness=2)
-            show_img = cv2.line(show_img, utils.phys_to_left_pix(x4, self.y_upper_border, test_2d.FLOOR_HEIGHT, image, left_cam), utils.phys_to_left_pix(x2, self.y_low_border, test_2d.FLOOR_HEIGHT, image, left_cam), (0, 255, 0), thickness=2)
+            show_img = cv2.line(show_img, utils.phys_to_left_pix(self.coor4[0], self.y_upper_border, test_2d.FLOOR_HEIGHT, image, left_cam), utils.phys_to_left_pix(self.coor3[0], self.y_upper_border, test_2d.FLOOR_HEIGHT, image, left_cam), (0, 255, 0), thickness=2)
+            show_img = cv2.line(show_img, utils.phys_to_left_pix(self.coor2[0], self.y_low_border, test_2d.FLOOR_HEIGHT, image, left_cam), utils.phys_to_left_pix(self.coor1[0], self.y_low_border, test_2d.FLOOR_HEIGHT, image, left_cam), (0, 255, 0), thickness=2)
+            show_img = cv2.line(show_img, utils.phys_to_left_pix(self.coor3[0], self.y_upper_border, test_2d.FLOOR_HEIGHT, image, left_cam), utils.phys_to_left_pix(self.coor1[0], self.y_low_border, test_2d.FLOOR_HEIGHT, image, left_cam), (0, 255, 0), thickness=2)
+            show_img = cv2.line(show_img, utils.phys_to_left_pix(self.coor4[0], self.y_upper_border, test_2d.FLOOR_HEIGHT, image, left_cam), utils.phys_to_left_pix(self.coor2[0], self.y_low_border, test_2d.FLOOR_HEIGHT, image, left_cam), (0, 255, 0), thickness=2)
 
         return show_img
 
 
     def write_borders(self, filename):
-        file_text = str(self.m_left) + str(self.b_left) + str(self.m_right) + str(self.b_right) + str(self.y_low_border) + str(self.y_upper_border) + str(self.y_middle) + str(self.x_middle)
+        file_text = str(self.m_left) + str(self.b_left) + str(self.m_right) + str(self.b_right) + str(self.y_low_border) + str(self.y_upper_border) + str(self.y_middle) + str(self.x_middle) + str(self.coor1[0]) + str(self.coor1[1]) + str(self.coor2[0]) + str(self.coor2[1]) + str(self.coor3[0]) + str(self.coor3[1]) + str(self.coor4[0]) + str(self.coor4[1])
 
         if os.path.exists(filename):
             os.remove(filename)
@@ -114,4 +115,13 @@ class Borders:
         self.y_upper_border = float(lines[5].split(','))
         self.y_middle = float(lines[6].split(','))
         self.x_middle = float(lines[7].split(','))
+        self.coor1[0] = float(lines[8].split(','))
+        self.coor1[1] = float(lines[9].split(','))
+        self.coor2[0] = float(lines[10].split(','))
+        self.coor2[1] = float(lines[11].split(','))
+        self.coor3[0] = float(lines[12].split(','))
+        self.coor3[1] = float(lines[13].split(','))
+        self.coor4[0] = float(lines[14].split(','))
+        self.coor4[1] = float(lines[5].split(','))
+
         print("Borders Loaded")    
