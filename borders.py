@@ -1,4 +1,6 @@
 from image_3d import Image3D
+import test_2d
+import utils
 import cv2
 
 class Borders:
@@ -14,6 +16,7 @@ class Borders:
         self.y_upper_border = 0
         self.x_middle = 0
         self.y_middle = 0
+        self.set_borders = False
 
 
     # saving the image in the array
@@ -23,8 +26,8 @@ class Borders:
             self.index += 1
         if self.index > 4:
             self.calc_borders()
+            self.set_borders = True
  
-
     def calc_borders(self):
         self.m_left, self.b_left = self.calc_linear_eq(self.images[3], self.images[1])
         self.m_right, self.b_right = self.calc_linear_eq(self.images[2], self.images[0])            
@@ -68,9 +71,15 @@ class Borders:
 
     
     def draw_borders(self, show_img):
-        cv2.line(show_img, (x1, y1), (x2, y2), (0, 255, 0), thickness=2)
-        cv2.line(show_img, (x1, y1), (x2, y2), (0, 255, 0), thickness=2)
-        cv2.line(show_img, (x1, y1), (x2, y2), (0, 255, 0), thickness=2)
-        cv2.line(show_img, (x1, y1), (x2, y2), (0, 255, 0), thickness=2)
-        return 0
+        if self.set_borders:
+            x4 = self.images[3].phys_x_balloon
+            x3 = self.images[2].phys_x_balloon
+            x2 = self.images[1].phys_x_balloon
+            x1 = self.images[0].phys_x_balloon
+        
+            cv2.line(show_img, utils.phys_to_left_pix(x4, self.y_upper_border), utils.phys_to_left_pix(x3, self.y_upper_border), (0, 255, 0), thickness=2)
+            cv2.line(show_img, utils.phys_to_left_pix(x2, self.y_low_border), utils.phys_to_left_pix(x1, self.y_low_border), (0, 255, 0), thickness=2)
+            cv2.line(show_img, utils.phys_to_left_pix(x3, self.y_upper_border), utils.phys_to_left_pix(x1, self.y_low_border), (0, 255, 0), thickness=2)
+            cv2.line(show_img, utils.phys_to_left_pix(x4, self.y_upper_border), utils.phys_to_left_pix(x2, self.y_low_border), (0, 255, 0), thickness=2)
 
+        return show_img

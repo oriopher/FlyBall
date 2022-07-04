@@ -1,4 +1,5 @@
 import numpy as np
+from borders import Borders
 import cv2
 
 
@@ -92,6 +93,6 @@ class Frame:
                                        cv2.FONT_HERSHEY_DUPLEX, 1, text_color, 2, cv2.LINE_AA)
             show_img = cv2.circle(show_img, (int(self.x_drone), int(self.y_drone)), 15, (0, 0, 0), 3)
         
-        borders.draw_borders(show_img)
+        show_img = borders.draw_borders(show_img)
         
         cv2.imshow(window_name, show_img)
