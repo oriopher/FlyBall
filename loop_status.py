@@ -11,9 +11,12 @@ class LoopStatus:
     def takeoff(self):
         self.tookoff = True
 
-    def start(self):
+    def start_track(self):
         if self.tookoff:
             self.start_track = True
+
+    def stop_track(self):
+        self.start_track = False
 
     def stop_loop(self):
         self.continue_loop = False

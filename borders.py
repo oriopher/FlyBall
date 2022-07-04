@@ -56,7 +56,7 @@ class Borders:
 
 
     # checks if balloon is in borders
-    def in_borders(self, image_3d: Image3D):
+    def balloon_in_borders(self, image_3d: Image3D):
 
         # balloon is too far or too close to camera
         if (image_3d.phys_y_balloon < self.Y_LOW_BORDER or image_3d.phys_y_balloon > self.Y_UPPER_BORDER):
