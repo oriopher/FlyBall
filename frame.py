@@ -16,6 +16,8 @@ class Frame:
         self.y_drone = 0
         self.x_balloon = 0
         self.y_balloon = 0
+        self.THRESHOLD_SIZE = self.image.shape[1]/50
+        self.SEARCH_RANGE = self.image.shape[1]/10
 
     def detect_coordinates(self, bounds, x_old, y_old, search_range):
         search_range = max(1, search_range)
