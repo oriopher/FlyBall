@@ -1,5 +1,7 @@
+from turtle import left
 from image_3d import Image3D
 import test_2d
+import camera
 import utils
 import cv2
 
@@ -70,16 +72,16 @@ class Borders:
         return True   
 
     
-    def draw_borders(self, show_img):
+    def draw_borders(self, show_img, left_cam: camera):
         if self.set_borders:
             x4 = self.images[3].phys_x_balloon
             x3 = self.images[2].phys_x_balloon
             x2 = self.images[1].phys_x_balloon
             x1 = self.images[0].phys_x_balloon
         
-            cv2.line(show_img, utils.phys_to_left_pix(x4, self.y_upper_border), utils.phys_to_left_pix(x3, self.y_upper_border), (0, 255, 0), thickness=2)
-            cv2.line(show_img, utils.phys_to_left_pix(x2, self.y_low_border), utils.phys_to_left_pix(x1, self.y_low_border), (0, 255, 0), thickness=2)
-            cv2.line(show_img, utils.phys_to_left_pix(x3, self.y_upper_border), utils.phys_to_left_pix(x1, self.y_low_border), (0, 255, 0), thickness=2)
-            cv2.line(show_img, utils.phys_to_left_pix(x4, self.y_upper_border), utils.phys_to_left_pix(x2, self.y_low_border), (0, 255, 0), thickness=2)
+            show_img = cv2.line(show_img, utils.phys_to_left_pix(x4, self.y_upper_border, test_2d.FLOOR_HEIGHT, left_cam), utils.phys_to_left_pix(x3, self.y_upper_border, test_2d.FLOOR_HEIGHT, left_cam), (0, 255, 0), thickness=2)
+            show_img = cv2.line(show_img, utils.phys_to_left_pix(x2, self.y_low_border, test_2d.FLOOR_HEIGHT, left_cam), utils.phys_to_left_pix(x1, self.y_low_border, test_2d.FLOOR_HEIGHT, left_cam), (0, 255, 0), thickness=2)
+            show_img = cv2.line(show_img, utils.phys_to_left_pix(x3, self.y_upper_border, test_2d.FLOOR_HEIGHT, left_cam), utils.phys_to_left_pix(x1, self.y_low_border, test_2d.FLOOR_HEIGHT, left_cam), (0, 255, 0), thickness=2)
+            show_img = cv2.line(show_img, utils.phys_to_left_pix(x4, self.y_upper_border, test_2d.FLOOR_HEIGHT, left_cam), utils.phys_to_left_pix(x2, self.y_low_border, test_2d.FLOOR_HEIGHT, left_cam), (0, 255, 0), thickness=2)
 
         return show_img
