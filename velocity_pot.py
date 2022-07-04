@@ -1,6 +1,5 @@
 import numpy as np
 from image_3d import Image3D
-from borders import Borders
 from djitellopy import Tello
 from test_2d import DRONE_DEFAULT_HEIGHT
 
