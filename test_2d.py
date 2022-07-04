@@ -15,7 +15,7 @@ EFRAT_WEB = Camera(61, 0, True)
 
 COLORS_FILENAME = "color_bounds.txt"
 
-FLOOR_HEIGHT = -70
+FLOOR_HEIGHT = -50
 DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
 
 def lin_velocity_with_acc(cm_rel, real_vel):
@@ -112,7 +112,7 @@ def lin_velocity_with_control(cm_rel, real_velocity):
     return int(velocity)
 
 
-def track_2d(image_3d: Image3D, tello: Tello):
+def track_2d(image_3d: Image3D, tello: Tello, height:int=DRONE_DEFAULT_HEIGHT):
     x_cm_rel = image_3d.phys_x_balloon - image_3d.phys_x_drone
     #print("x_ball_cm: ", image_3d.phys_x_balloon, "x_drone_cm: ", image_3d.phys_x_drone)
     #print("x_cm_rel: ", x_cm_rel)
@@ -121,7 +121,7 @@ def track_2d(image_3d: Image3D, tello: Tello):
     #print("y_ball_cm: ", image_3d.phys_y_balloon, "y_drone_cm: ", image_3d.phys_y_drone)
     #print("y_cm_rel: ", y_cm_rel)
 
-    z_cm_rel = DRONE_DEFAULT_HEIGHT - image_3d.phys_z_drone
+    z_cm_rel = height - image_3d.phys_z_drone
 
     left_right, for_back, up_down = 0, 0, 0
     if tello.send_rc_control:
@@ -151,41 +151,49 @@ def hit_ball(image: Image3D, tello: Tello):
     return False
 
 
-def hit_ball_rc(image_3d: Image3D, tello: Tello, loop_status: Status):
-    UPPER_LIMIT = 170
+def hit_ball_rc(image_3d: Image3D, tello: Tello, loop_status: Status, hitting: bool=False):
+    UPPER_LIMIT = 200
     LOWER_LIMIT = 0
     XY_LIMIT = 10
     Z_LIMIT = 15
+    VEL_LIMIT = 5
 
     x_rel = int(image_3d.phys_x_balloon - image_3d.phys_x_drone)
     y_rel = int(image_3d.phys_y_balloon - image_3d.phys_y_drone)
     z_rel = int(loop_status.hit_height - image_3d.phys_z_drone)
 
-    if abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT and LOWER_LIMIT < z_rel < UPPER_LIMIT:
-        if z_rel < Z_LIMIT:
-            left_right, for_back = 0, 0
-            up_down = -100
+    if abs(x_rel) < XY_LIMIT \
+            and abs(y_rel) < XY_LIMIT \
+            and LOWER_LIMIT < z_rel < UPPER_LIMIT:
+        if hitting:
+            if z_rel < Z_LIMIT:
+                left_right, for_back = 0, 0
+                up_down = -100
+                while not tello.send_rc_control:
+                    continue
+                tello.send_rc_control(left_right, for_back, up_down, 0)
+
+                sleep(1)
+                up_down = 0
+                while not tello.send_rc_control:
+                    continue
+                tello.send_rc_control(left_right, for_back, up_down, 0)
+                loop_status.hit_mode_off()
+                return
+        else:
+            if abs(image_3d.velocity_x_drone) < VEL_LIMIT and abs(image_3d.velocity_y_drone) < VEL_LIMIT:
+                hitting = True
+        if hitting:
+            up_down = 100
+            left_right = lin_velocity_with_two_params(x_rel, image_3d.velocity_x_balloon, 'x')
+            for_back = lin_velocity_with_two_params(y_rel, image_3d.velocity_y_balloon, 'y')
             while not tello.send_rc_control:
                 continue
             tello.send_rc_control(left_right, for_back, up_down, 0)
-
-            sleep(1)
-            up_down = 0
-            while not tello.send_rc_control:
-                continue
-            tello.send_rc_control(left_right, for_back, up_down, 0)
-            loop_status.hit_mode_off()
-            return
-
-        left_right = lin_velocity_with_two_params(x_rel, image_3d.velocity_x_balloon, 'x')
-        for_back = lin_velocity_with_two_params(y_rel, image_3d.velocity_y_balloon, 'y')
-        up_down = 100
-        while not tello.send_rc_control:
-            continue
-        tello.send_rc_control(left_right, for_back, up_down, 0)
-
+        else:
+            track_2d(image_3d, tello, int(loop_status.hit_height - 100))
     else:
-        track_2d(image_3d, tello)
+        track_2d(image_3d, tello, int(loop_status.hit_height - 100))
 
 
 
@@ -350,6 +358,6 @@ if __name__ == "__main__":
     left = ORI_PHONE
     right = NIR_PHONE
 
-    distance = 57
+    distance = 60
     while continue_test:
         continue_test, colors = capture_video(tello, distance, left, right, colors, method='parallel')
