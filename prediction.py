@@ -6,19 +6,22 @@ class BallPredictor:
 
     def __init__(self, image_3d : Image3D):
         self.time = image_3d.time
-        self.x_0 = image_3d.phys_x_balloon
-        self.y_0 = image_3d.phys_y_balloon
-        self.z_0 = image_3d.phys_z_balloon
-        self.v_x_0 = image_3d.velocity_x_balloon
-        self.v_y_0 = image_3d.velocity_y_balloon
-        self.v_z_0 = image_3d.velocity_z_balloon
+        self.x_0 = image_3d.phys_x_balloon / 100
+        self.y_0 = image_3d.phys_y_balloon / 100
+        self.z_0 = image_3d.phys_z_balloon / 100
+        self.v_x_0 = -image_3d.velocity_x_balloon / 100
+        self.v_y_0 = -image_3d.velocity_y_balloon / 100
+        self.v_z_0 = image_3d.velocity_z_balloon / 100
         self.theta = np.arctan(self.v_y_0 / self.v_x_0)
+
+        print("x, y, z : %.2f. %.2f, %.2f" % (self.x_0, self.y_0, self.z_0))
+        print("vx, vy, vz : %.2f. %.2f, %.2f" % (self.v_x_0, self.v_y_0, self.v_z_0))
 
     def get_prediction(self, time):
         g = 9.7803 # Gravitational constatnt
         m = 0.002 # Balloon mass.
         C_d = 0.47 # Dimensionless drag constant
-        A = 0.1809557  # Balloon cross setion in m^2
+        A = 0.045238  # Balloon cross setion in m^2
         rho = 1.225 # Air density kg/m^3
         V_t = np.sqrt(2 * m * g / (C_d * A * rho)) # Terminal velocity
 
@@ -32,4 +35,5 @@ class BallPredictor:
         x = self.x_0 + d_xy * np.cos(self.theta)
         y = self.y_0 + d_xy * np.sin(self.theta)
 
+        x, y, z = x*100, y*100, z*100
         return x, y, z # cm

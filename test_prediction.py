@@ -14,6 +14,9 @@ NIR_PHONE = Camera(67, 1, True)
 MAYA_WEB = Camera(61, 0, True)
 EFRAT_WEB = Camera(61, 0, True)
 
+ORI_PHONE_NIR = Camera(66.9, 0, False)
+NIR_PHONE_NIR = Camera(67, 2, False)
+
 COLORS_FILENAME = "color_bounds.txt"
 
 
@@ -103,10 +106,6 @@ def capture_video( cameras_distance, left: Camera, right: Camera, method='parall
         ret_left, image_left = vid_left.read()
         ret_right, image_right = vid_right.read()
 
-        if left.is_flipped:
-            image_left = cv2.flip(image_left, 1)
-        if right.is_flipped:
-            image_right = cv2.flip(image_right, 1)
         image_now = Image3D(image_left, image_right)
     
         # Process frames
@@ -119,13 +118,6 @@ def capture_video( cameras_distance, left: Camera, right: Camera, method='parall
                 image_now.phys_x_drone, image_now.phys_y_drone = image_old.phys_x_drone, image_old.phys_y_drone
 
             image_now.calculate_mean_velocities(old_images)
-
-        if loop_status.get_predict_stat() == 1: # start prediction
-            # predictions = predict(image_now)
-            # head = 0
-            # results = np.zeros(predictions.shape)
-            predictor = BallPredictor(image_now)
-            loop_status.test_predictions()
 
         if loop_status.get_predict_stat() == 2: # test prediction
             # if predictions[head][0] > image_now.time:
@@ -140,15 +132,22 @@ def capture_video( cameras_distance, left: Camera, right: Camera, method='parall
             #     loop_status.stop_predictions()
             diff_time = image_now.time - predictor.time
             x_pred, y_pred, z_pred = predictor.get_prediction(diff_time.total_seconds())
+            print("time difference is %.4f sec" % diff_time.total_seconds())
             print("prediction coords: (%.0f,%.0f,%.0f)" % (x_pred, y_pred, z_pred))
             x_real, y_real, z_real = image_now.phys_x_balloon, image_now.phys_y_balloon, image_now.phys_z_balloon
             print("real coords: (%.0f,%.0f,%.0f)" % (x_real, y_real, z_real))
             print("diff is (%.0f,%.0f,%.0f)" % (x_real - x_pred, y_real - y_pred, z_real - z_pred))
+            print("------------------------------")
 
-
-        
+        if loop_status.get_predict_stat() == 1: # start prediction
+            # predictions = predict(image_now)
+            # head = 0
+            # results = np.zeros(predictions.shape)
+            predictor = BallPredictor(image_now)
+            loop_status.test_predictions()
+      
         text_balloon_coor = "c(%.0f,%.0f,%.0f)" % (image_now.phys_x_balloon, image_now.phys_y_balloon, image_now.phys_z_balloon)
-        text_balloon_vel = "v(%.0f,%.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon)
+        text_balloon_vel = "v(%.0f,%.0f,%.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon, image_now.velocity_z_balloon)
     
         # Display the resulting frame
         image_now.frame_left.show_image("left", text_balloon=text_balloon_coor, text_color=(240,240,240))
@@ -179,9 +178,9 @@ def pixels_to_cm(distance, num_pixels, fov_angle):
 if __name__ == "__main__":
     continue_test = True
 
-    left = MAYA_WEB
-    right = NIR_PHONE
+    left = ORI_PHONE_NIR
+    right = NIR_PHONE_NIR
 
-    distance = 75
+    distance = 50
     while continue_test:
         continue_test = capture_video(distance, left, right, method='parallel')
