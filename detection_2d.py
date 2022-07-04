@@ -29,11 +29,12 @@ def capture_video(cameras_distance, left: Camera, right: Camera, method='paralle
     vid_right = cv2.VideoCapture(right.index)
 
     frame_counter = 0
-
     image_old = None
+
     image_list = [None] * 10
 
     colors = ColorBounds()
+
     while(True):
         frame_counter = frame_counter+1
         # Capture the video frame by frame
@@ -48,6 +49,7 @@ def capture_video(cameras_distance, left: Camera, right: Camera, method='paralle
         text_balloon = None
     
         # Process frames
+
         if frame_counter>len(image_list):
             image_now.frame_left.detect_balloon(colors.ball_left, image_old.frame_left.x_balloon, image_old.frame_left.y_balloon)
             image_now.frame_right.detect_balloon(colors.ball_right, image_old.frame_right.x_balloon, image_old.frame_right.y_balloon)
@@ -85,7 +87,7 @@ def pixels_to_cm(distance, num_pixels, fov_angle):
 if __name__ == "__main__":
     web = Camera(61, 0, True)
     phone = Camera(67, 1, True)
-    distance = 50
+    distance = 82
     # Galaxy - FoV is 67 degrees
     # Lenovo - FoV is 61 degrees
     capture_video(distance, phone, web, method='parallel')
