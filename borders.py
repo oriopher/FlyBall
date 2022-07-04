@@ -78,10 +78,11 @@ class Borders:
             x3 = self.images[2].phys_x_balloon
             x2 = self.images[1].phys_x_balloon
             x1 = self.images[0].phys_x_balloon
+            image = self.images[0].frame_left.image
         
-            show_img = cv2.line(show_img, utils.phys_to_left_pix(x4, self.y_upper_border, test_2d.FLOOR_HEIGHT, left_cam), utils.phys_to_left_pix(x3, self.y_upper_border, test_2d.FLOOR_HEIGHT, left_cam), (0, 255, 0), thickness=2)
-            show_img = cv2.line(show_img, utils.phys_to_left_pix(x2, self.y_low_border, test_2d.FLOOR_HEIGHT, left_cam), utils.phys_to_left_pix(x1, self.y_low_border, test_2d.FLOOR_HEIGHT, left_cam), (0, 255, 0), thickness=2)
-            show_img = cv2.line(show_img, utils.phys_to_left_pix(x3, self.y_upper_border, test_2d.FLOOR_HEIGHT, left_cam), utils.phys_to_left_pix(x1, self.y_low_border, test_2d.FLOOR_HEIGHT, left_cam), (0, 255, 0), thickness=2)
-            show_img = cv2.line(show_img, utils.phys_to_left_pix(x4, self.y_upper_border, test_2d.FLOOR_HEIGHT, left_cam), utils.phys_to_left_pix(x2, self.y_low_border, test_2d.FLOOR_HEIGHT, left_cam), (0, 255, 0), thickness=2)
+            show_img = cv2.line(show_img, utils.phys_to_left_pix(x4, self.y_upper_border, test_2d.FLOOR_HEIGHT, image, left_cam), utils.phys_to_left_pix(x3, self.y_upper_border, test_2d.FLOOR_HEIGHT, image, left_cam), (0, 255, 0), thickness=2)
+            show_img = cv2.line(show_img, utils.phys_to_left_pix(x2, self.y_low_border, test_2d.FLOOR_HEIGHT, image, left_cam), utils.phys_to_left_pix(x1, self.y_low_border, test_2d.FLOOR_HEIGHT, image, left_cam), (0, 255, 0), thickness=2)
+            show_img = cv2.line(show_img, utils.phys_to_left_pix(x3, self.y_upper_border, test_2d.FLOOR_HEIGHT, image, left_cam), utils.phys_to_left_pix(x1, self.y_low_border, test_2d.FLOOR_HEIGHT, image, left_cam), (0, 255, 0), thickness=2)
+            show_img = cv2.line(show_img, utils.phys_to_left_pix(x4, self.y_upper_border, test_2d.FLOOR_HEIGHT, image, left_cam), utils.phys_to_left_pix(x2, self.y_low_border, test_2d.FLOOR_HEIGHT, image, left_cam), (0, 255, 0), thickness=2)
 
         return show_img
