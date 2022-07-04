@@ -1,3 +1,4 @@
+from ctypes import util
 import numpy as np
 import cv2
 from sklearn import utils
@@ -65,11 +66,17 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status
     return True
 
 
-def draw_circle(image3d: Image3D):
+def show_cams_with_circle(image3d: Image3D, cam : Camera):
     show_img = image3d.frame_left.image
     x_phys = image3d.phys_x_balloon
-    radius = utils.phys_to_left_pix(x_phys + 10) - utils.phys_to_left_pix(x_phys)
-    show_img = cv2.circle(show_img, (int(self.x_balloon), int(self.y_balloon)), radius, (0, 0, 0), 3)
+    y_phys = image3d.phys_y_balloon
+    z_phys = image3d.phys_z_balloon
+
+    radius = utils.phys_to_left_pix(x_phys + 10, y_phys, z_phys, show_img, cam) - utils.phys_to_left_pix(x_phys, y_phys, z_phys, show_img, cam)
+    coordinates = utils.phys_to_left_pix(x_phys, y_phys, z_phys, show_img, cam)
+    show_img = cv2.circle(show_img, coordinates, radius, (0, 0, 0), 3)
+    cv2.imshow("left", show_img)
+    cv2.imshow("right", image3d.frame_right.image)
 
 
 def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, colors: ColorBounds, method='parallel'):
@@ -108,13 +115,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
 
             image_now.calculate_mean_velocities(old_images)
         
-
-
-        if loop_status.tookoff and not tookoff:
-            tello.connect()
-            print("battery = ", tello.get_battery(), "%")
-            tello.takeoff()
-            tookoff = True
+        show_cams_with_circle(image_now, left)
 
         old_images[frame_counter % len(old_images)] = image_now
         image_old = image_now
