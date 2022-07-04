@@ -6,7 +6,7 @@ from image_3d import Image3D
 from loop_status import Status
 from djitellopy import Tello
 from camera import Camera
-from time import sleep
+from velocity_pot import lin_velocity_with_two_params, track_balloon
 
 ORI_WEB = Camera(51.3, 0, False)
 ORI_PHONE = Camera(66.9, 3, False)
@@ -18,138 +18,6 @@ COLORS_FILENAME = "color_bounds.txt"
 
 FLOOR_HEIGHT = -70
 DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
-
-def lin_velocity_with_acc(cm_rel, real_vel):
-    #this function assumes the drone is looking at the cameras.
-    a = 1.5
-    b = 1
-    stoping_limit = 5
-    max_vel = 30
-
-    velocity_pot = int(min(abs(a*cm_rel), max_vel))
-
-    # ball is in left side of the drone and it's not too fast
-    if cm_rel > stoping_limit and cm_rel < b * abs(real_vel) and real_vel < 0:   # If the velocity is positive we would like to stop
-        velocity = -velocity_pot
-
-    # ball is in right side of the drone and it's not too fast
-    elif cm_rel < -stoping_limit and abs(cm_rel) < b * abs(real_vel) and real_vel > 0:    # If the velocity is negative we would like to stop
-        velocity = velocity_pot
-
-    else:
-        velocity = 0
-        
-    return velocity
-
-
-def lin_velocity_with_two_params(cm_rel, real_velocity, direction):
-    #this function assumes the drone is looking at the cameras.
-    MAX_VEL = 40
-    A = 1.5
-    B = 1
-    VELOCITY_LIMIT = 20
-    STOPPING_VEL = 40
-
-    limit = B * real_velocity
-    velocity_pot = int(min(A*(abs(cm_rel) - limit), MAX_VEL))
-    
-    if (abs(cm_rel) < limit and abs(real_velocity) > VELOCITY_LIMIT):
-            velocity = -np.sign(real_velocity) * STOPPING_VEL
-    
-    else:
-        velocity = -np.sign(cm_rel) * velocity_pot
-
-    if direction == 'x':
-        return int(velocity)
-    elif direction == 'y':
-        return int(velocity)
- 
-
-def lin_velocity_z(cm_rel):
-    #this function assumes the drone is looking at the cameras.
-    MAX_VEL = 40
-    A = 2
-
-    velocity_pot = int(min(A*(abs(cm_rel)), MAX_VEL))
-    velocity = np.sign(cm_rel) * velocity_pot
-
-    return int(velocity)
-
-
-def lin_velocity_with_control(cm_rel, real_velocity):
-    #this function assumes the drone is looking at the cameras.
-    MAX_VEL = 80
-    UPPER_LIMIT = 20
-    LOWER_LIMIT = 5
-    VELOCITY_LIMIT = 20
-    STOPPING_VEL = 10
-    A_UPPER = 1.5
-    A_LOWER = 0.7
-
-    velocity_pot_upper = int(min(A_UPPER*(abs(cm_rel) - LOWER_LIMIT), MAX_VEL))
-    velocity_pot_lower = int(min(A_LOWER*(abs(cm_rel) - LOWER_LIMIT), MAX_VEL))
-    
-
-    # if drone is too fast, stop earlier
-    if UPPER_LIMIT > abs(cm_rel) > LOWER_LIMIT and abs(real_velocity) > VELOCITY_LIMIT:
-        velocity = 0
-
-    # drone is not too fast, continue in original speed
-    elif UPPER_LIMIT > abs(cm_rel) > LOWER_LIMIT:
-        # velocity = np.sign(real_velocity)*velocity_pot_lower
-        velocity = -np.sign(cm_rel)*velocity_pot_lower
-
-    # if drone is too fast and close to the baloon, set negative velocity
-    elif abs(cm_rel) < LOWER_LIMIT and abs(real_velocity) > VELOCITY_LIMIT:
-        velocity = -np.sign(real_velocity)*STOPPING_VEL
-
-    elif abs(cm_rel) > UPPER_LIMIT:
-        velocity = np.sign(cm_rel)*velocity_pot_upper
-
-    # if we got here, drone is close to the baloon with low speed
-    else:
-        velocity = 0
-
-    return int(velocity)
-
-
-def track_2d(image_3d: Image3D, tello: Tello):
-    x_cm_rel = image_3d.phys_x_balloon - image_3d.phys_x_drone
-    #print("x_ball_cm: ", image_3d.phys_x_balloon, "x_drone_cm: ", image_3d.phys_x_drone)
-    #print("x_cm_rel: ", x_cm_rel)
-
-    y_cm_rel = image_3d.phys_y_balloon - image_3d.phys_y_drone
-    #print("y_ball_cm: ", image_3d.phys_y_balloon, "y_drone_cm: ", image_3d.phys_y_drone)
-    #print("y_cm_rel: ", y_cm_rel)
-
-    z_cm_rel = DRONE_DEFAULT_HEIGHT - image_3d.phys_z_drone
-
-    left_right, for_back, up_down = 0, 0, 0
-    if tello.send_rc_control:
-        left_right = lin_velocity_with_two_params(x_cm_rel, image_3d.velocity_x_balloon, 'x')
-        for_back = lin_velocity_with_two_params(y_cm_rel, image_3d.velocity_y_balloon, 'y')
-        up_down = lin_velocity_z(z_cm_rel)
-        tello.send_rc_control(left_right, for_back, up_down, 0)
-
-
-def hit_ball(image: Image3D, tello: Tello):
-    UPPER_LIMIT = 170
-    LOWER_LIMIT = 30
-    XY_LIMIT = 20
-    A = 1.2
-    
-    x_rel = int(image.phys_x_balloon - image.phys_x_drone)
-    y_rel = int(image.phys_y_balloon - image.phys_y_drone)
-    z_rel = int(image.phys_z_balloon - image.phys_z_drone)
-
-    if abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT and LOWER_LIMIT < z_rel < UPPER_LIMIT:
-        if tello.send_rc_control:
-            tello.go_xyz_speed(int(x_rel*A), int(y_rel*A), int(z_rel*A), 100)
-            while not tello.send_rc_control:
-                continue
-            tello.go_xyz_speed(0, 0, -int(z_rel), 100)
-        return True
-    return False
 
 
 def hit_ball_rc(image_3d: Image3D, tello: Tello, loop_status: Status):
@@ -181,8 +49,7 @@ def hit_ball_rc(image_3d: Image3D, tello: Tello, loop_status: Status):
         tello.send_rc_control(left_right, for_back, up_down, 0)
 
     else:
-        track_2d(image_3d, tello)
-
+        track_balloon(image_3d, tello)
 
 
 
@@ -226,7 +93,7 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status
         tello.takeoff()
 
     elif key == ord('y'):
-        loop_status.start()
+        loop_status.start_track()
 
     # the 'q' button is set as the quitting button
     elif key == ord('q'):
@@ -262,11 +129,10 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
 
     frame_counter = 0
     image_old = None
-    tookoff = False
     continue_test = True
 
     loop_status = Status()
-    old_images = [None]*10
+    old_images = [None]*15
 
     while(True):
         frame_counter = frame_counter+1
@@ -300,10 +166,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         elif datetime.datetime.now() - datetime.timedelta(seconds = 1) > loop_status.hit_time:
             continue
         elif loop_status.start_track:
-            track_2d(image_now, tello)
-
-        # if loop_status.hit_mode() and hit_ball(image_now, tello):
-        #     loop_status.hit_mode_off()
+            track_balloon(image_now, tello)
 
         old_images[frame_counter % len(old_images)] = image_now
         image_old = image_now
