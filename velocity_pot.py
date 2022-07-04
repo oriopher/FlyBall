@@ -33,8 +33,8 @@ def track_balloon(image_3d: Image3D, tello: Tello):
 
 
 def seek_middle(image_3d: Image3D, tello: Tello, borders: Borders):
-    dest_x = borders.X_MIDDLE
-    dest_y = borders.Y_MIDDLE
+    dest_x = borders.x_middle
+    dest_y = borders.y_middle
     dest_z = DRONE_DEFAULT_HEIGHT
 
     track_3d(image_3d, tello, dest_x, dest_y, dest_z)

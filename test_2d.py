@@ -192,8 +192,8 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         text_drone_vel = "v(%.0f,%.0f)" % (image_now.velocity_x_drone, image_now.velocity_y_drone)
     
         # Display the resulting frame
-        image_now.frame_left.show_image("left", text_balloon=text_balloon_coor, text_drone=text_drone_coor, text_color=(240,240,240))
-        image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(200,50,50))
+        image_now.frame_left.show_image("left", borders, text_balloon=text_balloon_coor, text_drone=text_drone_coor, text_color=(240,240,240))
+        image_now.frame_right.show_image("right", borders, text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(200,50,50))
 
         if loop_status.tookoff and not tookoff:
             tello.connect()
