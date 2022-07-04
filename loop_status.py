@@ -1,3 +1,4 @@
+import datetime
 
 class LoopStatus:
 
@@ -6,7 +7,8 @@ class LoopStatus:
         self.start_track = False
         self.continue_loop = True
         self.hit = False
-        self.hit_height = 0
+        self.hit_coords = 0
+        self.hit_time = None
 
     def takeoff(self):
         self.tookoff = True
@@ -21,13 +23,16 @@ class LoopStatus:
     def reset(self):
         self.__init__()
 
-    def hit_mode_on(self, height):
+    def hit_mode_on(self, coords):
         if self.start_track:
             self.hit = True
-            self.hit_height = height
+            self.hit_coords = coords
     
     def hit_mode_off(self):
         self.hit = False
+
+    def set_hit_time(self):
+        self.hit_time = datetime.datetime.now()
 
     def hit_mode(self):
         return self.hit
