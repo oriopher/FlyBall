@@ -151,7 +151,7 @@ def hit_ball(image: Image3D, tello: Tello):
     return False
 
 
-def hit_ball_rc(image_3d: Image3D, tello: Tello, loop_status: Status, hitting: bool=False):
+def hit_ball_rc(image_3d: Image3D, tello: Tello, loop_status: Status):
     UPPER_LIMIT = 200
     LOWER_LIMIT = 0
     XY_LIMIT = 10
@@ -164,34 +164,31 @@ def hit_ball_rc(image_3d: Image3D, tello: Tello, loop_status: Status, hitting: b
 
     if abs(x_rel) < XY_LIMIT \
             and abs(y_rel) < XY_LIMIT \
-            and LOWER_LIMIT < z_rel < UPPER_LIMIT:
-        if hitting:
-            if z_rel < Z_LIMIT:
-                left_right, for_back = 0, 0
-                up_down = -100
-                while not tello.send_rc_control:
-                    continue
-                tello.send_rc_control(left_right, for_back, up_down, 0)
-
-                sleep(1)
-                up_down = 0
-                while not tello.send_rc_control:
-                    continue
-                tello.send_rc_control(left_right, for_back, up_down, 0)
-                loop_status.hit_mode_off()
-                return
-        else:
-            if abs(image_3d.velocity_x_drone) < VEL_LIMIT and abs(image_3d.velocity_y_drone) < VEL_LIMIT:
-                hitting = True
-        if hitting:
-            up_down = 100
-            left_right = lin_velocity_with_two_params(x_rel, image_3d.velocity_x_balloon, 'x')
-            for_back = lin_velocity_with_two_params(y_rel, image_3d.velocity_y_balloon, 'y')
+            and LOWER_LIMIT < z_rel < UPPER_LIMIT \
+            and abs(image_3d.velocity_x_drone) < VEL_LIMIT \
+            and abs(image_3d.velocity_y_drone) < VEL_LIMIT:
+        if z_rel < Z_LIMIT:
+            left_right, for_back = 0, 0
+            up_down = -100
             while not tello.send_rc_control:
                 continue
             tello.send_rc_control(left_right, for_back, up_down, 0)
-        else:
-            track_2d(image_3d, tello, int(loop_status.hit_height - 100))
+
+            sleep(1)
+            up_down = 0
+            while not tello.send_rc_control:
+                continue
+            tello.send_rc_control(left_right, for_back, up_down, 0)
+            loop_status.hit_mode_off()
+            return
+
+        left_right = lin_velocity_with_two_params(x_rel, image_3d.velocity_x_balloon, 'x')
+        for_back = lin_velocity_with_two_params(y_rel, image_3d.velocity_y_balloon, 'y')
+        up_down = 100
+        while not tello.send_rc_control:
+            continue
+        tello.send_rc_control(left_right, for_back, up_down, 0)
+
     else:
         track_2d(image_3d, tello, int(loop_status.hit_height - 100))
 
