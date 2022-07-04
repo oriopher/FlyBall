@@ -1,13 +1,10 @@
-from ctypes import util
 import numpy as np
 import cv2
-from sklearn import utils
 from color_bounds import ColorBounds
 from image_3d import Image3D
 from loop_status import Status
 from djitellopy import Tello
 from camera import Camera
-from time import sleep
 import utils
 
 ORI_WEB = Camera(51.3, 0, False)
@@ -17,23 +14,6 @@ MAYA_WEB = Camera(61, 0, True)
 EFRAT_WEB = Camera(61, 0, True)
 
 COLORS_FILENAME = "color_bounds.txt"
-
-
-def track_2d(image_3d: Image3D, tello: Tello):
-    x_cm_rel = image_3d.phys_x_balloon - image_3d.phys_x_drone
-    #print("x_ball_cm: ", image_3d.phys_x_balloon, "x_drone_cm: ", image_3d.phys_x_drone)
-    #print("x_cm_rel: ", x_cm_rel)
-
-    y_cm_rel = image_3d.phys_y_balloon - image_3d.phys_y_drone
-    #print("y_ball_cm: ", image_3d.phys_y_balloon, "y_drone_cm: ", image_3d.phys_y_drone)
-    #print("y_cm_rel: ", y_cm_rel)
-
-    left_right, for_back, up_down = 0, 0, 0
-    if tello.send_rc_control:
-        left_right = lin_velocity_with_two_params(x_cm_rel, image_3d.velocity_x_balloon, 'x')
-        for_back = lin_velocity_with_two_params(y_cm_rel, image_3d.velocity_y_balloon, 'y')
-        tello.send_rc_control(left_right, for_back, up_down, 0)
-
 
 def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status, tello: Tello) -> bool:
     key = cv2.waitKey(1) & 0xFF
@@ -85,7 +65,6 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
 
     frame_counter = 0
     image_old = None
-    tookoff = False
     continue_test = True
 
     loop_status = Status()
@@ -96,11 +75,6 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         # Capture the video frame by frame
         ret_left, image_left = vid_left.read()
         ret_right, image_right = vid_right.read()
-
-        if left.is_flipped:
-            image_left = cv2.flip(image_left, 1)
-        if right.is_flipped:
-            image_right = cv2.flip(image_right, 1)
         image_now = Image3D(image_left, image_right)
         
     
