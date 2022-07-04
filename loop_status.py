@@ -1,6 +1,5 @@
 import datetime
 
-from enum import Enum
 class LoopStatus:
 
     def __init__(self):

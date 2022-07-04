@@ -32,4 +32,4 @@ class BallPredictor:
         x = self.x_0 + d_xy * np.cos(self.theta)
         y = self.y_0 + d_xy * np.sin(self.theta)
 
-        return x, y, z
+        return x, y, z # cm

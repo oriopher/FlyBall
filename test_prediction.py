@@ -6,7 +6,6 @@ from image_3d import Image3D
 from loop_status import Status
 from djitellopy import Tello
 from camera import Camera
-from time import sleep
 from prediction import BallPredictor
 
 ORI_WEB = Camera(51.3, 0, False)
@@ -18,7 +17,7 @@ EFRAT_WEB = Camera(61, 0, True)
 COLORS_FILENAME = "color_bounds.txt"
 
 
-def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status, tello: Tello) -> bool:
+def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status) -> bool:
     key = cv2.waitKey(1) & 0xFF
 
     # the 'v' button is set as the detect color of balloon in the left cam
@@ -32,9 +31,6 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status
         lower, upper = image_3d.frame_right.detect_color()
         colors.ball_right.change(lower, upper)
         print("color bounds changed")
-
-    elif key == ord('y'):
-        loop_status.start()
 
     # the 'q' button is set as the quitting button
     elif key == ord('q'):
@@ -53,44 +49,51 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status
     elif key == ord('z'):
         loop_status.start_predictions()
 
-    # the 'k' button is set as the stop predictions
+    # the 'x' button is set as the test predictions
     elif key == ord('x'):
+        loop_status.test_predictions()
+
+    # the 'c' button is set as the test predictions
+    elif key == ord('c'):
         loop_status.stop_predictions()
 
     return True
 
 
-def predict(image : Image3D):
-    NUM_PREDICTIONS = 101
-    LATEST_TIME = 1 # in seconds, relative to image.time.
+def predict(image_3d : Image3D):
+    NUM_PREDICTIONS = 61
+    LATEST_TIME = 2 # in seconds, relative to image.time.
 
-    predictions = np.zeros((NUM_PREDICTIONS, 4)) # every row is a prediction with (time, x, y, z)
-    predictor = BallPredictor(image)
-    time_interval = LATEST_TIME / (len(predictions) - 1)   
-    for i in range(len(predictions)):
-        predictions[i][0] = image.time + time_interval * i 
-        predictions[i][1], predictions[i][2], predictions[i][3] = predictor.get_prediction(time_interval * i )
+    # times = np.linspace(0, LATEST_TIME, NUM_PREDICTIONS)
+    # predictions = np.zeros((NUM_PREDICTIONS, 4)) # every row is a prediction with (time, x, y, z)
+    predictor = BallPredictor(image_3d)
+    # for i in range(len(predictions)):
+    #     predictions[i][0] = predictor.time + datetime.timedelta(seconds = times[i])
+    #     predictions[i][1], predictions[i][2], predictions[i][3] = predictor.get_prediction(times[i])
     
-    return predictions
+    # return predictions
+
+    return predictor
 
 
 def print_prediction_test(predictions, results):
-    diff = np.zeros(np.shape(predictions))
     diff = results - predictions
     printable = np.concatenate((predictions, results, diff), axis = 1)
-    title = np.array(["pred time", "x", "y", "z", "res time", "x", "y", "z", "diff time", "x", "y", "z"])
+    title = np.array(["pred time", "x", "y", "z", "res time", "x", "y", "z", "diff time", "diff x", "diff y", "diff z"])
     print(np.concatenate((title, printable)))
 
 
-def capture_video( cameras_distance, left: Camera, right: Camera, colors: ColorBounds, method='parallel'):
+def capture_video( cameras_distance, left: Camera, right: Camera, method='parallel'):
     vid_left = cv2.VideoCapture(left.index)
     vid_right = cv2.VideoCapture(right.index)
 
     frame_counter = 0
     image_old = None
     continue_test = True
+    predictor = None
 
     loop_status = Status()
+    colors = ColorBounds()
     old_images = [None]*10
 
 
@@ -118,22 +121,30 @@ def capture_video( cameras_distance, left: Camera, right: Camera, colors: ColorB
             image_now.calculate_mean_velocities(old_images)
 
         if loop_status.get_predict_stat() == 1: # start prediction
-            predictions = predict(image_now)
-            head = 0
-            results = np.zeros(predictions.shape)
+            # predictions = predict(image_now)
+            # head = 0
+            # results = np.zeros(predictions.shape)
+            predictor = BallPredictor(image_now)
             loop_status.test_predictions()
 
         if loop_status.get_predict_stat() == 2: # test prediction
-            if predictions[head][0] > image_now.time:
-                if (abs(head[0] - image_now.time) < abs(head[0] - image_old.time)):
-                    results[head] = image_now.time, image_now.phys_x_balloon, image_now.phys_y_balloon, image_now.phys_z_balloon
-                else:
-                    results[head] = image_old.time, image_old.phys_x_balloon, image_old.phys_y_balloon, image_old.phys_z_balloon
-                head += 1
+            # if predictions[head][0] > image_now.time:
+            #     if (abs(head[0] - image_now.time) < abs(head[0] - image_old.time)):
+            #         results[head] = image_now.time, image_now.phys_x_balloon, image_now.phys_y_balloon, image_now.phys_z_balloon
+            #     else:
+            #         results[head] = image_old.time, image_old.phys_x_balloon, image_old.phys_y_balloon, image_old.phys_z_balloon
+            #     head += 1
 
-            if head == len(predictions) - 1:
-                print_prediction_test(predictions, results)
-                loop_status.stop_predictions()
+            # if head == len(predictions) - 1:
+            #     print_prediction_test(predictions, results)
+            #     loop_status.stop_predictions()
+            diff_time = image_now.time - predictor.time
+            x_pred, y_pred, z_pred = predictor.get_prediction(diff_time.total_seconds())
+            print("prediction coords: (%.0f,%.0f,%.0f)" % (x_pred, y_pred, z_pred))
+            x_real, y_real, z_real = image_now.phys_x_balloon, image_now.phys_y_balloon, image_now.phys_z_balloon
+            print("real coords: (%.0f,%.0f,%.0f)" % (x_real, y_real, z_real))
+            print("diff is (%.0f,%.0f,%.0f)" % (x_real - x_pred, y_real - y_pred, z_real - z_pred))
+
 
         
         text_balloon_coor = "c(%.0f,%.0f,%.0f)" % (image_now.phys_x_balloon, image_now.phys_y_balloon, image_now.phys_z_balloon)
@@ -143,13 +154,10 @@ def capture_video( cameras_distance, left: Camera, right: Camera, colors: ColorB
         image_now.frame_left.show_image("left", text_balloon=text_balloon_coor, text_color=(240,240,240))
         image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_color=(200,50,50))
 
-        
-
-
         old_images[frame_counter % len(old_images)] = image_now
         image_old = image_now
    
-        continue_test = interactive_loop(image_now, colors, loop_status, tello)
+        continue_test = interactive_loop(image_now, colors, loop_status)
         if not loop_status.continue_loop:
             break
 
@@ -160,7 +168,7 @@ def capture_video( cameras_distance, left: Camera, right: Camera, colors: ColorB
     # Destroy all the windows
     cv2.destroyAllWindows()
 
-    return continue_test, colors
+    return continue_test
 
 
 # return how much cm in one pixel.
@@ -169,8 +177,6 @@ def pixels_to_cm(distance, num_pixels, fov_angle):
 
 
 if __name__ == "__main__":
-
-    colors = ColorBounds()
     continue_test = True
 
     left = MAYA_WEB
@@ -178,4 +184,4 @@ if __name__ == "__main__":
 
     distance = 75
     while continue_test:
-        continue_test, colors = capture_video(distance, left, right, colors, method='parallel')
+        continue_test = capture_video(distance, left, right, method='parallel')
