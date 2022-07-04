@@ -1,6 +1,9 @@
+from turtle import left
 import numpy as np
 from borders import Borders
 import cv2
+
+from camera import Camera
 
 
 class Frame:
@@ -80,7 +83,7 @@ class Frame:
                      min(255, ball_color[2] + Frame.V_RANGE))
         return [min_color, max_color]
 
-    def show_image(self, window_name, borders: Borders, detection_sign=True, text_balloon=None, text_drone=None, text_color=(250, 250, 250)):
+    def show_image(self, window_name, borders: Borders, left_cam: Camera, detection_sign=True, text_balloon=None, text_drone=None, text_color=(250, 250, 250)):
         show_img = self.image
         if detection_sign and self.x_balloon != 0 and self.y_balloon != 0:
             show_img = cv2.circle(show_img, (int(self.x_balloon), int(self.y_balloon)), 15, (0, 0, 0), 3)
@@ -93,6 +96,6 @@ class Frame:
                                        cv2.FONT_HERSHEY_DUPLEX, 1, text_color, 2, cv2.LINE_AA)
             show_img = cv2.circle(show_img, (int(self.x_drone), int(self.y_drone)), 15, (0, 0, 0), 3)
         
-        show_img = borders.draw_borders(show_img)
+        show_img = borders.draw_borders(show_img, left_cam)
         
         cv2.imshow(window_name, show_img)

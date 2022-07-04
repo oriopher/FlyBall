@@ -1,4 +1,4 @@
-from turtle import left
+import os
 from image_3d import Image3D
 import test_2d
 import camera
@@ -6,7 +6,6 @@ import utils
 import cv2
 
 class Borders:
-
     def __init__(self):
         self.index = 0
         self.images = [None] * 4       # (x_4, y_4) ################################ (x_3, y_3)
@@ -29,7 +28,8 @@ class Borders:
         if self.index > 4:
             self.calc_borders()
             self.set_borders = True
- 
+
+
     def calc_borders(self):
         self.m_left, self.b_left = self.calc_linear_eq(self.images[3], self.images[1])
         self.m_right, self.b_right = self.calc_linear_eq(self.images[2], self.images[0])            
@@ -86,3 +86,32 @@ class Borders:
             show_img = cv2.line(show_img, utils.phys_to_left_pix(x4, self.y_upper_border, test_2d.FLOOR_HEIGHT, image, left_cam), utils.phys_to_left_pix(x2, self.y_low_border, test_2d.FLOOR_HEIGHT, image, left_cam), (0, 255, 0), thickness=2)
 
         return show_img
+
+
+    def write_borders(self, filename):
+        file_text = str(self.m_left) + str(self.b_left) + str(self.m_right) + str(self.b_right) + str(self.y_low_border) + str(self.y_upper_border) + str(self.y_middle) + str(self.x_middle)
+
+        if os.path.exists(filename):
+            os.remove(filename)
+        with open(filename, 'w') as f:
+            f.write(file_text)
+            print("Borders Saved")
+
+
+    def read_borders(self, filename):
+        if not os.path.exists(filename):
+            print("ERROR: borders file does not exist")
+            return
+        
+        with open(filename, 'r') as f:
+            lines = f.readlines()
+
+        self.m_left = float(lines[0].split(','))
+        self.b_left = float(lines[1].split(','))
+        self.m_right = float(lines[2].split(','))
+        self.b_right = float(lines[3].split(','))
+        self.y_low_border = float(lines[4].split(','))
+        self.y_upper_border = float(lines[5].split(','))
+        self.y_middle = float(lines[6].split(','))
+        self.x_middle = float(lines[7].split(','))
+        print("Borders Loaded")    

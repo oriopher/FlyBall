@@ -146,6 +146,14 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status
         borders.set_image(image_3d)
         print("saved the " + str(borders.index + 1) + " coordinate")
 
+    # the 'b' button is set as the save borders to file
+    elif key == ord('b'):
+        borders.write_borders('borders.txt')
+
+    # the 'r' button is set as the read colors from file
+    elif key == ord('r'):
+        borders.read_borders('borders.txt')    
+
     return True
 
 
@@ -192,8 +200,8 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         text_drone_vel = "v(%.0f,%.0f)" % (image_now.velocity_x_drone, image_now.velocity_y_drone)
     
         # Display the resulting frame
-        image_now.frame_left.show_image("left", borders, text_balloon=text_balloon_coor, text_drone=text_drone_coor, text_color=(240,240,240))
-        image_now.frame_right.show_image("right", borders, text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(200,50,50))
+        image_now.frame_left.show_image("left", borders, left, text_balloon=text_balloon_coor, text_drone=text_drone_coor, text_color=(240,240,240))
+        image_now.frame_right.show_image("right", borders, left, text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(200,50,50))
 
         if loop_status.tookoff and not tookoff:
             tello.connect()
