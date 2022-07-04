@@ -1,5 +1,8 @@
 import datetime
 
+from loop_state_machine import ON_GROUND
+
+
 class LoopStatus:
 
     def __init__(self):
@@ -9,6 +12,7 @@ class LoopStatus:
         self.hit = False
         self.hit_coords = 0
         self.hit_time = None
+        self.state = ON_GROUND
 
     def takeoff(self):
         self.tookoff = True

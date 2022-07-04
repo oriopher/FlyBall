@@ -7,6 +7,9 @@ from loop_status import Status
 from djitellopy import Tello
 from camera import Camera
 from velocity_pot import lin_velocity_with_two_params, track_balloon
+from loop_state_machine import State, ON_GROUND
+
+
 
 ORI_WEB = Camera(51.3, 0, False)
 ORI_PHONE = Camera(66.9, 3, False)
@@ -108,6 +111,7 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status
     # the 'l' button is set as the landing button
     elif key == ord('l'):
         loop_status.stop_loop()
+        loop_status.state = ON_GROUND()
 
     # the 'h' button is set as the hitting balloon method
     elif key == ord("h"):
@@ -140,6 +144,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
     old_images = [None]*15
 
     while(True):
+        state = loop_status.state
         frame_counter = frame_counter+1
         # Capture the video frame by frame
         ret_left, image_left = vid_left.read()
@@ -166,12 +171,17 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         image_now.frame_left.show_image("left", text_balloon=text_balloon_coor, text_drone=text_drone_coor, text_color=(150,250,200))
         image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
 
-        if loop_status.hit_mode():
-            hit_ball_rc(image_now, tello, loop_status)
-        elif datetime.datetime.now() - datetime.timedelta(seconds = 1) > loop_status.hit_time:
-            continue
-        elif loop_status.start_track:
-            track_balloon(image_now, tello)
+        state.run(**{'image_3d': image_now, 'loop_status': loop_status, 'tello': tello})
+        if state.to_transition(**{'image_3d': image_now, 'loop_status': loop_status, 'tello': tello}):
+            loop_status.state = state.next
+
+
+        # if loop_status.hit_mode():
+        #     hit_ball_rc(image_now, tello, loop_status)
+        # elif datetime.datetime.now() - datetime.timedelta(seconds = 1) > loop_status.hit_time:
+        #     continue
+        # elif loop_status.start_track:
+        #     track_balloon(image_now, tello)
 
         old_images[frame_counter % len(old_images)] = image_now
         image_old = image_now
