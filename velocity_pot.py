@@ -88,8 +88,8 @@ def lin_velocity_with_two_params(cm_rel, real_velocity, direction):
 
 def lin_velocity_z(cm_rel):
     #this function assumes the drone is looking at the cameras.
-    MAX_VEL = 20
-    A = 1.5
+    MAX_VEL = 40
+    A = 2
 
     velocity_pot = int(min(A*(abs(cm_rel)), MAX_VEL))
     velocity = np.sign(cm_rel) * velocity_pot
