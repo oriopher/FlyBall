@@ -20,10 +20,10 @@ NIR_PHONE_NIR = Camera(67, 2, False)
 
 COLORS_FILENAME = "color_bounds.txt"
 
-def image_with_circle(image3d: Image3D, cam : Camera, show_img, x_phys, y_phys, z_phys):
+def image_with_circle(cam : Camera, show_img, x_phys, y_phys, z_phys, color = (240, 240, 240)):
     radius = utils.phys_to_left_pix(x_phys + 11, y_phys, z_phys, show_img, cam)[0] - utils.phys_to_left_pix(x_phys, y_phys, z_phys, show_img, cam)[0]
     coordinates = utils.phys_to_left_pix(x_phys, y_phys, z_phys, show_img, cam)
-    show_img = cv2.circle(show_img, coordinates, radius, (255, 0, 0), 3)
+    show_img = cv2.circle(show_img, coordinates, radius, color, 3)
     # print("radius: ", radius)
     # print("coordinates: ", coordinates)
     # cv2.imshow("left", show_img)
@@ -157,7 +157,7 @@ def capture_video( cameras_distance, left: Camera, right: Camera, method='parall
             image_now.frame_left.show_image("left", text_balloon=text_balloon_coor, text_color=(240,240,240))
         else:
             left_show_img = image_now.frame_left.image_to_show(text_balloon=text_balloon_coor, text_color=(240,240,240))
-            left_show_img = image_with_circle(image_now, left, left_show_img, x_pred, y_pred, z_pred)
+            left_show_img = image_with_circle(left, left_show_img, x_pred, y_pred, z_pred)
             cv2.imshow("left", left_show_img)
         image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_color=(200,50,50))
 
@@ -180,7 +180,8 @@ def capture_video( cameras_distance, left: Camera, right: Camera, method='parall
     # Destroy all the windows
     cv2.destroyAllWindows()
 
-    return continue_test, prediction_table
+    shape = image_left.shape
+    return continue_test, prediction_table, shape
 
 
 # return how much cm in one pixel.
@@ -196,7 +197,7 @@ if __name__ == "__main__":
 
     distance = 54
     while continue_test:
-        continue_test, prediction_table = capture_video(distance, left, right, method='parallel')
+        continue_test, prediction_table, shape = capture_video(distance, left, right, method='parallel')
 
     for prediction in prediction_table:
         print("time difference is %.4f sec" % prediction[0])
@@ -205,4 +206,11 @@ if __name__ == "__main__":
         print("diff is (%.0f,%.0f,%.0f)" % (prediction[4] - prediction[1], prediction[5] - prediction[2], prediction[6]-prediction[3]))
         print("------------------------------")
 
-    blank_image = np.zeros((height,width,3), np.uint8)
+
+    pred_image = np.zeros((shape[0],shape[1],shape[2]), np.uint8)
+    for prediction in prediction_table[:20]:
+        pred_image = image_with_circle(left, pred_image, prediction[1], prediction[2], prediction[3], color=(240,50,240))
+        pred_image = image_with_circle(left, pred_image, prediction[4], prediction[5], prediction[6], color=(50,240,240))
+
+    cv2.imshow("prediction", pred_image)
+    cv2.waitKey(0)
