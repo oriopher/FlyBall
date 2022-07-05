@@ -110,7 +110,6 @@ def capture_video( cameras_distance, left: Camera, right: Camera, method='parall
     colors = ColorBounds()
     old_images = [None]*10
 
-
     while(True):
         frame_counter = frame_counter+1
         # Capture the video frame by frame
@@ -149,13 +148,6 @@ def capture_video( cameras_distance, left: Camera, right: Camera, method='parall
             print("real coords: (%.0f,%.0f,%.0f)" % (x_real, y_real, z_real))
             print("diff is (%.0f,%.0f,%.0f)" % (x_real - x_pred, y_real - y_pred, z_real - z_pred))
             print("------------------------------")
-
-        if loop_status.get_predict_stat() == 1: # start prediction
-            # predictions = predict(image_now)
-            # head = 0
-            # results = np.zeros(predictions.shape)
-            predictor = BallPredictor(image_now)
-            loop_status.test_predictions()
       
         text_balloon_coor = "c(%.0f,%.0f,%.0f)" % (image_now.phys_x_balloon, image_now.phys_y_balloon, image_now.phys_z_balloon)
         text_balloon_vel = "v(%.0f,%.0f,%.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon, image_now.velocity_z_balloon)
@@ -168,6 +160,13 @@ def capture_video( cameras_distance, left: Camera, right: Camera, method='parall
             left_show_img = image_with_circle(image_now, left, left_show_img, x_pred, y_pred, z_pred)
             cv2.imshow("left", left_show_img)
         image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_color=(200,50,50))
+
+        if loop_status.get_predict_stat() == 1: # start prediction
+            # predictions = predict(image_now)
+            # head = 0
+            # results = np.zeros(predictions.shape)
+            predictor = BallPredictor(image_now)
+            loop_status.test_predictions()
 
         old_images[frame_counter % len(old_images)] = image_now
         image_old = image_now

@@ -22,12 +22,12 @@ class BallPredictor:
         g = 9.7803 # Gravitational constatnt
         rho = 1.225 # Air density kg/m^3
         air_mass = 4/3 * np.pi * r**3 * rho 
-        m = 0.00146 # Balloon mass.
+        m = air_mass + 0.00146 # Balloon mass.
         C_d = 0.47 # Dimensionless drag constant
         A = np.pi * r**2  # Balloon cross setion in m^2
         V_t = np.sqrt(2 * m * g / (C_d * A * rho)) # Terminal velocity
 
-        v_z = V_t * (self.v_z_0 - V_t * np.tan(time * g / V_t)) / (self.v_z_0 + V_t * np.tan(time * g / V_t))
+        v_z = V_t * (self.v_z_0 - V_t * np.tan(time * g / V_t)) / (V_t + self.v_z_0 * np.tan(time * g / V_t))
         z = self.z_0 + V_t**2 / (2 * g) * np.log( (self.v_z_0**2 + V_t**2) / (v_z**2 + V_t**2) )
         v_xy_0  = np.sqrt( self.v_x_0**2 + self.v_y_0**2 )
         # v_xy = V_t**2 * v_xy_0 / (V_t**2 + g * v_xy_0 * time)
