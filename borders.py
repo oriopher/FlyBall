@@ -3,6 +3,10 @@ from image_3d import Image3D
 from camera import Camera
 from utils import phys_to_left_pix
 import cv2
+import numpy as np
+
+FLOOR_HEIGHT = -50
+DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
 
 class Borders:
     def __init__(self):
@@ -15,7 +19,8 @@ class Borders:
         self.y_upper_border = 0
         self.x_middle = 0
         self.y_middle = 0
-        self.coordinates = [[0, 0], [0, 0], [0, 0], [0, 0]]
+        self.coordinates = np.zeros((4,2))
+        self.pixels_coordinates = np.zeros((4,2), dtype=int)
         self.fov = 0
         self.x_n_pix = 0
         self.z_n_pix = 0
@@ -25,7 +30,7 @@ class Borders:
     # saving the image in the array
     def set_image(self, image_3d: Image3D, left_cam: Camera):
         if (self.index <= 3):
-            self.coordinates[self.index] = [image_3d.phys_x_balloon, image_3d.phys_y_balloon]
+            self.coordinates[self.index] = np.array([image_3d.phys_x_balloon, image_3d.phys_y_balloon])
             self.index += 1
         if self.index == 4:
             self.fov = left_cam.fov
@@ -45,6 +50,11 @@ class Borders:
         x_left = (self.y_middle - self.b_left) / self.m_left
         x_right = (self.y_middle - self.b_right) / self.m_right
         self.x_middle = (x_right + x_left) / 2
+
+        self.pixels_coordinates[3][0], self.pixels_coordinates[3][1] = phys_to_left_pix(self.coordinates[3][0], self.y_upper_border, FLOOR_HEIGHT, self.x_n_pix, self.z_n_pix, self.fov)        
+        self.pixels_coordinates[2][0], self.pixels_coordinates[2][1] = phys_to_left_pix(self.coordinates[2][0], self.y_upper_border, FLOOR_HEIGHT, self.x_n_pix, self.z_n_pix, self.fov)        
+        self.pixels_coordinates[1][0], self.pixels_coordinates[1][1] = phys_to_left_pix(self.coordinates[1][0], self.y_low_border, FLOOR_HEIGHT, self.x_n_pix, self.z_n_pix, self.fov)        
+        self.pixels_coordinates[0][0], self.pixels_coordinates[0][1] = phys_to_left_pix(self.coordinates[0][0], self.y_low_border, FLOOR_HEIGHT, self.x_n_pix, self.z_n_pix, self.fov)        
 
 
     def calc_linear_eq(self, coor1, coor2):
@@ -72,12 +82,12 @@ class Borders:
         return True   
 
     
-    def draw_borders(self, show_img, left_cam: Camera):
+    def draw_borders(self, show_img):
         if self.set_borders:
-            show_img = cv2.line(show_img, phys_to_left_pix(self.coordinates[3][0], self.y_upper_border, -10, self.x_n_pix, self.z_n_pix, self.fov), phys_to_left_pix(self.coordinates[2][0], self.y_upper_border, -10, self.x_n_pix, self.z_n_pix, self.fov), (0, 255, 0), thickness=2)
-            show_img = cv2.line(show_img, phys_to_left_pix(self.coordinates[1][0], self.y_low_border, -10, self.x_n_pix, self.z_n_pix, self.fov), phys_to_left_pix(self.coordinates[0][0], self.y_low_border, -10, self.x_n_pix, self.z_n_pix, self.fov), (0, 255, 0), thickness=2)
-            show_img = cv2.line(show_img, phys_to_left_pix(self.coordinates[2][0], self.y_upper_border, -10, self.x_n_pix, self.z_n_pix, self.fov), phys_to_left_pix(self.coordinates[0][0], self.y_low_border, -10, self.x_n_pix, self.z_n_pix, self.fov), (0, 255, 0), thickness=2)
-            show_img = cv2.line(show_img, phys_to_left_pix(self.coordinates[3][0], self.y_upper_border, -10, self.x_n_pix, self.z_n_pix, self.fov), phys_to_left_pix(self.coordinates[1][0], self.y_low_border, -10, self.x_n_pix, self.z_n_pix, self.fov), (0, 255, 0), thickness=2)
+            show_img = cv2.line(show_img, (self.pixels_coordinates[0][0], self.pixels_coordinates[0][1]), (self.pixels_coordinates[1][0], self.pixels_coordinates[1][1]), (0, 255, 0), thickness=2)
+            show_img = cv2.line(show_img, (self.pixels_coordinates[1][0], self.pixels_coordinates[1][1]), (self.pixels_coordinates[3][0], self.pixels_coordinates[3][1]), (0, 255, 0), thickness=2)
+            show_img = cv2.line(show_img, (self.pixels_coordinates[3][0], self.pixels_coordinates[3][1]), (self.pixels_coordinates[2][0], self.pixels_coordinates[2][1]), (0, 255, 0), thickness=2)
+            show_img = cv2.line(show_img, (self.pixels_coordinates[2][0], self.pixels_coordinates[2][1]), (self.pixels_coordinates[0][0], self.pixels_coordinates[0][1]), (0, 255, 0), thickness=2)
 
         return show_img
 
@@ -85,7 +95,7 @@ class Borders:
         return "%.2f,%.2f\n" % (coordinate[0], coordinate[1])
 
     def img_info_str(self):
-        return "%.0f,%.0f,%.0f\n" % (self.fov, self.x_n_pix, self.z_n_pix)        
+        return "%.3f,%.0f,%.0f\n" % (self.fov, self.x_n_pix, self.z_n_pix)        
 
     def write_borders(self, filename):
         file_text = self.coordinate_str(self.coordinates[0]) + self.coordinate_str(self.coordinates[1]) \
@@ -109,7 +119,7 @@ class Borders:
 
     def read_img_info(self, line):
         line_s = line.split(',')
-        self.fov = int(line_s[0])
+        self.fov = float(line_s[0])
         self.x_n_pix = int(line_s[1])
         self.z_n_pix = int(line_s[2])
 

@@ -14,7 +14,10 @@ ORI_PHONE = Camera(66.9, 3, False)
 NIR_PHONE = Camera(67, 4, False)
 MAYA_WEB = Camera(61, 0, True)
 EFRAT_WEB = Camera(61, 2, False)
-EFRAT_PHONE = Camera(61, 3, False)
+EFRAT_PHONE = Camera(64, 3, False)
+
+NIR_PHONE_NIR = Camera(67, 0, False)
+EFRAT_PHONE_NIR = Camera(64, 2, False)
 
 COLORS_FILENAME = "color_bounds.txt"
 
@@ -130,7 +133,7 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, l
     # the 'j' button is set as the saving the borders. can save 4 coordinates
     elif key == ord('j'):
         borders.set_image(image_3d, left_cam)
-        print("saved the " + str(borders.index + 1) + " coordinate")
+        print("saved the " + str(borders.index) + " coordinate")
         if borders.index == 4:
             borders.write_borders('borders.txt')
 
@@ -180,39 +183,33 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         text_drone_vel = "v(%.0f,%.0f)" % (image_now.velocity_x_drone, image_now.velocity_y_drone)
     
         # Display the resulting frame
-        image_now.frame_left.show_image("left", borders, left, text_balloon=text_balloon_coor, text_drone=text_drone_coor, text_color=(240,240,240))
-        image_now.frame_right.show_image("right", borders, left, text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(200,50,50))
-
-        if loop_status.tookoff and not tookoff:
-            tello.connect()
-            print("battery = ", tello.get_battery(), "%")
-            tello.takeoff()
-            tookoff = True
+        left_img = image_now.frame_left.image_to_show("left", text_balloon=text_balloon_coor, text_drone=text_drone_coor, text_color=(150,250,200))
+        left_img = borders.draw_borders(left_img)
+        cv2.imshow("left", left_img)
+        image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
 
         # balloon is out of borders. drone is seeking the middle until the balloon is back
-        if not borders.balloon_in_borders(image_now):
-            loop_status.stop_track()
-            seek_middle(image_now, tello, borders)
+        # if loop_status.start and not borders.balloon_in_borders(image_now):
+        #     loop_status.stop_track()
+        #     seek_middle(image_now, tello, borders)
 
         # balloon returned to the play area, we can continue to play
         #if borders.in_borders(image_now) and not loop_status.start_track:
         #   loop_status.out_of_borders = False
         #   loop_status.start_track = True
 
-        image_now.frame_left.show_image("left", borders, left, text_balloon=text_balloon_coor, text_drone=text_drone_coor, text_color=(150,250,200))
-        image_now.frame_right.show_image("right", borders, left, text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
 
         if loop_status.hit_mode():
             hit_ball_rc(image_now, tello, loop_status)
     
         elif loop_status.hit_time and datetime.now() - timedelta(seconds = 1) > loop_status.hit_time:
             continue
-        elif loop_status.start_track:
+        elif loop_status.start:
             track_balloon(image_now, tello)
 
         old_images[frame_counter % len(old_images)] = image_now
         image_old = image_now
-   
+    
         continue_test = interactive_loop(image_now, colors, borders, loop_status, left, tello)
         if not loop_status.continue_loop:
             break
@@ -237,9 +234,9 @@ if __name__ == "__main__":
     borders = Borders()
     continue_test = True
 
-    left = EFRAT_PHONE
-    right = EFRAT_WEB
+    left = EFRAT_PHONE_NIR
+    right = NIR_PHONE_NIR
 
-    distance = 63
+    distance = 53.5
     while continue_test:
         continue_test, colors = capture_video(tello, distance, left, right, colors, borders, method='parallel')

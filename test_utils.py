@@ -17,6 +17,8 @@ EFRAT_WEB = Camera(61, 0, True)
 
 COLORS_FILENAME = "color_bounds.txt"
 
+NIR_PHONE_NIR = Camera(67, 0, False)
+EFRAT_PHONE_NIR = Camera(64, 2, False)
 
 def track_2d(image_3d: Image3D, tello: Tello):
     x_cm_rel = image_3d.phys_x_balloon - image_3d.phys_x_drone
@@ -143,9 +145,9 @@ if __name__ == "__main__":
     colors = ColorBounds()
     continue_test = True
 
-    left = MAYA_WEB
-    right = NIR_PHONE
+    left = EFRAT_PHONE_NIR
+    right = NIR_PHONE_NIR
 
-    distance = 75
+    distance = 53
     while continue_test:
         continue_test, colors = capture_video(tello, distance, left, right, colors, method='parallel')
