@@ -72,12 +72,22 @@ class Borders:
             return False
 
         # ballon is out of left border
-        if (image_3d.phys_y_balloon - self.m_left * image_3d.phys_x_balloon - self.b_left < 0):
-            return False
+        if self.m_left >= 0:
+            if (image_3d.phys_y_balloon - self.m_left * image_3d.phys_x_balloon - self.b_left > 0):
+                return False
 
-        # ballon is out of right border
-        if (image_3d.phys_y_balloon - self.m_right * image_3d.phys_x_balloon - self.b_right < 0):
-            return False
+        else:       
+            if (image_3d.phys_y_balloon - self.m_left * image_3d.phys_x_balloon - self.b_left < 0):
+                return False
+
+        if self.m_right >= 0:     
+            # ballon is out of right border
+            if (image_3d.phys_y_balloon - self.m_right * image_3d.phys_x_balloon - self.b_right < 0):
+                return False
+
+        else:
+            if (image_3d.phys_y_balloon - self.m_right * image_3d.phys_x_balloon - self.b_right > 0):
+                return False                    
 
         # balloon is in play area
         return True   

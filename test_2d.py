@@ -193,6 +193,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
 
         # balloon is out of borders. drone is seeking the middle until the balloon is back
         if loop_status.start and not borders.balloon_in_borders(image_now):
+            print("seek middle")
             loop_status.stop_track()
             seek_middle(image_now, tello, borders)
 
