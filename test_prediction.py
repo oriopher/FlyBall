@@ -16,14 +16,15 @@ MAYA_WEB = Camera(61, 0, True)
 EFRAT_WEB = Camera(61, 0, True)
 
 ORI_PHONE_NIR = Camera(66.9, 0, False)
-NIR_PHONE_NIR = Camera(67, 2, False)
+MAYA_PHONE_NIR = Camera(76, 2, False)
+NIR_PHONE_NIR = Camera(67, 0, False)
 
 COLORS_FILENAME = "color_bounds.txt"
 
-def image_with_circle(cam : Camera, show_img, x_phys, y_phys, z_phys, color = (240, 240, 240)):
-    radius = utils.phys_to_left_pix(x_phys + 11, y_phys, z_phys, show_img, cam)[0] - utils.phys_to_left_pix(x_phys, y_phys, z_phys, show_img, cam)[0]
-    coordinates = utils.phys_to_left_pix(x_phys, y_phys, z_phys, show_img, cam)
-    show_img = cv2.circle(show_img, coordinates, radius, color, 3)
+def image_with_circle(cam : Camera, show_img, x_phys, y_phys, z_phys, color = (240, 240, 240), thickness = 3):
+    radius = utils.phys_to_left_pix_img(x_phys + 11, y_phys, z_phys, show_img, cam)[0] - utils.phys_to_left_pix_img(x_phys, y_phys, z_phys, show_img, cam)[0]
+    coordinates = utils.phys_to_left_pix_img(x_phys, y_phys, z_phys, show_img, cam)
+    show_img = cv2.circle(show_img, coordinates, radius, color, thickness=thickness)
     # print("radius: ", radius)
     # print("coordinates: ", coordinates)
     # cv2.imshow("left", show_img)
@@ -192,10 +193,10 @@ def pixels_to_cm(distance, num_pixels, fov_angle):
 if __name__ == "__main__":
     continue_test = True
 
-    left = ORI_PHONE_NIR
+    left = MAYA_PHONE_NIR
     right = NIR_PHONE_NIR
 
-    distance = 54
+    distance = 74.5
     while continue_test:
         continue_test, prediction_table, shape = capture_video(distance, left, right, method='parallel')
 
@@ -208,9 +209,9 @@ if __name__ == "__main__":
 
 
     pred_image = np.zeros((shape[0],shape[1],shape[2]), np.uint8)
-    for prediction in prediction_table[:20]:
-        pred_image = image_with_circle(left, pred_image, prediction[1], prediction[2], prediction[3], color=(240,50,240))
-        pred_image = image_with_circle(left, pred_image, prediction[4], prediction[5], prediction[6], color=(50,240,240))
+    for prediction in prediction_table[::3]:
+        pred_image = image_with_circle(left, pred_image, prediction[1], prediction[2], prediction[3], color=(240,50,240), thickness=1)
+        pred_image = image_with_circle(left, pred_image, prediction[4], prediction[5], prediction[6], color=(50,240,240), thickness=1)
 
     cv2.imshow("prediction", pred_image)
     cv2.waitKey(0)
