@@ -97,6 +97,16 @@ def print_prediction_test(predictions, results):
     print(np.concatenate((title, printable)))
 
 
+def save_prediction(prediction_table, index, diff_time, real_coord, pred_coord):
+    prediction_table[index][0] = diff_time
+    prediction_table[index][1] = real_coord[0]
+    prediction_table[index][2] = real_coord[1]
+    prediction_table[index][3] = real_coord[2]
+    prediction_table[index][4] = pred_coord[0]
+    prediction_table[index][5] = pred_coord[1]
+    prediction_table[index][6] = pred_coord[2]
+
+
 def capture_video( cameras_distance, left: Camera, right: Camera, method='parallel'):
     vid_left = cv2.VideoCapture(left.index)
     vid_right = cv2.VideoCapture(right.index)
@@ -109,6 +119,7 @@ def capture_video( cameras_distance, left: Camera, right: Camera, method='parall
     loop_status = Status()
     colors = ColorBounds()
     old_images = [None]*10
+    prediction_table = np.zeros((40,7))
 
     while(True):
         frame_counter = frame_counter+1
@@ -130,24 +141,13 @@ def capture_video( cameras_distance, left: Camera, right: Camera, method='parall
             image_now.calculate_mean_velocities(old_images)
 
         if loop_status.get_predict_stat() == 2: # test prediction
-            # if predictions[head][0] > image_now.time:
-            #     if (abs(head[0] - image_now.time) < abs(head[0] - image_old.time)):
-            #         results[head] = image_now.time, image_now.phys_x_balloon, image_now.phys_y_balloon, image_now.phys_z_balloon
-            #     else:
-            #         results[head] = image_old.time, image_old.phys_x_balloon, image_old.phys_y_balloon, image_old.phys_z_balloon
-            #     head += 1
-
-            # if head == len(predictions) - 1:
-            #     print_prediction_test(predictions, results)
-            #     loop_status.stop_predictions()
             diff_time = image_now.time - predictor.time
-            x_pred, y_pred, z_pred = predictor.get_prediction(diff_time.total_seconds())
-            print("time difference is %.4f sec" % diff_time.total_seconds())
-            print("prediction coords: (%.0f,%.0f,%.0f)" % (x_pred, y_pred, z_pred))
+            diff_time = diff_time.total_seconds()
+            x_pred, y_pred, z_pred = predictor.get_prediction(diff_time)
             x_real, y_real, z_real = image_now.phys_x_balloon, image_now.phys_y_balloon, image_now.phys_z_balloon
-            print("real coords: (%.0f,%.0f,%.0f)" % (x_real, y_real, z_real))
-            print("diff is (%.0f,%.0f,%.0f)" % (x_real - x_pred, y_real - y_pred, z_real - z_pred))
-            print("------------------------------")
+            prediction_index = frame_counter - prediction_start
+            if prediction_index < len(prediction_table):
+                save_prediction(prediction_table, prediction_index, diff_time, (x_real, y_real, z_real), (x_pred, y_pred, z_pred))
       
         text_balloon_coor = "c(%.0f,%.0f,%.0f)" % (image_now.phys_x_balloon, image_now.phys_y_balloon, image_now.phys_z_balloon)
         text_balloon_vel = "v(%.0f,%.0f,%.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon, image_now.velocity_z_balloon)
@@ -162,11 +162,9 @@ def capture_video( cameras_distance, left: Camera, right: Camera, method='parall
         image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_color=(200,50,50))
 
         if loop_status.get_predict_stat() == 1: # start prediction
-            # predictions = predict(image_now)
-            # head = 0
-            # results = np.zeros(predictions.shape)
             predictor = BallPredictor(image_now)
             loop_status.test_predictions()
+            prediction_start = frame_counter + 1
 
         old_images[frame_counter % len(old_images)] = image_now
         image_old = image_now
@@ -182,7 +180,7 @@ def capture_video( cameras_distance, left: Camera, right: Camera, method='parall
     # Destroy all the windows
     cv2.destroyAllWindows()
 
-    return continue_test
+    return continue_test, prediction_table
 
 
 # return how much cm in one pixel.
@@ -198,4 +196,13 @@ if __name__ == "__main__":
 
     distance = 54
     while continue_test:
-        continue_test = capture_video(distance, left, right, method='parallel')
+        continue_test, prediction_table = capture_video(distance, left, right, method='parallel')
+
+    for prediction in prediction_table:
+        print("time difference is %.4f sec" % prediction[0])
+        print("prediction coords: (%.0f,%.0f,%.0f)" % (prediction[4], prediction[5], prediction[6]))
+        print("real coords: (%.0f,%.0f,%.0f)" % (prediction[1], prediction[2], prediction[3]))
+        print("diff is (%.0f,%.0f,%.0f)" % (prediction[4] - prediction[1], prediction[5] - prediction[2], prediction[6]-prediction[3]))
+        print("------------------------------")
+
+    blank_image = np.zeros((height,width,3), np.uint8)
