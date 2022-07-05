@@ -9,7 +9,7 @@ def phys_to_left_pix(x_cm, y_cm, z_cm, image, cam : Camera): # image is a direct
 
 def phys_to_left_pix(x_cm, y_cm, z_cm, x_n_pix, z_n_pix, cam_fov):
     d_x = x_n_pix / 2 / np.tan(cam_fov / 2)
-    x_pix = (int)(d_x * x_cm / y_cm)
+    x_pix = int(x_n_pix / 2 + d_x * x_cm / y_cm)
     d_z = z_n_pix / 2 / np.tan(cam_fov / 2)
-    z_pix = (int)(d_z * z_cm / y_cm)
+    z_pix = int(z_n_pix / 2 - d_z * z_cm / y_cm)
     return x_pix, z_pix 

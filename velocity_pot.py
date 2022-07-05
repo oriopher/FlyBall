@@ -1,25 +1,21 @@
 import numpy as np
 from image_3d import Image3D
 from djitellopy import Tello
-from test_2d import DRONE_DEFAULT_HEIGHT
+
+FLOOR_HEIGHT = -80
+DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
 
 
 def track_3d(image_3d: Image3D, tello: Tello, dest_x: float, dest_y: float, dest_z: float):
     x_cm_rel = dest_x - image_3d.phys_x_drone
-    #print("x_ball_cm: ", image_3d.phys_x_balloon, "x_drone_cm: ", image_3d.phys_x_drone)
-    #print("x_cm_rel: ", x_cm_rel)
-
     y_cm_rel = dest_y - image_3d.phys_y_drone
-    #print("y_ball_cm: ", image_3d.phys_y_balloon, "y_drone_cm: ", image_3d.phys_y_drone)
-    #print("y_cm_rel: ", y_cm_rel)
-
     z_cm_rel = dest_z - image_3d.phys_z_drone
 
     left_right, for_back, up_down = 0, 0, 0
+    left_right = lin_velocity_with_two_params(x_cm_rel, image_3d.velocity_x_balloon, 'x')
+    for_back = lin_velocity_with_two_params(y_cm_rel, image_3d.velocity_y_balloon, 'y')
+    up_down = lin_velocity_z(z_cm_rel)
     if tello.send_rc_control:
-        left_right = lin_velocity_with_two_params(x_cm_rel, image_3d.velocity_x_balloon, 'x')
-        for_back = lin_velocity_with_two_params(y_cm_rel, image_3d.velocity_y_balloon, 'y')
-        up_down = lin_velocity_z(z_cm_rel)
         tello.send_rc_control(left_right, for_back, up_down, 0)
 
 

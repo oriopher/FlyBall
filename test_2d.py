@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import numpy as np
 import cv2
 from color_bounds import ColorBounds
@@ -6,17 +6,21 @@ from image_3d import Image3D
 from loop_status import Status
 from djitellopy import Tello
 from camera import Camera
-from velocity_pot import lin_velocity_with_two_params, track_balloon
+from velocity_pot import lin_velocity_with_two_params, track_balloon, seek_middle
 
 ORI_WEB = Camera(51.3, 0, False)
 ORI_PHONE = Camera(66.9, 3, False)
 NIR_PHONE = Camera(67, 4, False)
 MAYA_WEB = Camera(61, 0, True)
-EFRAT_WEB = Camera(61, 0, True)
+EFRAT_WEB = Camera(61, 2, False)
+EFRAT_PHONE = Camera(64, 3, False)
+
+NIR_PHONE_NIR = Camera(67, 0, False)
+EFRAT_PHONE_NIR = Camera(77, 2, False)
 
 COLORS_FILENAME = "color_bounds.txt"
 
-FLOOR_HEIGHT = -50
+FLOOR_HEIGHT = -80
 DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
 
 
@@ -58,7 +62,7 @@ def hit_ball_rc(image_3d: Image3D, tello: Tello, loop_status: Status):
 
 
 
-def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status, tello: Tello) -> bool:
+def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status, left_cam: Camera, tello: Tello) -> bool:
     key = cv2.waitKey(1) & 0xFF
     str_colors_changed = "color bounds changed"
 
@@ -123,7 +127,7 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status
 
     # the 'k' button is set as the read colors from file
     elif key == ord('k'):
-        colors.read_colors(COLORS_FILENAME)
+        colors.read_colors(COLORS_FILENAME)  
 
     return True
 
@@ -163,20 +167,21 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         text_drone_vel = "v(%.0f,%.0f)" % (image_now.velocity_x_drone, image_now.velocity_y_drone)
     
         # Display the resulting frame
-        image_now.frame_left.show_image("left", text_balloon=text_balloon_coor, text_drone=text_drone_coor, text_color=(150,250,200))
+        image_now.frame_left.show_image("right", text_balloon=text_balloon_coor, text_drone=text_drone_coor, text_color=(240,240,150))
         image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
 
         if loop_status.hit_mode():
             hit_ball_rc(image_now, tello, loop_status)
-        elif datetime.datetime.now() - datetime.timedelta(seconds = 1) > loop_status.hit_time:
+    
+        elif loop_status.hit_time and datetime.now() - timedelta(seconds = 1) > loop_status.hit_time:
             continue
-        elif loop_status.start_track:
+        elif loop_status.start:
             track_balloon(image_now, tello)
 
         old_images[frame_counter % len(old_images)] = image_now
         image_old = image_now
-   
-        continue_test = interactive_loop(image_now, colors, loop_status, tello)
+    
+        continue_test = interactive_loop(image_now, colors, loop_status, left, tello)
         if not loop_status.continue_loop:
             break
     
@@ -193,20 +198,15 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
     return continue_test, colors
 
 
-# return how much cm in one pixel.
-def pixels_to_cm(distance, num_pixels, fov_angle):  
-    return distance * 2 * np.tan(fov_angle/2) * fov_angle / num_pixels
-
-
 if __name__ == "__main__":
     tello = Tello()
 
     colors = ColorBounds()
     continue_test = True
 
-    left = ORI_PHONE
-    right = NIR_PHONE
+    left = EFRAT_PHONE_NIR
+    right = NIR_PHONE_NIR
 
-    distance = 60
+    distance = 82
     while continue_test:
         continue_test, colors = capture_video(tello, distance, left, right, colors, method='parallel')
