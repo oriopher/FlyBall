@@ -7,6 +7,7 @@ from loop_status import Status
 from djitellopy import Tello
 from camera import Camera
 from prediction import BallPredictor
+import utils
 
 ORI_WEB = Camera(51.3, 0, False)
 ORI_PHONE = Camera(66.9, 2, True)
@@ -18,6 +19,16 @@ ORI_PHONE_NIR = Camera(66.9, 0, False)
 NIR_PHONE_NIR = Camera(67, 2, False)
 
 COLORS_FILENAME = "color_bounds.txt"
+
+def image_with_circle(image3d: Image3D, cam : Camera, show_img, x_phys, y_phys, z_phys):
+    radius = utils.phys_to_left_pix(x_phys + 11, y_phys, z_phys, show_img, cam)[0] - utils.phys_to_left_pix(x_phys, y_phys, z_phys, show_img, cam)[0]
+    coordinates = utils.phys_to_left_pix(x_phys, y_phys, z_phys, show_img, cam)
+    show_img = cv2.circle(show_img, coordinates, radius, (255, 0, 0), 3)
+    # print("radius: ", radius)
+    # print("coordinates: ", coordinates)
+    # cv2.imshow("left", show_img)
+
+    return show_img
 
 
 def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status) -> bool:
@@ -150,7 +161,12 @@ def capture_video( cameras_distance, left: Camera, right: Camera, method='parall
         text_balloon_vel = "v(%.0f,%.0f,%.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon, image_now.velocity_z_balloon)
     
         # Display the resulting frame
-        image_now.frame_left.show_image("left", text_balloon=text_balloon_coor, text_color=(240,240,240))
+        if loop_status.get_predict_stat() != 2:
+            image_now.frame_left.show_image("left", text_balloon=text_balloon_coor, text_color=(240,240,240))
+        else:
+            left_show_img = image_now.frame_left.image_to_show(text_balloon=text_balloon_coor, text_color=(240,240,240))
+            left_show_img = image_with_circle(image_now, left, left_show_img, x_pred, y_pred, z_pred)
+            cv2.imshow("left", left_show_img)
         image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_color=(200,50,50))
 
         old_images[frame_counter % len(old_images)] = image_now
