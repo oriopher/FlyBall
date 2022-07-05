@@ -181,6 +181,6 @@ if __name__ == "__main__":
     left = ORI_PHONE_NIR
     right = NIR_PHONE_NIR
 
-    distance = 50
+    distance = 54
     while continue_test:
         continue_test = capture_video(distance, left, right, method='parallel')
