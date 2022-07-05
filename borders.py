@@ -14,8 +14,10 @@ class Borders:
         self.b_left = 0                               #######################
         self.m_right = 0                                ##################
         self.b_right = 0                                  ##############
-        self.y_low_border = 0                  # (x_2, y_2) ########## (x_1, y_1)
-        self.y_upper_border = 0
+        self.m_upper = 0                       # (x_2, y_2) ########## (x_1, y_1)
+        self.b_upper = 0
+        self.m_low = 0 
+        self.b_low = 0
         self.x_middle = 0
         self.y_middle = 0
         self.coordinates = np.zeros((4,2))
@@ -40,20 +42,20 @@ class Borders:
 
     def calc_borders(self):
         self.m_left, self.b_left = self.calc_linear_eq(self.coordinates[3], self.coordinates[1])
-        self.m_right, self.b_right = self.calc_linear_eq(self.coordinates[2], self.coordinates[0])            
-        self.y_upper_border = min(self.coordinates[2][1], self.coordinates[3][1])    
-        self.y_low_border = max(self.coordinates[0][1], self.coordinates[1][1])
+        self.m_right, self.b_right = self.calc_linear_eq(self.coordinates[2], self.coordinates[0])
+        self.m_upper, self.b_upper = self.calc_linear_eq(self.coordinates[3], self.coordinates[2])
+        self.m_low, self.b_low = self.calc_linear_eq(self.coordinates[1], self.coordinates[0])                    
 
         # calculate the middle coordinates
-        self.y_middle = (self.y_upper_border - self.y_low_border) / 2
-        x_left = (self.y_middle - self.b_left) / self.m_left
-        x_right = (self.y_middle - self.b_right) / self.m_right
-        self.x_middle = (x_right + x_left) / 2
+        self.x_middle = (self.coordinates[1][0] + self.coordinates[0][0]) / 2
+        y_upper = self.m_upper * self.x_middle + self.b_upper
+        y_low = self.m_low * self.x_middle + self.b_low
+        self.y_middle = (y_upper + y_low) / 2
 
-        self.pixels_coordinates[3][0], self.pixels_coordinates[3][1] = phys_to_left_pix(self.coordinates[3][0], self.y_upper_border, FLOOR_HEIGHT - 10, self.x_n_pix, self.z_n_pix, self.fov)        
-        self.pixels_coordinates[2][0], self.pixels_coordinates[2][1] = phys_to_left_pix(self.coordinates[2][0], self.y_upper_border, FLOOR_HEIGHT - 10, self.x_n_pix, self.z_n_pix, self.fov)        
-        self.pixels_coordinates[1][0], self.pixels_coordinates[1][1] = phys_to_left_pix(self.coordinates[1][0], self.y_low_border, FLOOR_HEIGHT - 10, self.x_n_pix, self.z_n_pix, self.fov)        
-        self.pixels_coordinates[0][0], self.pixels_coordinates[0][1] = phys_to_left_pix(self.coordinates[0][0], self.y_low_border, FLOOR_HEIGHT - 10, self.x_n_pix, self.z_n_pix, self.fov)    
+        self.pixels_coordinates[3][0], self.pixels_coordinates[3][1] = phys_to_left_pix(self.coordinates[3][0], self.coordinates[3][1], FLOOR_HEIGHT - 10, self.x_n_pix, self.z_n_pix, self.fov)        
+        self.pixels_coordinates[2][0], self.pixels_coordinates[2][1] = phys_to_left_pix(self.coordinates[2][0], self.coordinates[2][1], FLOOR_HEIGHT - 10, self.x_n_pix, self.z_n_pix, self.fov)        
+        self.pixels_coordinates[1][0], self.pixels_coordinates[1][1] = phys_to_left_pix(self.coordinates[1][0], self.coordinates[1][1], FLOOR_HEIGHT - 10, self.x_n_pix, self.z_n_pix, self.fov)        
+        self.pixels_coordinates[0][0], self.pixels_coordinates[0][1] = phys_to_left_pix(self.coordinates[0][0], self.coordinates[0][1], FLOOR_HEIGHT - 10, self.x_n_pix, self.z_n_pix, self.fov)    
 
         print(self.coordinates)    
 
@@ -67,27 +69,34 @@ class Borders:
     # checks if balloon is in borders
     def balloon_in_borders(self, image_3d: Image3D):
 
-        # balloon is too far or too close to camera
-        if (image_3d.phys_y_balloon < self.y_low_border or image_3d.phys_y_balloon > self.y_upper_border):
+        # balloon is too far from camera
+        if (image_3d.phys_y_balloon - self.m_upper * image_3d.phys_x_balloon - self.b_upper > 0):
+            return False
+
+        # balloon is too close to camera
+        if image_3d.phys_y_balloon - self.m_low * image_3d.phys_x_balloon - self.b_low < 0:
             return False
 
         # ballon is out of left border
         if self.m_left >= 0:
-            if (image_3d.phys_y_balloon - self.m_left * image_3d.phys_x_balloon - self.b_left > 0):
+            if image_3d.phys_y_balloon - self.m_left * image_3d.phys_x_balloon - self.b_left > 0:
                 return False
 
-        else:       
-            if (image_3d.phys_y_balloon - self.m_left * image_3d.phys_x_balloon - self.b_left < 0):
+        # ballon is out of left border
+        if self.m_left >= 0:
+            if image_3d.phys_y_balloon - self.m_left * image_3d.phys_x_balloon - self.b_left > 0:
                 return False
 
+        elif image_3d.phys_y_balloon - self.m_left * image_3d.phys_x_balloon - self.b_left < 0:   
+            return False
+
+        # ballon is out of right border
         if self.m_right >= 0:     
-            # ballon is out of right border
-            if (image_3d.phys_y_balloon - self.m_right * image_3d.phys_x_balloon - self.b_right < 0):
+            if image_3d.phys_y_balloon - self.m_right * image_3d.phys_x_balloon - self.b_right < 0:
                 return False
 
-        else:
-            if (image_3d.phys_y_balloon - self.m_right * image_3d.phys_x_balloon - self.b_right > 0):
-                return False                    
+        elif image_3d.phys_y_balloon - self.m_right * image_3d.phys_x_balloon - self.b_right > 0:
+            return False                    
 
         # balloon is in play area
         return True   
