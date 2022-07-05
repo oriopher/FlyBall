@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 class LoopStatus:
 
@@ -35,7 +35,7 @@ class LoopStatus:
         self.hit = False
 
     def set_hit_time(self):
-        self.hit_time = datetime.datetime.now()
+        self.hit_time = datetime.now()
 
     def hit_mode(self):
         return self.hit

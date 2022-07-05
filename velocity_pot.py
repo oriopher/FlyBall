@@ -2,7 +2,9 @@ import numpy as np
 from image_3d import Image3D
 from borders import Borders
 from djitellopy import Tello
-from test_2d import DRONE_DEFAULT_HEIGHT
+
+FLOOR_HEIGHT = -50
+DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
 
 
 def track_3d(image_3d: Image3D, tello: Tello, dest_x: float, dest_y: float, dest_z: float):

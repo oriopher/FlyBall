@@ -1,20 +1,20 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import numpy as np
 import cv2
-import velocity_pot
 from borders import Borders
 from color_bounds import ColorBounds
 from image_3d import Image3D
 from loop_status import Status
 from djitellopy import Tello
 from camera import Camera
-from velocity_pot import lin_velocity_with_two_params, track_balloon
+from velocity_pot import lin_velocity_with_two_params, track_balloon, seek_middle
 
 ORI_WEB = Camera(51.3, 0, False)
 ORI_PHONE = Camera(66.9, 3, False)
 NIR_PHONE = Camera(67, 4, False)
 MAYA_WEB = Camera(61, 0, True)
-EFRAT_WEB = Camera(61, 0, True)
+EFRAT_WEB = Camera(61, 2, False)
+EFRAT_PHONE = Camera(61, 3, False)
 
 COLORS_FILENAME = "color_bounds.txt"
 
@@ -60,7 +60,7 @@ def hit_ball_rc(image_3d: Image3D, tello: Tello, loop_status: Status):
 
 
 
-def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, loop_status: Status, tello: Tello) -> bool:
+def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, loop_status: Status, left_cam: Camera, tello: Tello) -> bool:
     key = cv2.waitKey(1) & 0xFF
     str_colors_changed = "color bounds changed"
 
@@ -129,12 +129,14 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, l
 
     # the 'j' button is set as the saving the borders. can save 4 coordinates
     elif key == ord('j'):
-        borders.set_image(image_3d)
+        borders.set_image(image_3d, left_cam)
         print("saved the " + str(borders.index + 1) + " coordinate")
+        if borders.index == 4:
+            borders.write_borders('borders.txt')
 
     # the 'b' button is set as the save borders to file
-    elif key == ord('b'):
-        borders.write_borders('borders.txt')
+  #  elif key == ord('b'):
+   #     borders.write_borders('borders.txt')
 
     # the 'r' button is set as the read colors from file
     elif key == ord('r'):
@@ -190,19 +192,20 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         # balloon is out of borders. drone is seeking the middle until the balloon is back
         if not borders.balloon_in_borders(image_now):
             loop_status.stop_track()
-            velocity_pot.seek_middle(image_now, tello, borders)
+            seek_middle(image_now, tello, borders)
 
         # balloon returned to the play area, we can continue to play
         #if borders.in_borders(image_now) and not loop_status.start_track:
         #   loop_status.out_of_borders = False
         #   loop_status.start_track = True
 
-        image_now.frame_left.show_image("left", text_balloon=text_balloon_coor, text_drone=text_drone_coor, text_color=(150,250,200))
-        image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
+        image_now.frame_left.show_image("left", borders, left, text_balloon=text_balloon_coor, text_drone=text_drone_coor, text_color=(150,250,200))
+        image_now.frame_right.show_image("right", borders, left, text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
 
         if loop_status.hit_mode():
             hit_ball_rc(image_now, tello, loop_status)
-        elif datetime.datetime.now() - datetime.timedelta(seconds = 1) > loop_status.hit_time:
+    
+        elif loop_status.hit_time and datetime.now() - timedelta(seconds = 1) > loop_status.hit_time:
             continue
         elif loop_status.start_track:
             track_balloon(image_now, tello)
@@ -210,7 +213,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         old_images[frame_counter % len(old_images)] = image_now
         image_old = image_now
    
-        continue_test = interactive_loop(image_now, colors, loop_status, tello)
+        continue_test = interactive_loop(image_now, colors, borders, loop_status, left, tello)
         if not loop_status.continue_loop:
             break
     
@@ -234,9 +237,9 @@ if __name__ == "__main__":
     borders = Borders()
     continue_test = True
 
-    left = ORI_PHONE
-    right = NIR_PHONE
+    left = EFRAT_PHONE
+    right = EFRAT_WEB
 
-    distance = 60
+    distance = 63
     while continue_test:
         continue_test, colors = capture_video(tello, distance, left, right, colors, borders, method='parallel')
