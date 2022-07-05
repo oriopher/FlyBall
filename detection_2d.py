@@ -25,8 +25,8 @@ def interactive_loop(key, image_3d, colors):
 
 
 def capture_video(cameras_distance, left, right, method='parallel'):
-    vid_left = cv2.VideoCapture(left.index)
-    vid_right = cv2.VideoCapture(right.index)
+    vid_left = left.vid
+    vid_right = right.vid
 
     detect_left_time = 70
     detect_right_time = 140
@@ -56,8 +56,8 @@ def capture_video(cameras_distance, left, right, method='parallel'):
                 image_now.phys_x_drone, image_now.phys_y_drone = image_old.phys_x_drone, image_old.phys_y_drone
 
         # Display the resulting frame
-        image_now.frame_left.show_image("left")
-        image_now.frame_right.show_image("right", text_balloon=text_balloon)
+        image_now.frame_left.show_image("left, fps={}".format(left.fps))
+        image_now.frame_right.show_image("right, fps={}".format(right.fps), text_balloon=text_balloon)
 
         image_old = image_now
 
