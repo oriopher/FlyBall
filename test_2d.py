@@ -17,11 +17,11 @@ EFRAT_WEB = Camera(61, 2, False)
 EFRAT_PHONE = Camera(64, 3, False)
 
 NIR_PHONE_NIR = Camera(67, 0, False)
-EFRAT_PHONE_NIR = Camera(64, 2, False)
+EFRAT_PHONE_NIR = Camera(77, 2, False)
 
 COLORS_FILENAME = "color_bounds.txt"
 
-FLOOR_HEIGHT = -50
+FLOOR_HEIGHT = -80
 DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
 
 
@@ -133,7 +133,7 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, l
     # the 'j' button is set as the saving the borders. can save 4 coordinates
     elif key == ord('j'):
         borders.set_image(image_3d, left_cam)
-        print("saved the " + str(borders.index) + " coordinate")
+        print("saved the %.0f coordinate: (%.0f,%.0f,%.0f)" % (borders.index, image_3d.phys_x_balloon, image_3d.phys_y_balloon, image_3d.phys_z_balloon))
         if borders.index == 4:
             borders.write_borders('borders.txt')
 
@@ -184,14 +184,17 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
     
         # Display the resulting frame
         left_img = image_now.frame_left.image_to_show("left", text_balloon=text_balloon_coor, text_drone=text_drone_coor, text_color=(150,250,200))
-        left_img = borders.draw_borders(left_img)
+        color = (0, 240, 0)
+        if not borders.balloon_in_borders(image_now):
+            color = (0, 0, 240)
+        left_img = borders.draw_borders(left_img, color)
         cv2.imshow("left", left_img)
         image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
 
         # balloon is out of borders. drone is seeking the middle until the balloon is back
-        # if loop_status.start and not borders.balloon_in_borders(image_now):
-        #     loop_status.stop_track()
-        #     seek_middle(image_now, tello, borders)
+        if loop_status.start and not borders.balloon_in_borders(image_now):
+            loop_status.stop_track()
+            seek_middle(image_now, tello, borders)
 
         # balloon returned to the play area, we can continue to play
         #if borders.in_borders(image_now) and not loop_status.start_track:
@@ -237,6 +240,6 @@ if __name__ == "__main__":
     left = EFRAT_PHONE_NIR
     right = NIR_PHONE_NIR
 
-    distance = 53.5
+    distance = 82
     while continue_test:
         continue_test, colors = capture_video(tello, distance, left, right, colors, borders, method='parallel')

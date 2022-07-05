@@ -3,7 +3,7 @@ from image_3d import Image3D
 from borders import Borders
 from djitellopy import Tello
 
-FLOOR_HEIGHT = -50
+FLOOR_HEIGHT = -80
 DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
 
 

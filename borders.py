@@ -5,8 +5,7 @@ from utils import phys_to_left_pix
 import cv2
 import numpy as np
 
-FLOOR_HEIGHT = -50
-DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
+FLOOR_HEIGHT = -80
 
 class Borders:
     def __init__(self):
@@ -51,10 +50,12 @@ class Borders:
         x_right = (self.y_middle - self.b_right) / self.m_right
         self.x_middle = (x_right + x_left) / 2
 
-        self.pixels_coordinates[3][0], self.pixels_coordinates[3][1] = phys_to_left_pix(self.coordinates[3][0], self.y_upper_border, FLOOR_HEIGHT, self.x_n_pix, self.z_n_pix, self.fov)        
-        self.pixels_coordinates[2][0], self.pixels_coordinates[2][1] = phys_to_left_pix(self.coordinates[2][0], self.y_upper_border, FLOOR_HEIGHT, self.x_n_pix, self.z_n_pix, self.fov)        
-        self.pixels_coordinates[1][0], self.pixels_coordinates[1][1] = phys_to_left_pix(self.coordinates[1][0], self.y_low_border, FLOOR_HEIGHT, self.x_n_pix, self.z_n_pix, self.fov)        
-        self.pixels_coordinates[0][0], self.pixels_coordinates[0][1] = phys_to_left_pix(self.coordinates[0][0], self.y_low_border, FLOOR_HEIGHT, self.x_n_pix, self.z_n_pix, self.fov)        
+        self.pixels_coordinates[3][0], self.pixels_coordinates[3][1] = phys_to_left_pix(self.coordinates[3][0], self.y_upper_border, FLOOR_HEIGHT - 10, self.x_n_pix, self.z_n_pix, self.fov)        
+        self.pixels_coordinates[2][0], self.pixels_coordinates[2][1] = phys_to_left_pix(self.coordinates[2][0], self.y_upper_border, FLOOR_HEIGHT - 10, self.x_n_pix, self.z_n_pix, self.fov)        
+        self.pixels_coordinates[1][0], self.pixels_coordinates[1][1] = phys_to_left_pix(self.coordinates[1][0], self.y_low_border, FLOOR_HEIGHT - 10, self.x_n_pix, self.z_n_pix, self.fov)        
+        self.pixels_coordinates[0][0], self.pixels_coordinates[0][1] = phys_to_left_pix(self.coordinates[0][0], self.y_low_border, FLOOR_HEIGHT - 10, self.x_n_pix, self.z_n_pix, self.fov)    
+
+        print(self.coordinates)    
 
 
     def calc_linear_eq(self, coor1, coor2):
@@ -75,19 +76,19 @@ class Borders:
             return False
 
         # ballon is out of right border
-        if (image_3d.phys_y_balloon - self.m_right * image_3d.phys_x_balloon - self.b_right > 0):
+        if (image_3d.phys_y_balloon - self.m_right * image_3d.phys_x_balloon - self.b_right < 0):
             return False
 
         # balloon is in play area
         return True   
 
     
-    def draw_borders(self, show_img):
+    def draw_borders(self, show_img, color = (240,0,240)):
         if self.set_borders:
-            show_img = cv2.line(show_img, (self.pixels_coordinates[0][0], self.pixels_coordinates[0][1]), (self.pixels_coordinates[1][0], self.pixels_coordinates[1][1]), (0, 255, 0), thickness=2)
-            show_img = cv2.line(show_img, (self.pixels_coordinates[1][0], self.pixels_coordinates[1][1]), (self.pixels_coordinates[3][0], self.pixels_coordinates[3][1]), (0, 255, 0), thickness=2)
-            show_img = cv2.line(show_img, (self.pixels_coordinates[3][0], self.pixels_coordinates[3][1]), (self.pixels_coordinates[2][0], self.pixels_coordinates[2][1]), (0, 255, 0), thickness=2)
-            show_img = cv2.line(show_img, (self.pixels_coordinates[2][0], self.pixels_coordinates[2][1]), (self.pixels_coordinates[0][0], self.pixels_coordinates[0][1]), (0, 255, 0), thickness=2)
+            show_img = cv2.line(show_img, (self.pixels_coordinates[0][0], self.pixels_coordinates[0][1]), (self.pixels_coordinates[1][0], self.pixels_coordinates[1][1]), color, thickness=2)
+            show_img = cv2.line(show_img, (self.pixels_coordinates[1][0], self.pixels_coordinates[1][1]), (self.pixels_coordinates[3][0], self.pixels_coordinates[3][1]), color, thickness=2)
+            show_img = cv2.line(show_img, (self.pixels_coordinates[3][0], self.pixels_coordinates[3][1]), (self.pixels_coordinates[2][0], self.pixels_coordinates[2][1]), color, thickness=2)
+            show_img = cv2.line(show_img, (self.pixels_coordinates[2][0], self.pixels_coordinates[2][1]), (self.pixels_coordinates[0][0], self.pixels_coordinates[0][1]), color, thickness=2)
 
         return show_img
 

@@ -6,7 +6,7 @@ from camera import Camera
 class Frame:
     THRESHOLD_SIZE = 8  # pixels
     H_RANGE = 20
-    S_RANGE = 100
+    S_RANGE = 30
     V_RANGE = 170
 
     SEARCH_RANGE = 50  # pixels
@@ -17,7 +17,7 @@ class Frame:
         self.y_drone = 0
         self.x_balloon = 0
         self.y_balloon = 0
-        self.THRESHOLD_SIZE = self.image.shape[1]/50
+        self.THRESHOLD_SIZE = self.image.shape[1]/60
         self.SEARCH_RANGE = self.image.shape[1]/10
 
     def detect_coordinates(self, bounds, x_old, y_old, search_range):
