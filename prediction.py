@@ -43,11 +43,15 @@ class BallPredictor:
 
 
 class NumericBallPredictor:
-    B = 1
-    M = 1
-    RHO = 1
-    V = 1
-    g = 9.8
+    r = 0.11  # in meters
+    g = 9.7803  # Gravitational constant
+    rho = 1.225  # Air density kg/m^3
+    V = 4 / 3 * np.pi * r ** 3  # Balloon Volume
+    air_mass = V * rho
+    m = air_mass + 0.00146  # Balloon mass.
+    C_d = 0.47  # Dimensionless drag constant
+    A = np.pi * r ** 2  # Balloon cross section in m^2
+    B = 0.5*rho*A*C_d  # Buoyancy
 
     def __init__(self, image_3d: Image3D):
         self.time = image_3d.time
@@ -68,7 +72,7 @@ class NumericBallPredictor:
 
     def _prepare_predictions(self, times):
         sol = odeint(NumericBallPredictor._derivative_func, np.array([self.v_xy_0, self.v_z_0, 0, self.z_0]), times,
-                     args=(self.B, self.M, self.RHO, self.V, self.g, self.theta))
+                     args=(self.B, self.m, self.rho, self.V, self.g, self.theta))
         d_xy = sol[:, 2]
         z = sol[:, 3]
         x = self.x_0 + d_xy * np.cos(self.theta)
