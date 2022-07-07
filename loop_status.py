@@ -1,11 +1,10 @@
-import datetime
+from datetime import datetime
 
-from enum import Enum
 class LoopStatus:
 
     def __init__(self):
         self.tookoff = False
-        self.start_track = False
+        self.start = False
         self.continue_loop = True
         self.hit = False
         self.hit_coords = 0
@@ -18,10 +17,10 @@ class LoopStatus:
 
     def start_track(self):
         if self.tookoff:
-            self.start_track = True
+            self.start = True
 
     def stop_track(self):
-        self.start_track = False
+        self.start = False
 
     def stop_loop(self):
         self.continue_loop = False
@@ -30,7 +29,7 @@ class LoopStatus:
         self.__init__()
 
     def hit_mode_on(self, coords):
-        if self.start_track:
+        if self.start:
             self.hit = True
             self.hit_coords = coords
     
@@ -38,7 +37,7 @@ class LoopStatus:
         self.hit = False
 
     def set_hit_time(self):
-        self.hit_time = datetime.datetime.now()
+        self.hit_time = datetime.now()
 
     def hit_mode(self):
         return self.hit
