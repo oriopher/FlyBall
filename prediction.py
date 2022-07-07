@@ -51,12 +51,12 @@ class NumericBallPredictor:
 
     def __init__(self, image_3d: Image3D, latest_time: float, num_predictions: int):
         self.time = image_3d.time
-        self.x_0 = image_3d.phys_x_balloon
-        self.y_0 = image_3d.phys_y_balloon
-        self.z_0 = image_3d.phys_z_balloon
-        self.v_x_0 = image_3d.velocity_x_balloon
-        self.v_y_0 = image_3d.velocity_y_balloon
-        self.v_z_0 = image_3d.velocity_z_balloon
+        self.x_0 = image_3d.phys_x_balloon / 100
+        self.y_0 = image_3d.phys_y_balloon / 100
+        self.z_0 = image_3d.phys_z_balloon / 100
+        self.v_x_0 = image_3d.velocity_x_balloon / 100
+        self.v_y_0 = image_3d.velocity_y_balloon / 100
+        self.v_z_0 = image_3d.velocity_z_balloon / 100
         self.theta = np.arctan2(self.v_y_0, self.v_x_0)
         self.v_xy_0 = np.sqrt(self.v_x_0 ** 2 + self.v_y_0 ** 2)
         self.times = np.linspace(0, latest_time, num_predictions)
