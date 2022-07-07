@@ -24,9 +24,9 @@ def interactive_loop(key, image_3d, colors):
     return continue_loop
 
 
-def capture_video(cameras_distance, left: Camera, right: Camera, method='parallel'):
-    vid_left = cv2.VideoCapture(left.index)
-    vid_right = cv2.VideoCapture(right.index)
+def capture_video(cameras_distance, left, right, method='parallel'):
+    vid_left = left.vid
+    vid_right = right.vid
 
     frame_counter = 0
     image_old = None
@@ -61,13 +61,13 @@ def capture_video(cameras_distance, left: Camera, right: Camera, method='paralle
             text_balloon = "(%.0f, %.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon)
 
         # Display the resulting frame
-        image_now.frame_left.show_image("left", text_balloon=text_balloon)
-        image_now.frame_right.show_image("right", text_balloon=text_balloon)
+        image_now.frame_left.show_image("left, fps={}".format(left.fps))
+        image_now.frame_right.show_image("right, fps={}".format(right.fps), text_balloon=text_balloon)
 
         image_list[frame_counter % len(image_list)] = image_now
         image_old = image_now
 
-        key = cv2.waitKey(1) & 0xFF   
+        key = cv2.waitKey(1) & 0xFF
         continue_loop = interactive_loop(key, image_now, colors)
         if not continue_loop:
             break

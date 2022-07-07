@@ -127,14 +127,14 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status
 
     # the 'k' button is set as the read colors from file
     elif key == ord('k'):
-        colors.read_colors(COLORS_FILENAME)  
+        colors.read_colors(COLORS_FILENAME)
 
     return True
 
 
 def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, colors: ColorBounds, method='parallel'):
-    vid_left = cv2.VideoCapture(left.index)
-    vid_right = cv2.VideoCapture(right.index)
+    vid_left = left.vid
+    vid_right = right.vid
 
     frame_counter = 0
     image_old = None
@@ -160,7 +160,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
                 image_now.phys_x_drone, image_now.phys_y_drone = image_old.phys_x_drone, image_old.phys_y_drone
 
             image_now.calculate_mean_velocities(old_images)
-        
+
         text_balloon_coor = "c(%.0f,%.0f,%.0f)" % (image_now.phys_x_balloon, image_now.phys_y_balloon, image_now.phys_z_balloon)
         text_drone_coor = "c(%.0f,%.0f,%.0f)" % (image_now.phys_x_drone, image_now.phys_y_drone, image_now.phys_z_drone)
         text_balloon_vel = "v(%.0f,%.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon)
@@ -172,7 +172,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
 
         if loop_status.hit_mode():
             hit_ball_rc(image_now, tello, loop_status)
-    
+
         elif loop_status.hit_time and datetime.now() - timedelta(seconds = 1) > loop_status.hit_time:
             continue
         elif loop_status.start:
@@ -180,11 +180,11 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
 
         old_images[frame_counter % len(old_images)] = image_now
         image_old = image_now
-    
+
         continue_test = interactive_loop(image_now, colors, loop_status, left, tello)
         if not loop_status.continue_loop:
             break
-    
+
     if loop_status.tookoff:
         tello.land()
         print("battery = ", tello.get_battery(), "%")
