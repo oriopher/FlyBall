@@ -6,7 +6,7 @@ from image_3d import Image3D
 from loop_status import Status
 from djitellopy import Tello
 from camera import Camera
-from prediction import BallPredictor
+from prediction import BallPredictor, NumericBallPredictor
 import utils
 
 ORI_WEB = Camera(51.3, 0, False)
@@ -163,7 +163,7 @@ def capture_video( cameras_distance, left: Camera, right: Camera, method='parall
         image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_color=(200,50,50))
 
         if loop_status.get_predict_stat() == 1: # start prediction
-            predictor = BallPredictor(image_now)
+            predictor = NumericBallPredictor(image_now)
             loop_status.test_predictions()
             prediction_start = frame_counter + 1
 
