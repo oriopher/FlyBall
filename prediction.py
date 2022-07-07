@@ -61,7 +61,6 @@ class NumericBallPredictor:
         self.v_xy_0 = np.sqrt(self.v_x_0 ** 2 + self.v_y_0 ** 2)
         self.times = np.linspace(0, latest_time, num_predictions)
         self.xs, self.ys, self.zs = self._prepare_predictions(self.times)
-        self.predictions = np.array([self.times, self.xs, self.ys, self.zs]).T
 
     @staticmethod
     def _derivative_func(variables, time, buoyancy, mass, density, volume, gravity, theta):
@@ -79,3 +78,7 @@ class NumericBallPredictor:
 
         x, y, z = x * 100, y * 100, z * 100
         return x, y, z
+
+    def get_prediction(self, time):
+        i = np.where(self.times == time)
+        return self.xs[i], self.ys[i], self.zs[i]
