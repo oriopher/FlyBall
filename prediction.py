@@ -60,17 +60,17 @@ class NumericBallPredictor:
         self.theta = np.arctan2(self.v_y_0, self.v_x_0)
         self.v_xy_0 = np.sqrt(self.v_x_0 ** 2 + self.v_y_0 ** 2)
         self.times = np.linspace(0, latest_time, num_predictions)
-        self.xs, self.ys, self.zs = self.prepare_predictions(self.times)
+        self.xs, self.ys, self.zs = self._prepare_predictions(self.times)
         self.predictions = np.array([self.times, self.xs, self.ys, self.zs]).T
 
     @staticmethod
-    def derivative_func(variables, time, buoyancy, mass, density, volume, gravity, theta):
+    def _derivative_func(variables, time, buoyancy, mass, density, volume, gravity, theta):
         c1 = -(buoyancy / mass) * (variables[0] ** 2 + variables[1] ** 2)
         c2 = (density * volume / mass - 1) * gravity
         return np.array([c1 * np.sin(theta), c2 + c1 * np.cos(), variables[0], variables[1]])
 
-    def prepare_predictions(self, times):
-        sol = odeint(NumericBallPredictor.derivative_func, np.array([self.v_xy_0, self.v_z_0, 0, self.z_0]), times,
+    def _prepare_predictions(self, times):
+        sol = odeint(NumericBallPredictor._derivative_func, np.array([self.v_xy_0, self.v_z_0, 0, self.z_0]), times,
                      args=(self.B, self.M, self.RHO, self.V, self.g, self.theta))
         d_xy = sol[:, 2]
         z = sol[:, 3]
