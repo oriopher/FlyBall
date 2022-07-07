@@ -49,7 +49,7 @@ class NumericBallPredictor:
     V = 1
     g = 9.8
 
-    def __init__(self, image_3d: Image3D, latest_time: float, num_predictions: int):
+    def __init__(self, image_3d: Image3D):
         self.time = image_3d.time
         self.x_0 = image_3d.phys_x_balloon / 100
         self.y_0 = image_3d.phys_y_balloon / 100
@@ -59,8 +59,6 @@ class NumericBallPredictor:
         self.v_z_0 = image_3d.velocity_z_balloon / 100
         self.theta = np.arctan2(self.v_y_0, self.v_x_0)
         self.v_xy_0 = np.sqrt(self.v_x_0 ** 2 + self.v_y_0 ** 2)
-        self.times = np.linspace(0, latest_time, num_predictions)
-        self.xs, self.ys, self.zs = self._prepare_predictions(self.times)
 
     @staticmethod
     def _derivative_func(variables, time, buoyancy, mass, density, volume, gravity, theta):
@@ -80,5 +78,4 @@ class NumericBallPredictor:
         return x, y, z
 
     def get_prediction(self, time):
-        i = np.where(self.times == time)
-        return self.xs[i], self.ys[i], self.zs[i]
+        return self._prepare_predictions(np.linspace(0, time, 2))[1]
