@@ -1,10 +1,12 @@
 import numpy as np
 import cv2
+import PySimpleGUI as sg
 from color_bounds import ColorBounds
 from image_3d import Image3D
 from loop_status import Status
 from djitellopy import Tello
 from camera import Camera
+from gui import Gui
 
 ORI_WEB = Camera(51.3, 0, False)
 ORI_PHONE = Camera(66.9, 2, False)
@@ -66,73 +68,47 @@ def track_2d(image_3d: Image3D, tello: Tello):
         tello.send_rc_control(left_right, for_back, up_down, 0)
 
 
-def interactive_loop(frame_counter: int, image_3d: Image3D, colors: ColorBounds, loop_status: Status, tello: Tello) -> bool:
-    key = cv2.waitKey(1) & 0xFF
+def interactive_loop(frame_counter: int, image_3d: Image3D, colors: ColorBounds, gui: Gui, loop_status: Status, tello: Tello) -> bool:
+    event, values = gui.window.read()
 
-    # detect_balloon_left_time = 200
-    # detect_balloon_right_time = 400
-    # detect_drone_left_time = 600
-    # detect_drone_right_time = 800
-    # takeoff_time = 1000
-    # start_track_time = 1200
-
-    # if frame_counter == detect_balloon_left_time:
-    #     print("detecting balloon color left")
-    #     key = ord('v')
-    # if frame_counter == detect_balloon_right_time:
-    #     print("detecting balloon color right")
-    #     key = ord('n') 
-    # if frame_counter == detect_drone_left_time:
-    #     print("detecting drone color left")
-    #     key = ord('s')
-    # if frame_counter == detect_drone_right_time:
-    #     print("detecting drone color right")
-    #     key = ord('f') 
-
-    # the 'c' button reconnects to the drone
-    if key == ord('c'):
-        tello.connect()
-        loop_status.reset()
-
-    # the 'v' button is set as the detect color of balloon in the left cam
-    if key == ord('v'):
-        lower, upper = image_3d.frame_left.detect_color()
-        colors.ball_left.change(lower, upper)
-
-    # the 'n' button is set as the detect color of balloon in the right cam
-    elif key == ord('n'):
-        lower, upper = image_3d.frame_right.detect_color()
-        colors.ball_right.change(lower, upper)
-
-    # the 's' button is set as the detect color of drone in the left cam
-    elif key == ord('s'):
-        lower, upper = image_3d.frame_left.detect_color()
-        colors.drone_left.change(lower, upper)
-
-    # the 'f' button is set as the detect color of drone in the right cam
-    elif key == ord('f'):
-        lower, upper = image_3d.frame_right.detect_color()
-        colors.drone_right.change(lower, upper)
-
-    elif key == ord('t'):
-        loop_status.takeoff()
-
-    elif key == ord('y'):
-        loop_status.start()
-
-    # the 'q' button is set as the quitting button
-    elif key == ord('q'):
+    if event == sg.WIN_CLOSED or event == 'Quit': # if user closes window
         loop_status.stop_loop()
         return False
 
-    # the 'l' button is set as the landing button
-    elif key == ord('l'):
+    # the 'c' button reconnects to the drone
+    if event == 'Connect':
+        tello.connect()
+        loop_status.reset()
+
+    elif event == 'Balloon color (L)':
+        lower, upper = image_3d.frame_left.detect_color()
+        colors.ball_left.change(lower, upper)
+
+    elif event == 'Balloon color (R)':
+        lower, upper = image_3d.frame_right.detect_color()
+        colors.ball_right.change(lower, upper)
+
+    elif event == 'Drone color (L)':
+        lower, upper = image_3d.frame_left.detect_color()
+        colors.drone_left.change(lower, upper)
+
+    elif event == 'Drone color (R)':
+        lower, upper = image_3d.frame_right.detect_color()
+        colors.drone_right.change(lower, upper)
+
+    elif event == 'Take Off':
+        loop_status.takeoff()
+
+    elif event == 'Start Track':
+        loop_status.start()
+
+    elif event == 'Land':
         loop_status.stop_loop()
 
     return True
 
 
-def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, colors: ColorBounds, method='parallel'):
+def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, colors: ColorBounds, gui: Gui, method='parallel'):
     vid_left = cv2.VideoCapture(left.index)
     vid_right = cv2.VideoCapture(right.index)
 
@@ -179,7 +155,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
 
         image_old = image_now
    
-        continue_test = interactive_loop(frame_counter, image_now, colors, loop_status, tello)
+        continue_test = interactive_loop(frame_counter, image_now, colors, gui, loop_status, tello)
         if not loop_status.continue_loop:
             break
   
@@ -189,6 +165,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
     vid_right.release()
     # Destroy all the windows
     cv2.destroyAllWindows()
+    gui.window.close()
 
     return continue_test, colors
 
@@ -204,6 +181,7 @@ if __name__ == "__main__":
     print("battery = ", tello.get_battery(), "%")
 
     colors = ColorBounds()
+    gui = Gui()
     continue_test = True
 
     web = Camera(61, 0, True)
@@ -212,4 +190,4 @@ if __name__ == "__main__":
     # Galaxy - FoV is 67 degrees
     # Lenovo - FoV is 61 degrees
     while continue_test:
-        continue_test, colors = capture_video(tello, distance, ORI_PHONE, ORI_WEB, colors, method='parallel')
+        continue_test, colors = capture_video(tello, distance, ORI_PHONE, ORI_WEB, colors, gui, method='parallel')

@@ -1,22 +1,16 @@
 import PySimpleGUI as sg
 
-sg.theme('LightGreen')   # Add a touch of color
-# All the stuff inside your window.
-layout = [  [sg.Image(filename="logo.png")],
-            [sg.Text('Setting Functions:')],
-            [sg.Button('Drone color (Left)'), sg.Button('Drone color (Right)'), sg.Button('Balloon color (Left)'), sg.Button('Balloon color (Right)'), sg.Button('Set Borders')],
-            [sg.Text('Read colors and borders:')],
-            [sg.Button('Read Colors'), sg.Button('Read Borders')],
-            [sg.Text('Play Functions:')],
-            [sg.Button('Start Track'), sg.Button('Stop Track'), sg.Button('Hit'), sg.Button('Land'), sg.Button('Quit')],
-            [sg.Button('Ok'), sg.Button('Cancel')] ]
+class Gui:
+    layout = [  [sg.Text('Setting Functions:')],
+                [sg.Button('Drone color (L)'), sg.Button('Drone color (R)'), sg.Button('Balloon color (L)'), sg.Button('Balloon color (R)'), sg.Button('Set Borders')],
+                [sg.Button('Read Colors'), sg.Button('Read Borders')],
+                [sg.Text('Tello Functions:')],
+                [sg.Button('Connect'), sg.Button('Take Off'), sg.Button('Flip'), sg.Button('Land')],
+                [sg.Text('Play Functions:')],
+                [sg.Button('Start Track'), sg.Button('Stop Track'), sg.Button('Hit'), sg.Button('Quit')]]
 
-# Create the Window
-window = sg.Window('FlyBall', layout)
-# Event Loop to process "events" and get the "values" of the inputs
-while True:
-    event, values = window.read()
-    if event == sg.WIN_CLOSED or event == 'Cancel': # if user closes window or clicks cancel
-        break
 
-window.close()
+    def __init__(self):
+        sg.theme('LightGreen')   # Add a touch of color
+        self.window = sg.Window('FlyBall', Gui.layout)  # Create the Window
+    
