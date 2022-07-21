@@ -16,7 +16,7 @@ MAYA_WEB = Camera(61, 0, True)
 EFRAT_WEB = Camera(61, 2, False)
 EFRAT_PHONE = Camera(64, 3, False)
 
-NIR_PHONE_NIR = Camera(67, 0, False)
+NIR_PHONE_NIR = Camera(67, 3, False)
 EFRAT_PHONE_NIR = Camera(77, 2, False)
 
 COLORS_FILENAME = "color_bounds.txt"
@@ -238,9 +238,9 @@ if __name__ == "__main__":
     borders = Borders()
     continue_test = True
 
-    left = EFRAT_PHONE_NIR
-    right = NIR_PHONE_NIR
+    left = NIR_PHONE_NIR
+    right = EFRAT_PHONE_NIR
 
-    distance = 82
+    distance = 65
     while continue_test:
         continue_test, colors = capture_video(tello, distance, left, right, colors, borders, method='parallel')
