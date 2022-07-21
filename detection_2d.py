@@ -25,13 +25,14 @@ def interactive_loop(key, image_3d, colors):
 
 
 def capture_video(cameras_distance, left, right, method='parallel'):
-    vid_left = cv2.VideoCapture(left.index)
-    vid_right = cv2.VideoCapture(right.index)
+    vid_left = left.vid
+    vid_right = right.vid
 
-    detect_left_time = 70
-    detect_right_time = 140
     frame_counter = 0
     image_old = None
+
+    image_list = [None] * 10
+
     colors = ColorBounds()
 
     while(True):
@@ -40,34 +41,33 @@ def capture_video(cameras_distance, left, right, method='parallel'):
         ret_left, image_left = vid_left.read()
         ret_right, image_right = vid_right.read()
 
-        image_left = cv2.flip(image_left, 1)
-        image_right = cv2.flip(image_right, 1)
+        if left.is_flipped:
+            image_left = cv2.flip(image_left, 1)
+        if right.is_flipped:
+            image_right = cv2.flip(image_right, 1)
         image_now = Image3D(image_left, image_right)
         text_balloon = None
     
         # Process frames
-        if frame_counter>1:
-            image_now.detect_all(colors, image_old)
-            balloon_exist, drone_exist = image_now.calculate_all_distances(left, right, cameras_distance, method=method)
-            if not balloon_exist:
-                image_now.phys_x_balloon, image_now.phys_y_balloon = image_old.phys_x_balloon, image_old.phys_y_balloon
-            text_balloon = "(%.0f, %.0f)" % (image_now.phys_x_balloon, image_now.phys_y_balloon)
-            if not drone_exist:
-                image_now.phys_x_drone, image_now.phys_y_drone = image_old.phys_x_drone, image_old.phys_y_drone
+
+        if frame_counter>len(image_list):
+            image_now.frame_left.detect_balloon(colors.ball_left, image_old.frame_left.x_balloon, image_old.frame_left.y_balloon)
+            image_now.frame_right.detect_balloon(colors.ball_right, image_old.frame_right.x_balloon, image_old.frame_right.y_balloon)
+            if image_now.frame_left.x_balloon!=0 and image_now.frame_right.x_balloon!=0:
+                image_now.calculate_balloon_distance(left, right, cameras_distance, method=method)
+                text_balloon = "(%.0f, %.0f)" % (image_now.phys_x_balloon, image_now.phys_y_balloon)
+
+            image_now.calculate_mean_velocities(image_list)
+            text_balloon = "(%.0f, %.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon)
 
         # Display the resulting frame
-        image_now.frame_left.show_image("left")
-        image_now.frame_right.show_image("right", text_balloon=text_balloon)
+        image_now.frame_left.show_image("left, fps={}".format(left.fps))
+        image_now.frame_right.show_image("right, fps={}".format(right.fps), text_balloon=text_balloon)
 
+        image_list[frame_counter % len(image_list)] = image_now
         image_old = image_now
 
         key = cv2.waitKey(1) & 0xFF
-        if frame_counter == detect_left_time:
-            print("detecting balloon color left")
-            key = ord('l')
-        if frame_counter == detect_right_time:
-            print("detecting balloon color right")
-            key = ord('r')    
         continue_loop = interactive_loop(key, image_now, colors)
         if not continue_loop:
             break
@@ -90,4 +90,4 @@ if __name__ == "__main__":
     distance = 82
     # Galaxy - FoV is 67 degrees
     # Lenovo - FoV is 61 degrees
-    capture_video(distance, web, phone, method='parallel')
+    capture_video(distance, phone, web, method='parallel')
