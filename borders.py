@@ -47,7 +47,7 @@ class Borders:
         self.m_low, self.b_low = self.calc_linear_eq(self.coordinates[1], self.coordinates[0])                    
 
         # calculate the middle coordinates
-        self.x_middle = (self.coordinates[0][0] + self.coordinates[1][0] + self.coordinates[2][0] + self.coordinates[3][0]) / 4
+        self.x_middle = (self.coordinates[0][0] + self.coordinates[1][0]) / 2
         self.y_middle = (self.coordinates[0][1] + self.coordinates[1][1] + self.coordinates[2][1] + self.coordinates[3][1]) / 4
 
         self.pixels_coordinates[3][0], self.pixels_coordinates[3][1] = phys_to_left_pix(self.coordinates[3][0], self.coordinates[3][1], FLOOR_HEIGHT - 10, self.x_n_pix, self.z_n_pix, self.fov)        

@@ -143,7 +143,8 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, l
 
     # the 'r' button is set as the read colors from file
     elif key == ord('r'):
-        borders.read_borders('borders.txt')    
+        borders.read_borders('borders.txt')
+        print("middle is ({0:.3f},{1:.3f})".format(borders.x_middle, borders.y_middle))
 
     return True
 
@@ -163,8 +164,13 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         frame_counter = frame_counter+1
         # Capture the video frame by frame
         ret_left, image_left = vid_left.read()
+        if not ret_left:
+            continue
+        real_image_left = image_left
         ret_right, image_right = vid_right.read()
-        image_now = Image3D(image_left, image_right)
+        if not ret_right:
+            continue
+        image_now = Image3D(real_image_left, image_right)
     
         # Process frames
         if frame_counter > len(old_images):
@@ -192,7 +198,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
 
         # balloon is out of borders. drone is seeking the middle until the balloon is back
-        if loop_status.start and not borders.balloon_in_borders(image_now):
+        if loop_status.first_seek and (not borders.balloon_in_borders(image_now) or not loop_status.start):
             print("seek middle")
             loop_status.stop_track()
             seek_middle(image_now, tello, borders)
@@ -238,9 +244,9 @@ if __name__ == "__main__":
     borders = Borders()
     continue_test = True
 
-    left = NIR_PHONE_NIR
-    right = EFRAT_PHONE_NIR
+    left = NIR_PHONE
+    right = ORI_PHONE
 
-    distance = 65
+    distance = 77
     while continue_test:
         continue_test, colors = capture_video(tello, distance, left, right, colors, borders, method='parallel')
