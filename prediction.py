@@ -63,22 +63,24 @@ class NumericBallPredictor:
         self.v_x_0 = image_3d.velocity_x_balloon / 100
         self.v_y_0 = image_3d.velocity_y_balloon / 100
         self.v_z_0 = image_3d.velocity_z_balloon / 100
-        self.theta = np.arctan2(self.v_y_0, self.v_x_0)
+        self.phi = np.arctan2(self.v_y_0, self.v_x_0)
         self.v_xy_0 = np.sqrt(self.v_x_0 ** 2 + self.v_y_0 ** 2)
+        self.theta = np.arctan2(self.v_xy_0, self.v_z_0)
 
     @staticmethod
-    def _derivative_func(variables, time, buoyancy, mass, density, volume, gravity, theta):
-        c1 = -(buoyancy / mass) * (variables[0] ** 2 + variables[1] ** 2)
+    def _derivative_func(variables, time, b, mass, density, volume, gravity):
+        theta = np.arctan2(variables[0], variables[1])
+        c1 = -(b / mass) * (variables[0] ** 2 + variables[1] ** 2)
         c2 = (density * volume / mass - 1) * gravity
         return np.array([c1 * np.sin(theta), c2 + c1 * np.cos(theta), variables[0], variables[1]])
 
     def _prepare_predictions(self, times):
         sol = odeint(NumericBallPredictor._derivative_func, np.array([self.v_xy_0, self.v_z_0, 0, self.z_0]), times,
-                     args=(self.B, self.m, self.rho, self.V, self.g, self.theta))
+                     args=(self.B, self.m, self.rho, self.V, self.g))
         d_xy = sol[:, 2]
         z = sol[:, 3]
-        x = self.x_0 + d_xy * np.cos(self.theta)
-        y = self.y_0 + d_xy * np.sin(self.theta)
+        x = self.x_0 + d_xy * np.cos(self.phi)
+        y = self.y_0 + d_xy * np.sin(self.phi)
 
         x, y, z = x * 100, y * 100, z * 100
         return np.array([x, y, z])
