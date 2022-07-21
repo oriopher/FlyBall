@@ -43,15 +43,17 @@ class BallPredictor:
 
 
 class NumericBallPredictor:
-    r = 0.11  # in meters
+    r = 0.1  # in meters
     g = 9.7803  # Gravitational constant
     rho = 1.225  # Air density kg/m^3
     V = 4 / 3 * np.pi * r ** 3  # Balloon Volume
     air_mass = V * rho
-    m = air_mass + 0.00146  # Balloon mass.
     C_d = 0.47  # Dimensionless drag constant
     A = np.pi * r ** 2  # Balloon cross section in m^2
     B = 0.5*rho*A*C_d  # Buoyancy
+    rubber_weight = 2.5 * 10 ** -3
+    m = air_mass + rubber_weight  # Balloon mass.
+
 
     def __init__(self, image_3d: Image3D):
         self.time = image_3d.time
@@ -68,7 +70,7 @@ class NumericBallPredictor:
     def _derivative_func(variables, time, buoyancy, mass, density, volume, gravity, theta):
         c1 = -(buoyancy / mass) * (variables[0] ** 2 + variables[1] ** 2)
         c2 = (density * volume / mass - 1) * gravity
-        return np.array([c1 * np.sin(theta), c2 + c1 * np.cos(), variables[0], variables[1]])
+        return np.array([c1 * np.sin(theta), c2 + c1 * np.cos(theta), variables[0], variables[1]])
 
     def _prepare_predictions(self, times):
         sol = odeint(NumericBallPredictor._derivative_func, np.array([self.v_xy_0, self.v_z_0, 0, self.z_0]), times,
@@ -79,7 +81,7 @@ class NumericBallPredictor:
         y = self.y_0 + d_xy * np.sin(self.theta)
 
         x, y, z = x * 100, y * 100, z * 100
-        return x, y, z
+        return np.array([x, y, z])
 
     def get_prediction(self, time):
-        return self._prepare_predictions(np.linspace(0, time, 2))[1]
+        return self._prepare_predictions(np.linspace(0, time, 2))[:,1]

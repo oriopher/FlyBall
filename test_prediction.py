@@ -10,10 +10,11 @@ from prediction import BallPredictor, NumericBallPredictor
 import utils
 
 ORI_WEB = Camera(51.3, 0, False)
-ORI_PHONE = Camera(66.9, 2, True)
-NIR_PHONE = Camera(67, 1, True)
+ORI_PHONE = Camera(66.9, 2, False)
+NIR_PHONE = Camera(67, 3, False)
 MAYA_WEB = Camera(61, 0, True)
 EFRAT_WEB = Camera(61, 0, True)
+EFRAT_PHONE = Camera(77, 2, True)
 
 ORI_PHONE_NIR = Camera(66.9, 0, False)
 MAYA_PHONE_NIR = Camera(76, 2, False)
@@ -81,7 +82,7 @@ def predict(image_3d : Image3D):
 
     # times = np.linspace(0, LATEST_TIME, NUM_PREDICTIONS)
     # predictions = np.zeros((NUM_PREDICTIONS, 4)) # every row is a prediction with (time, x, y, z)
-    predictor = BallPredictor(image_3d)
+    predictor = NumericBallPredictor(image_3d)
     # for i in range(len(predictions)):
     #     predictions[i][0] = predictor.time + datetime.timedelta(seconds = times[i])
     #     predictions[i][1], predictions[i][2], predictions[i][3] = predictor.get_prediction(times[i])
@@ -193,10 +194,10 @@ def pixels_to_cm(distance, num_pixels, fov_angle):
 if __name__ == "__main__":
     continue_test = True
 
-    left = MAYA_PHONE_NIR
-    right = NIR_PHONE_NIR
+    left = NIR_PHONE
+    right = ORI_PHONE
 
-    distance = 74.5
+    distance = 77.5
     while continue_test:
         continue_test, prediction_table, shape = capture_video(distance, left, right, method='parallel')
 
