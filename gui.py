@@ -5,7 +5,7 @@ class Gui:
                     [sg.Button('Balloon color (L)'), sg.Button('Balloon color (R)')]]
 
     read_column =  [[sg.Button('Set Borders'), sg.Button('Read Colors'), sg.Button('Read Borders')],
-                    [sg.Text('Distance:'), sg.InputText(size=(7, 1)), sg.Button('Ok')]]            
+                    [sg.Text('Distance:'), sg.InputText(size=(4, 1)), sg.Button('Ok', visible=False, bind_return_key=True), sg.Text('Middle = ', key='-MIDDLE-')]]            
 
     Tello_func = [[sg.Button('Connect'), sg.Button('Take Off'), sg.Button('Flip'), sg.Button('Land')]]
     play_func = [[sg.Button('Start Track'), sg.Button('Stop Track'), sg.Button('Hit'), sg.Button('Quit')]]
@@ -18,7 +18,7 @@ class Gui:
 
     layout = [  [sg.Text('Settings Functions:', justification='center', size = (57,1), font=('MS Sans Serif', 10, 'bold'), text_color='midnight blue')],
                     [sg.Push(), sg.Column(left_camera_col, element_justification='c'), sg.Push(), sg.Column(right_camera_col, element_justification='c'), sg.Push()],
-                    [sg.Column(colors_column), sg.VSeparator(), sg.Column(read_column)],
+                    [sg.Column(colors_column, element_justification='c'), sg.VSeparator(), sg.Column(read_column, element_justification='c')],
                     [sg.Text('Tello Functions:', justification='center', size = (57,1), font=('MS Sans Serif', 10, 'bold'), text_color='midnight blue')],
                     [sg.Push(), sg.Column(Tello_func, element_justification='c'), sg.Push()],
                     [sg.Text('Play Functions:', justification='center', size = (57,1), font=('MS Sans Serif', 10, 'bold'), text_color='midnight blue')],
