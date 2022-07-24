@@ -1,5 +1,7 @@
 from velocity_pot import track_3d, lin_velocity_with_two_params
-from test_2d import DRONE_DEFAULT_HEIGHT
+
+FLOOR_HEIGHT = -70
+DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
 
 class State:
     @property
@@ -22,6 +24,7 @@ class ON_GROUND(State):
         return kwargs['loop_status'].tookoff
 
     def run(self, *args, **kwargs):
+        print("On Ground")
         return
 
 
@@ -31,9 +34,10 @@ class HOVERING(State):
         return STANDING_BY()
 
     def to_transition(self, *args, **kwargs):
-        return kwargs['loop_status'].start_track
+        return kwargs['loop_status'].start
 
-    def run(self):
+    def run(self, **kwargs):
+        print("Hovering")
         return
 
 
@@ -46,6 +50,7 @@ class STANDING_BY(State):
         return kwargs['loop_status'].hit
 
     def run(self, *args, **kwargs):
+        print("Stand By")
         X_OFFSET = 15
         Y_OFFSET = -20
         image_3d = kwargs['image_3d']
@@ -58,8 +63,8 @@ class SEARCHING(State):
         return HITTING()
 
     def to_transition(self, *args, **kwargs):
-        UPPER_LIMIT = 200
-        LOWER_LIMIT = 20
+        UPPER_LIMIT = 50
+        LOWER_LIMIT = 30
         XY_LIMIT = 10
         VEL_LIMIT = 5
 
@@ -73,7 +78,8 @@ class SEARCHING(State):
                and abs(image_3d.velocity_x_drone) < VEL_LIMIT and abs(image_3d.velocity_y_drone) < VEL_LIMIT
 
     def run(self, *args, **kwargs):
-        Z_OFFSET = 50
+        print("Searching")
+        Z_OFFSET = 40
         image_3d = kwargs['image_3d']
         loop_status = kwargs['loop_status']
         track_3d(image_3d, kwargs['tello'], image_3d.phys_x_balloon,
@@ -100,6 +106,7 @@ class HITTING(State):
         return transition
 
     def run(self, *args, **kwargs):
+        print("Hitting")
         image_3d = kwargs['image_3d']
         tello = kwargs['tello']
         x_rel = int(image_3d.phys_x_balloon - image_3d.phys_x_drone)
@@ -119,11 +126,12 @@ class DESCENDING(State):
         return STANDING_BY()
 
     def to_transition(self, *args, **kwargs):
-        Z_OFFSET = 50
+        Z_OFFSET = 15
         image_3d = kwargs['image_3d']
         return image_3d.phys_z_drone < DRONE_DEFAULT_HEIGHT + Z_OFFSET
 
     def run(self, *args, **kwargs):
+        print("Descending")
         tello = kwargs['tello']
         left_right, for_back = 0, 0
         up_down = -100

@@ -13,7 +13,7 @@ class LoopStatus:
         self.hit = False
         self.hit_coords = 0
         self.hit_time = None
-        self.state = ON_GROUND
+        self.state = ON_GROUND()
         self.hit_height = 0
         self.prediction = 0 # 0 - disabled, 1 - starting, 2 - printing and testing predictions
 

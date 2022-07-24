@@ -12,17 +12,19 @@ from velocity_pot import lin_velocity_with_two_params, track_balloon, seek_middl
 
 ORI_WEB = Camera(51.3, 0, False)
 ORI_PHONE = Camera(66.9, 3, False)
-NIR_PHONE = Camera(67, 4, False)
+NIR_PHONE = Camera(67, 0, False)
 MAYA_WEB = Camera(61, 0, True)
 EFRAT_WEB = Camera(61, 2, False)
 EFRAT_PHONE = Camera(64, 3, False)
+MAYA_PHONE = Camera(76, 2, False)
 
-NIR_PHONE_NIR = Camera(67, 3, False)
+NIR_PHONE_NIR = Camera(67, 0, False)
 EFRAT_PHONE_NIR = Camera(77, 2, False)
 
 COLORS_FILENAME = "color_bounds.txt"
+BORDERS_FILENAME = "borders.txt"
 
-FLOOR_HEIGHT = -80
+FLOOR_HEIGHT = -70
 DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
 
 
@@ -137,15 +139,15 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, l
         borders.set_image(image_3d, left_cam)
         print("saved the %.0f coordinate: (%.0f,%.0f,%.0f)" % (borders.index, image_3d.phys_x_balloon, image_3d.phys_y_balloon, image_3d.phys_z_balloon))
         if borders.index == 4:
-            borders.write_borders('borders.txt')
+            borders.write_borders(BORDERS_FILENAME)
 
     # the 'b' button is set as the save borders to file
   #  elif key == ord('b'):
-   #     borders.write_borders('borders.txt')
+   #     borders.write_borders(BORDERS_FILENAME)
 
     # the 'r' button is set as the read colors from file
     elif key == ord('r'):
-        borders.read_borders('borders.txt')
+        borders.read_borders(BORDERS_FILENAME)
         print("middle is ({0:.3f},{1:.3f})".format(borders.x_middle, borders.y_middle))
 
     return True
@@ -213,10 +215,10 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         #     track_balloon(image_now, tello)
 
         # balloon is out of borders. drone is seeking the middle until the balloon is back
-        if loop_status.first_seek and (not borders.balloon_in_borders(image_now) or not loop_status.start):
-            print("seek middle")
-            loop_status.stop_track()
-            seek_middle(image_now, tello, borders)
+        # if loop_status.first_seek and (not borders.balloon_in_borders(image_now) or not loop_status.start):
+        #     print("seek middle")
+        #     loop_status.stop_track()
+        #     seek_middle(image_now, tello, borders)
 
         # balloon returned to the play area, we can continue to play
         #if borders.in_borders(image_now) and not loop_status.start_track:
@@ -259,9 +261,9 @@ if __name__ == "__main__":
     borders = Borders()
     continue_test = True
 
-    left = NIR_PHONE
-    right = ORI_PHONE
+    left = MAYA_PHONE
+    right = NIR_PHONE_NIR
 
-    distance = 77
+    distance = 63
     while continue_test:
         continue_test, colors = capture_video(tello, distance, left, right, colors, borders, method='parallel')

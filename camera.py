@@ -10,8 +10,8 @@ class Camera:
         self.index = index
         self.flip = -1 if is_flipped else 1
         self.is_flipped = is_flipped
-        self.vid = cv2.VideoCapture(index)
-        self._calc_fps()
+        # self.vid = cv2.VideoCapture(index)
+        # self._calc_fps()
 
     def _calc_fps(self) -> None:
         NUM_SECS = 2

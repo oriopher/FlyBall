@@ -1,8 +1,9 @@
 import numpy as np
 from image_3d import Image3D
 from djitellopy import Tello
+from borders import Borders
 
-FLOOR_HEIGHT = -80
+FLOOR_HEIGHT = -70
 DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
 
 
@@ -66,7 +67,7 @@ def lin_velocity_with_two_params(cm_rel, real_velocity, direction):
     A = 1.5
     B = 1
     VELOCITY_LIMIT = 20
-    STOPPING_VEL = 40
+    STOPPING_VEL = 20
 
     limit = B * real_velocity
     velocity_pot = int(min(A * (abs(cm_rel) - limit), MAX_VEL))
