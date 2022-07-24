@@ -208,7 +208,6 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         #   loop_status.out_of_borders = False
         #   loop_status.start_track = True
 
-
         if loop_status.hit_mode():
             hit_ball_rc(image_now, tello, loop_status)
     

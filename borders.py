@@ -67,6 +67,10 @@ class Borders:
     # checks if balloon is in borders
     def balloon_in_borders(self, image_3d: Image3D):
 
+        # borders are not set. return True as if the balloon is in borders
+        if not self.set_borders:
+            return True
+
         # balloon is too far from camera
         if (image_3d.phys_y_balloon - self.m_upper * image_3d.phys_x_balloon - self.b_upper > 0):
             return False
