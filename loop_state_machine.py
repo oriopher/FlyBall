@@ -24,7 +24,6 @@ class ON_GROUND(State):
         return kwargs['loop_status'].tookoff
 
     def run(self, *args, **kwargs):
-        print("On Ground")
         return
 
 
@@ -37,7 +36,6 @@ class HOVERING(State):
         return kwargs['loop_status'].start
 
     def run(self, **kwargs):
-        print("Hovering")
         return
 
 
@@ -50,7 +48,6 @@ class STANDING_BY(State):
         return kwargs['loop_status'].hit
 
     def run(self, *args, **kwargs):
-        print("Stand By")
         X_OFFSET = 15
         Y_OFFSET = -20
         image_3d = kwargs['image_3d']
@@ -78,7 +75,6 @@ class SEARCHING(State):
                and abs(image_3d.velocity_x_drone) < VEL_LIMIT and abs(image_3d.velocity_y_drone) < VEL_LIMIT
 
     def run(self, *args, **kwargs):
-        print("Searching")
         Z_OFFSET = 40
         image_3d = kwargs['image_3d']
         loop_status = kwargs['loop_status']
@@ -106,7 +102,6 @@ class HITTING(State):
         return transition
 
     def run(self, *args, **kwargs):
-        print("Hitting")
         image_3d = kwargs['image_3d']
         tello = kwargs['tello']
         x_rel = int(image_3d.phys_x_balloon - image_3d.phys_x_drone)
@@ -131,7 +126,6 @@ class DESCENDING(State):
         return image_3d.phys_z_drone < DRONE_DEFAULT_HEIGHT + Z_OFFSET
 
     def run(self, *args, **kwargs):
-        print("Descending")
         tello = kwargs['tello']
         left_right, for_back = 0, 0
         up_down = -100
