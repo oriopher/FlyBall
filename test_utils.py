@@ -67,11 +67,11 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status
     return True
 
 
-def draw_circle(image3d: Image3D):
-    show_img = image3d.frame_left.image
-    x_phys = image3d.phys_x_balloon
-    radius = utils.phys_to_left_pix(x_phys + 10) - utils.phys_to_left_pix(x_phys)
-    show_img = cv2.circle(show_img, (int(self.x_balloon), int(self.y_balloon)), radius, (0, 0, 0), 3)
+# def draw_circle(image3d: Image3D):
+#     show_img = image3d.frame_left.image
+#     x_phys = image3d.phys_x_balloon
+#     radius = utils.phys_to_left_pix(x_phys + 10) - utils.phys_to_left_pix(x_phys)
+#     show_img = cv2.circle(show_img, (int(self.x_balloon), int(self.y_balloon)), radius, (0, 0, 0), 3)
 
 
 def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, colors: ColorBounds, method='parallel'):

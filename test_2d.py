@@ -7,7 +7,7 @@ from image_3d import Image3D
 from loop_status import Status
 from djitellopy import Tello
 from camera import Camera
-from velocity_pot import lin_velocity_with_two_params, track_balloon, seek_middle
+from velocity_pot import lin_velocity_with_two_params, track_balloon
 
 ORI_WEB = Camera(51.3, 0, False)
 ORI_PHONE = Camera(66.9, 3, False)
