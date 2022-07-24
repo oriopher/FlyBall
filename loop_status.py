@@ -5,6 +5,7 @@ class LoopStatus:
     def __init__(self):
         self.tookoff = False
         self.start = False
+        self.first_seek = False
         self.continue_loop = True
         self.hit = False
         self.hit_coords = 0
@@ -18,6 +19,8 @@ class LoopStatus:
     def start_track(self):
         if self.tookoff:
             self.start = True
+            if not self.first_seek:
+                self.first_seek = True
 
     def stop_track(self):
         self.start = False
