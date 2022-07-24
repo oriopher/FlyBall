@@ -218,7 +218,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         if loop_status.first_seek and (not borders.balloon_in_borders(image_now) or not loop_status.start):
             print("seek middle")
             loop_status.stop_track()
-            state = STANDING_BY()
+            loop_status.state = STANDING_BY()
 
         # balloon returned to the play area, we can continue to play
         #if borders.in_borders(image_now) and not loop_status.start_track:
