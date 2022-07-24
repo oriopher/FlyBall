@@ -75,6 +75,10 @@ def interactive_loop(frame_counter: int, image_3d: Image3D, colors: ColorBounds,
         loop_status.stop_loop()
         return False
 
+    elif event == 'Ok':
+        distance = int(values[1])
+        gui.window['Ok'].update(button_color = ('white','blue'))  
+
     # the 'c' button reconnects to the drone
     if event == 'Connect':
         tello.connect()
@@ -83,27 +87,34 @@ def interactive_loop(frame_counter: int, image_3d: Image3D, colors: ColorBounds,
     elif event == 'Balloon color (L)':
         lower, upper = image_3d.frame_left.detect_color()
         colors.ball_left.change(lower, upper)
+        gui.window['Balloon color (L)'].update(button_color = ('white','blue'))
 
     elif event == 'Balloon color (R)':
         lower, upper = image_3d.frame_right.detect_color()
         colors.ball_right.change(lower, upper)
+        gui.window['Balloon color (R)'].update(button_color = ('white','blue')) 
 
     elif event == 'Drone color (L)':
         lower, upper = image_3d.frame_left.detect_color()
         colors.drone_left.change(lower, upper)
+        gui.window['Drone color (L)'].update(button_color = ('white','blue'))
 
     elif event == 'Drone color (R)':
         lower, upper = image_3d.frame_right.detect_color()
         colors.drone_right.change(lower, upper)
+        gui.window['Drone color (R)'].update(button_color = ('white','blue'))
 
     elif event == 'Take Off':
         loop_status.takeoff()
+        gui.window['Take Off'].update(button_color = ('white','blue'))
 
     elif event == 'Start Track':
         loop_status.start()
+        gui.window['Start Track'].update(button_color = ('white','blue'))
 
     elif event == 'Land':
         loop_status.stop_loop()
+        gui.window['Land'].update(button_color = ('white','blue'))
 
     return True
 
