@@ -1,10 +1,11 @@
 import numpy as np
 import cv2
+from camera import Camera
 
 
 class Frame:
     THRESHOLD_SIZE = 8  # pixels
-    H_RANGE = 15
+    H_RANGE = 20
     S_RANGE = 30
     V_RANGE = 170
 
@@ -16,8 +17,11 @@ class Frame:
         self.y_drone = 0
         self.x_balloon = 0
         self.y_balloon = 0
+        self.THRESHOLD_SIZE = self.image.shape[1]/60
+        self.SEARCH_RANGE = self.image.shape[1]/10
 
     def detect_coordinates(self, bounds, x_old, y_old, search_range):
+        search_range = max(1, search_range)
         x_min, x_max, y_min, y_max = 0, self.image.shape[1], 0, self.image.shape[0]
         if x_old != 0 and y_old != 0 and search_range!=0:
             x_min = max(int(x_old - search_range), x_min)
@@ -26,7 +30,6 @@ class Frame:
             y_max = min(int(y_old + search_range) + 1, y_max)
 
         detection_image = self.image[y_min:y_max, x_min:x_max]
-
         # convert to hsv
         hsv = cv2.cvtColor(detection_image, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, bounds.lower, bounds.upper)
@@ -52,11 +55,17 @@ class Frame:
         x_coor, y_coor = self.detect_coordinates(bounds, x_old, y_old, search_range)
         self.x_balloon = x_coor
         self.y_balloon = y_coor
+        # if x_old!=0 and y_old!=0:
+        #     self.x_balloon = 0.5 * self.x_balloon + 0.5 * x_old
+        #     self.y_balloon = 0.5 * self.y_balloon + 0.5 * y_old
 
     def detect_drone(self, bounds, search_range, x_old=0, y_old=0):
         x_coor, y_coor = self.detect_coordinates(bounds, x_old, y_old, search_range)
         self.x_drone = x_coor
         self.y_drone = y_coor
+        # if x_old!=0 and y_old!=0:
+        #     self.x_balloon = 0.5 * self.x_balloon + 0.5 * x_old
+        #     self.y_balloon = 0.5 * self.y_balloon + 0.5 * y_old
 
     def detect_color(self):
         y_shape = self.image.shape[0]
@@ -73,17 +82,21 @@ class Frame:
                      min(255, ball_color[2] + Frame.V_RANGE))
         return [min_color, max_color]
 
-    def show_image(self, window_name, detection_sign=True, text_balloon=None, text_drone=None):
+    def image_to_show(self, detection_sign=True, text_balloon=None, text_drone=None, text_color=(250, 250, 250)):
         show_img = self.image
         if detection_sign and self.x_balloon != 0 and self.y_balloon != 0:
             show_img = cv2.circle(show_img, (int(self.x_balloon), int(self.y_balloon)), 15, (0, 0, 0), 3)
             if text_balloon:
                 show_img = cv2.putText(show_img, text_balloon, (int(self.x_balloon), int(self.y_balloon)),
-                                       cv2.FONT_HERSHEY_DUPLEX, 1, (250, 250, 250), 2, cv2.LINE_AA)
+                                       cv2.FONT_HERSHEY_DUPLEX, 1, text_color, 2, cv2.LINE_AA)
         if detection_sign and self.x_drone != 0 and self.y_drone != 0:
             if text_drone:
                 show_img = cv2.putText(show_img, text_drone, (int(self.x_drone), int(self.y_drone)),
-                                       cv2.FONT_HERSHEY_DUPLEX, 1, (250, 250, 250), 2, cv2.LINE_AA)
+                                       cv2.FONT_HERSHEY_DUPLEX, 1, text_color, 2, cv2.LINE_AA)
             show_img = cv2.circle(show_img, (int(self.x_drone), int(self.y_drone)), 15, (0, 0, 0), 3)
 
+        return show_img
+
+    def show_image(self, window_name, detection_sign=True, text_balloon=None, text_drone=None, text_color=(250, 250, 250)):
+        show_img = self.image_to_show(detection_sign, text_balloon, text_drone, text_color)
         cv2.imshow(window_name, show_img)

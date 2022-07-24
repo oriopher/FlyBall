@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from tkinter import Button
 import numpy as np
 import cv2
 import PySimpleGUI as sg
@@ -168,7 +167,8 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, g
     elif event == 'Read Borders':
         borders.read_borders('borders.txt')
         print("middle is ({0:.3f},{1:.3f})".format(borders.x_middle, borders.y_middle))
-        gui.window['Read Borders'].update(button_color = ('white','blue')) 
+        gui.window['Read Borders'].update(button_color = ('white','blue'))
+        gui.window['-MIDDLE-'].update("middle = ({0:.3f},{1:.3f})".format(borders.x_middle, borders.y_middle))
 
     return True
 
