@@ -7,7 +7,7 @@ from image_3d import Image3D
 from loop_status import Status
 from djitellopy import Tello
 from camera import Camera
-from loop_state_machine import State, ON_GROUND
+from loop_state_machine import State, ON_GROUND, STANDING_BY
 from velocity_pot import lin_velocity_with_two_params, track_balloon, seek_middle
 
 ORI_WEB = Camera(51.3, 0, False)
@@ -202,7 +202,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         cv2.imshow("left", left_img)
         image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
 
-        state.run(**{'image_3d': image_now, 'loop_status': loop_status, 'tello': tello})
+        state.run(**{'image_3d': image_now, 'loop_status': loop_status, 'tello': tello, 'borders': borders})
         if state.to_transition(**{'image_3d': image_now, 'loop_status': loop_status, 'tello': tello}):
             loop_status.state = state.next
 
@@ -215,10 +215,10 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         #     track_balloon(image_now, tello)
 
         # balloon is out of borders. drone is seeking the middle until the balloon is back
-        # if loop_status.first_seek and (not borders.balloon_in_borders(image_now) or not loop_status.start):
-        #     print("seek middle")
-        #     loop_status.stop_track()
-        #     seek_middle(image_now, tello, borders)
+        if loop_status.first_seek and (not borders.balloon_in_borders(image_now) or not loop_status.start):
+            print("seek middle")
+            loop_status.stop_track()
+            state = STANDING_BY()
 
         # balloon returned to the play area, we can continue to play
         #if borders.in_borders(image_now) and not loop_status.start_track:
