@@ -11,13 +11,15 @@ class LoopStatus:
         self.first_seek = False
         self.continue_loop = True
         self.hit = False
-        self.hit_coords = 0
-        self.hit_time = None
+        self.hit_coords = (0, 0, 0)
         self.state = ON_GROUND()
         self.hit_height = 0
         self.prediction = 0 # 0 - disabled, 1 - starting, 2 - printing and testing predictions
         self.x_0 = 0
         self.y_0 = 0
+        self.dest_coords = (0,0,0)
+        self.start_hit_timer = None
+        self.end_hit_timer = None
 
     def takeoff(self):
         self.tookoff = True
@@ -49,12 +51,11 @@ class LoopStatus:
         if self.start:
             self.hit = True
             self.hit_coords = coords
+            self.start_hit_timer = datetime.now()
     
     def hit_mode_off(self):
         self.hit = False
-
-    def set_hit_time(self):
-        self.hit_time = datetime.now()
+        self.end_hit_timer = datetime.now()
 
     def hit_mode(self):
         return self.hit
@@ -71,6 +72,8 @@ class LoopStatus:
     def get_predict_stat(self):
         return self.prediction
 
+    def set_dest_coords(self, coords):
+        self.dest_coords = coords
 
 class Status(LoopStatus):
     _instance = None

@@ -21,12 +21,10 @@ NIR_PHONE_NIR = Camera(67, 0, False)
 EFRAT_PHONE_NIR = Camera(64, 2, False)
 
 def track_2d(image_3d: Image3D, tello: Tello):
-    x_cm_rel = image_3d.phys_x_balloon - image_3d.phys_x_drone
-    #print("x_ball_cm: ", image_3d.phys_x_balloon, "x_drone_cm: ", image_3d.phys_x_drone)
+    x_cm_rel = image_3d.get_phys_balloon(0) - image_3d.get_phys_drone(0)
     #print("x_cm_rel: ", x_cm_rel)
 
-    y_cm_rel = image_3d.phys_y_balloon - image_3d.phys_y_drone
-    #print("y_ball_cm: ", image_3d.phys_y_balloon, "y_drone_cm: ", image_3d.phys_y_drone)
+    y_cm_rel = image_3d.get_phys_balloon(1) - image_3d.get_phys_drone(1)
     #print("y_cm_rel: ", y_cm_rel)
 
     left_right, for_back, up_down = 0, 0, 0

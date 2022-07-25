@@ -20,6 +20,8 @@ class Image3D:
         self.phys_x_drone = phys_x_drone
         self.phys_y_drone = phys_y_drone
         self.phys_z_drone = phys_z_drone
+        self.phys_balloon_median = (0, 0, 0)
+        self.phys_drone_median = (0, 0, 0)
         self.velocity_x_balloon = 0
         self.velocity_y_balloon = 0
         self.velocity_z_balloon = 0
@@ -123,3 +125,47 @@ class Image3D:
         self.velocity_x_drone = np.mean(x_drone_vel)
         self.velocity_y_drone = np.mean(y_drone_vel)
 
+    def calculate_mean_distances(self, images_list):
+        x_balloon = np.zeros(len(images_list))
+        y_balloon = np.zeros(len(images_list))
+        z_balloon = np.zeros(len(images_list))
+        x_drone = np.zeros(len(images_list))
+        y_drone = np.zeros(len(images_list))
+        z_drone = np.zeros(len(images_list))
+
+        for i in range(len(images_list)):
+            x_balloon[i] = images_list[i].phys_x_balloon     
+            y_balloon[i] = images_list[i].phys_y_balloon     
+            z_balloon[i] = images_list[i].phys_z_balloon     
+            x_drone[i] = images_list[i].phys_x_drone     
+            y_drone[i] = images_list[i].phys_y_drone     
+            z_drone[i] = images_list[i].phys_z_drone     
+            
+        self.phys_balloon_median = (np.mean(x_balloon), np.mean(y_balloon), np.mean(z_balloon))
+        self.phys_drone_median = (np.mean(x_drone), np.mean(y_drone), np.mean(z_drone))
+
+    def get_phys_balloon(self, index):
+        if index == 0:
+            return self.phys_x_balloon
+        elif index == 1:
+            return self.phys_y_balloon
+        elif index == 2:
+            return self.phys_z_balloon
+
+    def get_phys_drone(self, index):
+        if index == 0:
+            return self.phys_x_drone
+        elif index == 1:
+            return self.phys_y_drone
+        elif index == 2:
+            return self.phys_z_drone
+
+    def get_phys_mean_balloon(self, index):
+        if self.phys_balloon_median == (0,0,0):
+            return self.get_phys_balloon(index)
+        return self.phys_balloon_median[index]
+
+    def get_phys_mean_drone(self, index):
+        if self.phys_drone_median == (0,0,0):
+            return self.get_phys_drone(index)
+        return self.phys_drone_median[index]

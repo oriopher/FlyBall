@@ -5,7 +5,7 @@ from utils import phys_to_left_pix
 import cv2
 import numpy as np
 
-FLOOR_HEIGHT = -70
+FLOOR_HEIGHT = -60
 
 class Borders:
     def __init__(self):
@@ -100,7 +100,10 @@ class Borders:
         return True   
 
     
-    def draw_borders(self, show_img, color = (240,0,240)):
+    def draw_borders(self, show_img, image_3d, color_in = (240,0,240), color_out = (240, 0, 240)):
+        color = color_in
+        if not self.balloon_in_borders(image_3d):
+            color = color_out
         if self.set_borders:
             show_img = cv2.line(show_img, (self.pixels_coordinates[0][0], self.pixels_coordinates[0][1]), (self.pixels_coordinates[1][0], self.pixels_coordinates[1][1]), color, thickness=2)
             show_img = cv2.line(show_img, (self.pixels_coordinates[1][0], self.pixels_coordinates[1][1]), (self.pixels_coordinates[3][0], self.pixels_coordinates[3][1]), color, thickness=2)
@@ -158,4 +161,6 @@ class Borders:
 
         self.calc_borders()
         self.set_borders = True
-        print("Borders Loaded")    
+        print("Borders Loaded")  
+
+      
