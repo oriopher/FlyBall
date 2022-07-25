@@ -161,11 +161,13 @@ class Image3D:
             return self.phys_z_drone
 
     def get_phys_mean_balloon(self, index):
+        return self.get_phys_balloon(index)
         if self.phys_balloon_median == (0,0,0):
             return self.get_phys_balloon(index)
         return self.phys_balloon_median[index]
 
     def get_phys_mean_drone(self, index):
+        return self.get_phys_drone(index)
         if self.phys_drone_median == (0,0,0):
             return self.get_phys_drone(index)
         return self.phys_drone_median[index]

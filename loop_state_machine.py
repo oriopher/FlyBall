@@ -78,7 +78,7 @@ class SEARCHING(State):
         UPPER_LIMIT = 60
         LOWER_LIMIT = 35
         XY_LIMIT = 10
-        VEL_LIMIT = 5
+        VEL_LIMIT = 15
 
         image_3d = kwargs['image_3d']
         loop_status = kwargs['loop_status']

@@ -13,11 +13,12 @@ def track_3d(image_3d: Image3D, tello: Tello, dest_x: float, dest_y: float, dest
     z_cm_rel = dest_z - image_3d.phys_drone_median[2]
 
     left_right, for_back, up_down = 0, 0, 0
-    left_right = lin_velocity_with_two_params(x_cm_rel, image_3d.velocity_x_balloon, 'x')
-    for_back = lin_velocity_with_two_params(y_cm_rel, image_3d.velocity_y_balloon, 'y')
-    # left_right = lin_velocity_with_control(x_cm_rel, image_3d.velocity_x_balloon, 'x')
-    # for_back = lin_velocity_with_control(y_cm_rel, image_3d.velocity_y_balloon, 'y')
-    up_down = lin_velocity_z(z_cm_rel)
+    left_right = lin_velocity_with_two_params(x_cm_rel, image_3d.velocity_x_drone, 'x')
+    for_back = lin_velocity_with_two_params(y_cm_rel, image_3d.velocity_y_drone, 'y')
+    up_down = lin_velocity_with_two_params(z_cm_rel, image_3d.velocity_z_drone, 'z')
+    # left_right = lin_velocity_with_control(x_cm_rel, image_3d.velocity_x_drone, 'x')
+    # for_back = lin_velocity_with_control(y_cm_rel, image_3d.velocity_y_drone, 'y')
+    # up_down = lin_velocity_z(z_cm_rel)
     if tello.send_rc_control:
         tello.send_rc_control(left_right, for_back, up_down, 0)
 
@@ -68,17 +69,33 @@ def lin_velocity_with_acc(cm_rel, real_vel):
 
 def lin_velocity_with_two_params(cm_rel, real_velocity, direction):
     # this function assumes the drone is looking at the cameras.
-    MAX_VEL = 40
-    A = 1
-    B = 1.4
-    VELOCITY_LIMIT = 10
-    STOPPING_VEL = 30
+    # C = 2
+    # VELOCITY_LIMIT = 20
+    # STOPPING_VEL = 0
+    # MAX_VEL = 40
+    # A = 1.5
+    # B = 1
+    # VELOCITY_LIMIT = 10
+    # STOPPING_VEL = 20
 
-    limit = B * real_velocity
+    MAX_VEL = 30
+    if direction == 'z':
+        A = 1.5
+        B = 1.2
+    else:
+        A = 1.5
+        B = 1.5
+
+    
+
+    limit = B * abs(real_velocity)
     velocity_pot = int(min(A * (abs(cm_rel) - limit), MAX_VEL))
 
-    if abs(cm_rel) < limit and abs(real_velocity) > VELOCITY_LIMIT:
-        velocity = -np.sign(real_velocity) * STOPPING_VEL
+    if abs(cm_rel) < limit:
+        velocity = 0
+        # if abs(real_velocity) > VELOCITY_LIMIT:
+        #     velocity = -np.sign(real_velocity) * STOPPING_VEL
+        #     # velocity = -np.sign(real_velocity)*min(abs(real_velocity), MAX_VEL)             
 
     else:
         velocity = -np.sign(cm_rel) * velocity_pot
@@ -87,12 +104,14 @@ def lin_velocity_with_two_params(cm_rel, real_velocity, direction):
         return int(velocity)
     elif direction == 'y':
         return int(velocity)
+    elif direction == 'z':
+        return -int(velocity)
 
 
 def lin_velocity_z(cm_rel):
     # this function assumes the drone is looking at the cameras.
-    MAX_VEL = 40
-    A = 2
+    MAX_VEL = 20
+    A = 1.4
 
     velocity_pot = int(min(A * (abs(cm_rel)), MAX_VEL))
     velocity = np.sign(cm_rel) * velocity_pot

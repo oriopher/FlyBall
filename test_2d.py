@@ -167,8 +167,8 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
     continue_test = True
 
     loop_status = Status()
-    old_images_vel = [None]*15
-    old_images_coord = [None]*5
+    old_images_vel = [None]*10
+    old_images_coord = [None]*4
 
     while(True):
         state = loop_status.state
