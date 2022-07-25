@@ -1,4 +1,4 @@
-from velocity_pot import track_3d, lin_velocity_with_two_params, seek_middle
+from velocity_pot import track_3d, lin_velocity_with_two_params, seek_middle, track_2d
 
 FLOOR_HEIGHT = -70
 DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
@@ -49,7 +49,13 @@ class STANDING_BY(State):
         return kwargs['loop_status'].hit
 
     def run(self, *args, **kwargs):
-        seek_middle(kwargs['image_3d'],  kwargs['tello'],  kwargs['borders'])
+        borders = kwargs['borders']
+        if borders.set_borders:
+            seek_middle(kwargs['image_3d'],  kwargs['tello'], borders)
+        else:
+            loop_status = kwargs['loop_status']
+            track_2d(kwargs['image_3d'],  kwargs['tello'], loop_status.x_0, loop_status.y_0)
+
 
 
 class SEARCHING(State):

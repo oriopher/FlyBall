@@ -31,9 +31,11 @@ def track_balloon(image_3d: Image3D, tello: Tello):
 def seek_middle(image_3d: Image3D, tello: Tello, borders: Borders):
     dest_x = borders.x_middle
     dest_y = borders.y_middle
-    dest_z = DRONE_DEFAULT_HEIGHT
+    track_2d(image_3d, tello, dest_x, dest_y)
 
-    track_3d(image_3d, tello, dest_x, dest_y, dest_z)
+
+def track_2d(image_3d: Image3D, tello: Tello, dest_x: int, dest_y: int):
+    track_3d(image_3d, tello, dest_x, dest_y, DRONE_DEFAULT_HEIGHT)
 
 
 def lin_velocity_with_acc(cm_rel, real_vel):
