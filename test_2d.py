@@ -152,7 +152,7 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, l
 
     # the 'a' button is set to abort hitting state back to seek middle
     elif key == ord('a'):
-        loop_status.stop_track()
+        loop_status.stop_hit()
 
 
     return True
@@ -222,7 +222,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         # balloon is out of borders. drone is seeking the middle until the balloon is back
         if loop_status.first_seek and (not borders.balloon_in_borders(image_now) or not loop_status.start):
             print("seek middle")
-            loop_status.stop_track()
+            loop_status.stop_hit()
 
         # balloon returned to the play area, we can continue to play
         #if borders.in_borders(image_now) and not loop_status.start_track:

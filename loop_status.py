@@ -31,9 +31,13 @@ class LoopStatus:
                 self.y_0 = y_0
 
     def stop_track(self):
-        self.start = False
-        loop_status.hit = False
-        loop_status.state = STANDING_BY()
+        if self.start:
+            self.start = False
+
+    def stop_hit(self):
+        if self.hit:
+            self.hit = False
+            self.state = STANDING_BY()
 
     def stop_loop(self):
         self.continue_loop = False
