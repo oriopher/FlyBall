@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from loop_state_machine import ON_GROUND
+from loop_state_machine import ON_GROUND, STANDING_BY
 
 
 class LoopStatus:
@@ -16,18 +16,24 @@ class LoopStatus:
         self.state = ON_GROUND()
         self.hit_height = 0
         self.prediction = 0 # 0 - disabled, 1 - starting, 2 - printing and testing predictions
+        self.x_0 = 0
+        self.y_0 = 0
 
     def takeoff(self):
         self.tookoff = True
 
-    def start_track(self):
+    def start_track(self, x_0=0, y_0=0):
         if self.tookoff:
             self.start = True
             if not self.first_seek:
                 self.first_seek = True
+                self.x_0 = x_0
+                self.y_0 = y_0
 
     def stop_track(self):
         self.start = False
+        loop_status.hit = False
+        loop_status.state = STANDING_BY()
 
     def stop_loop(self):
         self.continue_loop = False
