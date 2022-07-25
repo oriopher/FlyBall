@@ -4,7 +4,7 @@ from djitellopy import Tello
 from borders import Borders
 
 FLOOR_HEIGHT = -70
-DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
+DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 80
 
 
 def track_3d(image_3d: Image3D, tello: Tello, dest_x: float, dest_y: float, dest_z: float):
@@ -13,8 +13,10 @@ def track_3d(image_3d: Image3D, tello: Tello, dest_x: float, dest_y: float, dest
     z_cm_rel = dest_z - image_3d.phys_z_drone
 
     left_right, for_back, up_down = 0, 0, 0
-    left_right = lin_velocity_with_two_params(x_cm_rel, image_3d.velocity_x_balloon, 'x')
-    for_back = lin_velocity_with_two_params(y_cm_rel, image_3d.velocity_y_balloon, 'y')
+    # left_right = lin_velocity_with_two_params(x_cm_rel, image_3d.velocity_x_balloon, 'x')
+    # for_back = lin_velocity_with_two_params(y_cm_rel, image_3d.velocity_y_balloon, 'y')
+    left_right = lin_velocity_with_control(x_cm_rel, image_3d.velocity_x_balloon, 'x')
+    for_back = lin_velocity_with_control(y_cm_rel, image_3d.velocity_y_balloon, 'y')
     up_down = lin_velocity_z(z_cm_rel)
     if tello.send_rc_control:
         tello.send_rc_control(left_right, for_back, up_down, 0)
@@ -72,7 +74,7 @@ def lin_velocity_with_two_params(cm_rel, real_velocity, direction):
     limit = B * real_velocity
     velocity_pot = int(min(A * (abs(cm_rel) - limit), MAX_VEL))
 
-    if (abs(cm_rel) < limit and abs(real_velocity) > VELOCITY_LIMIT):
+    if abs(cm_rel) < limit and abs(real_velocity) > VELOCITY_LIMIT:
         velocity = -np.sign(real_velocity) * STOPPING_VEL
 
     else:
@@ -95,10 +97,10 @@ def lin_velocity_z(cm_rel):
     return int(velocity)
 
 
-def lin_velocity_with_control(cm_rel, real_velocity):
+def lin_velocity_with_control(cm_rel, real_velocity, direction):
     # this function assumes the drone is looking at the cameras.
     MAX_VEL = 80
-    UPPER_LIMIT = 20
+    UPPER_LIMIT = 10
     LOWER_LIMIT = 5
     VELOCITY_LIMIT = 20
     STOPPING_VEL = 10
@@ -128,4 +130,8 @@ def lin_velocity_with_control(cm_rel, real_velocity):
     else:
         velocity = 0
 
-    return int(velocity)
+    velocity = int(velocity)
+    if direction == 'x':
+        return -velocity
+    elif direction == 'y':
+        return -velocity

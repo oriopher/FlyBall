@@ -1,7 +1,7 @@
 from velocity_pot import track_3d, lin_velocity_with_two_params
 
 FLOOR_HEIGHT = -70
-DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
+DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 80
 
 class State:
     @property
@@ -48,8 +48,8 @@ class STANDING_BY(State):
         return kwargs['loop_status'].hit
 
     def run(self, *args, **kwargs):
-        X_OFFSET = 15
-        Y_OFFSET = -20
+        X_OFFSET = -15
+        Y_OFFSET = -50
         image_3d = kwargs['image_3d']
         track_3d(image_3d, kwargs['tello'], image_3d.phys_x_balloon + X_OFFSET,
                  image_3d.phys_y_balloon + Y_OFFSET, DRONE_DEFAULT_HEIGHT)

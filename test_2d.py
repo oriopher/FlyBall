@@ -16,7 +16,7 @@ NIR_PHONE = Camera(67, 0, False)
 MAYA_WEB = Camera(61, 0, True)
 EFRAT_WEB = Camera(61, 2, False)
 EFRAT_PHONE = Camera(64, 3, False)
-MAYA_PHONE = Camera(76, 2, False)
+MAYA_PHONE = Camera(72, 2, False)
 
 NIR_PHONE_NIR = Camera(67, 0, False)
 EFRAT_PHONE_NIR = Camera(77, 2, False)
@@ -25,7 +25,7 @@ COLORS_FILENAME = "color_bounds.txt"
 BORDERS_FILENAME = "borders.txt"
 
 FLOOR_HEIGHT = -70
-DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
+DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 80
 
 
 def hit_ball_rc(image_3d: Image3D, tello: Tello, loop_status: Status):
@@ -229,10 +229,10 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         if loop_status.hit_mode():
             hit_ball_rc(image_now, tello, loop_status)
     
-        elif loop_status.hit_time and datetime.now() - timedelta(seconds = 1) > loop_status.hit_time:
-            continue
-        elif loop_status.start:
-            track_balloon(image_now, tello)
+        # elif loop_status.hit_time and datetime.now() - timedelta(seconds = 1) > loop_status.hit_time:
+        #     continue
+        # elif loop_status.start:
+        #     track_balloon(image_now, tello)
 
         old_images[frame_counter % len(old_images)] = image_now
         image_old = image_now
@@ -264,6 +264,6 @@ if __name__ == "__main__":
     left = MAYA_PHONE
     right = NIR_PHONE_NIR
 
-    distance = 63
+    distance = 60
     while continue_test:
         continue_test, colors = capture_video(tello, distance, left, right, colors, borders, method='parallel')
