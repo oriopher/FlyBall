@@ -2,7 +2,9 @@ from datetime import datetime, timedelta
 import numpy as np
 import cv2
 import PySimpleGUI as sg
+from sklearn.neighbors import VALID_METRICS
 from borders import Borders
+from frame import Frame
 from gui import Gui
 from color_bounds import ColorBounds
 from image_3d import Image3D
@@ -17,7 +19,6 @@ NIR_PHONE = Camera(67, 4, False)
 MAYA_WEB = Camera(61, 0, True)
 EFRAT_WEB = Camera(61, 2, False)
 EFRAT_PHONE = Camera(64, 3, False)
-
 NIR_PHONE_NIR = Camera(67, 3, False)
 EFRAT_PHONE_NIR = Camera(77, 2, False)
 
@@ -65,96 +66,94 @@ def hit_ball_rc(image_3d: Image3D, tello: Tello, loop_status: Status):
 
 
 
-def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, gui: Gui, loop_status: Status, left_cam: Camera, tello: Tello) -> bool:
+def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, gui: Gui, loop_status: Status, left_cam: Camera, right_cam: Camera, tello: Tello) -> bool:
     event, values = gui.window.read()
-    
+    key = cv2.waitKey(1) & 0xFF
     str_colors_changed = "color bounds changed"
 
-    if event == sg.WIN_CLOSED or event == 'Quit': # if user closes window
+    # the 'q' button is set as the quitting button or if user closes window
+    if event == sg.WIN_CLOSED or event == 'Quit' or key == ord('q'):
         loop_status.stop_loop()
         return False
 
+    # if user presses ENTER it updates distance
     elif event == 'Ok':
-        distance = int(values[4])
+        global DISTANCE
+        DISTANCE = int(values['-DISTANCE-'])
         gui.window['Ok'].update(button_color = ('white','blue'))  
 
     # the 'c' button reconnects to the drone
-    if event == 'Connect':
+    elif event == 'Connect' or key == ord('c'):
         tello.connect()
         loop_status.reset()
 
-
-    # detect color of balloon in the left cam
-    elif event == 'Balloon color (L)':
+    # the 'v' button is set as the detect color of balloon in the left cam
+    elif event == 'Balloon color (L)' or key == ord('v'):
         lower, upper = image_3d.frame_left.detect_color()
         colors.ball_left.change(lower, upper)
         print(str_colors_changed)
         gui.window['Balloon color (L)'].update(button_color = ('white','blue'))
 
-
-
     # the 'n' button is set as the detect color of balloon in the right cam
-    elif event == 'Balloon color (R)':
+    elif event == 'Balloon color (R)' or key == ord('n'):
         lower, upper = image_3d.frame_right.detect_color()
         colors.ball_right.change(lower, upper)
         print(str_colors_changed)
         gui.window['Balloon color (R)'].update(button_color = ('white','blue')) 
 
-
     # the 's' button is set as the detect color of drone in the left cam
-    elif event == 'Drone color (L)':
+    elif event == 'Drone color (L)' or key == ord('s'):
         lower, upper = image_3d.frame_left.detect_color()
         colors.drone_left.change(lower, upper)
         print(str_colors_changed)
         gui.window['Drone color (L)'].update(button_color = ('white','blue'))
 
-
     # the 'f' button is set as the detect color of drone in the right cam
-    elif event == 'Drone color (R)':
+    elif event == 'Drone color (R)' or key == ord('f'):
         lower, upper = image_3d.frame_right.detect_color()
         colors.drone_right.change(lower, upper)
         print(str_colors_changed)
         gui.window['Drone color (R)'].update(button_color = ('white','blue'))
 
-
-    elif event == 'Take Off':
+    # the 't' button is set as take off
+    elif event == 'Take Off' or key == ord('t'):
         loop_status.takeoff()
         tello.connect()
         print("battery = ", tello.get_battery(), "%")
         tello.takeoff()
         gui.window['Take Off'].update(button_color = ('white','blue'))
 
-
-    elif event == 'Start Track':
+    # the 'y' button is set as start tracking balloon
+    elif event == 'Start Track' or key == ord('y'):
         loop_status.start_track()
         gui.window['Start Track'].update(button_color = ('white','blue'))
 
-
     # the 'l' button is set as the landing button
-    elif event == 'Land':
+    elif event == 'Land' or key == ord('l'):
         loop_status.stop_loop()
         gui.window['Land'].update(button_color = ('white','blue'))
 
     # the 'h' button is set as the hitting balloon method
-    elif event == 'Hit':
+    elif event == 'Hit' or key == ord('h'):
         coords = (image_3d.phys_x_balloon, image_3d.phys_y_balloon, image_3d.phys_z_balloon)
         loop_status.hit_mode_on(coords)
-
-    elif event == 'Flip':
+   
+    # the 'w' button is set as flip
+    elif event == 'Flip' or key == ord('w'):
         tello.flip_forward()
 
     # the 'p' button is set as the save colors to file
-    elif event == 'Write Colors':
+    elif event == 'Save Colors' or key == ord('p'):
         colors.write_colors(COLORS_FILENAME)
-        gui.window['Write Colors'].update(button_color = ('white','blue'))
+        gui.window['Save Colors'].update(button_color = ('white','blue'))
 
-    # the 'k' button is set as the read colors from file
-    elif event == 'Read Colors':
+    # the 'k' button is set as the load colors from file
+    elif event == 'Load Colors' or key == ord('k'):
         colors.read_colors(COLORS_FILENAME)
-        gui.window['Read Colors'].update(button_color = ('white','blue'))
+        gui.window['Load Colors'].update(button_color = ('white','blue'))
 
     # the 'j' button is set as the saving the borders. can save 4 coordinates
-    elif event == '-SetBorders-':
+    elif event == '-SetBorders-' or key == ord('j'):
         borders.set_image(image_3d, left_cam)
         gui.window['-SetBorders-'].update('Set Borders('+ str(borders.index) + ')')
         print("saved the %.0f coordinate: (%.0f,%.0f,%.0f)" % (borders.index, image_3d.phys_x_balloon, image_3d.phys_y_balloon, image_3d.phys_z_balloon))
@@ -162,13 +161,30 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, g
             borders.write_borders('borders.txt')
             gui.window['-SetBorders-'].update(button_color = ('white','blue'))    
 
-
-    # the 'r' button is set as the read colors from file
-    elif event == 'Read Borders':
+    # the 'r' button is set as the load borders from file
+    elif event == 'Load Borders' or key == ord('r'):
         borders.read_borders('borders.txt')
         print("middle is ({0:.3f},{1:.3f})".format(borders.x_middle, borders.y_middle))
-        gui.window['Read Borders'].update(button_color = ('white','blue'))
+        gui.window['Load Borders'].update(button_color = ('white','blue'))
         gui.window['-MIDDLE-'].update("Middle = ({0:.3f},{1:.3f})".format(borders.x_middle, borders.y_middle))
+
+    elif event ==  '-FLIP_LEFT':
+        left_cam.flip = values['-FLIP_LEFT-']
+
+    elif event ==  '-FLIP_RIGHT':
+        right_cam.flip = values['-FLIP_RIGHT-']   
+
+    elif event == '-SLIDER_T-':
+        Frame.THRESHOLD_SIZE = values['-SLIDER_T-']
+
+    elif event == '-SLIDER_H-':
+        Frame.H_RANGE = values['-SLIDER_H-']      
+
+    elif event == '-SLIDER_V-':
+        Frame.H_RANGE = values['-SLIDER_V-'] 
+
+    elif event == '-SLIDER_S-':
+        Frame.H_RANGE = values['-SLIDER_S-'] 
 
     return True
 
@@ -243,7 +259,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         old_images[frame_counter % len(old_images)] = image_now
         image_old = image_now
     
-        continue_test = interactive_loop(image_now, colors, borders, gui, loop_status, left, tello)
+        continue_test = interactive_loop(image_now, colors, borders, gui, loop_status, left, right, tello)
         if not loop_status.continue_loop:
             break
     
@@ -272,5 +288,6 @@ if __name__ == "__main__":
     right = ORI_PHONE
 
     distance = 77
+
     while continue_test:
         continue_test, colors = capture_video(tello, distance, left, right, colors, borders, gui, method='parallel')
