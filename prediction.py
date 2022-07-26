@@ -54,7 +54,7 @@ class NumericBallPredictor:
     rubber_weight = 2.5 * 10 ** -3
     m = air_mass + rubber_weight  # Balloon mass.
 
-    XY_BOUND = 5 / 100
+    XY_VEL_BOUND = 5 / 100
     Z_BOUND = 10 / 100
 
     def __init__(self, image_3d: Image3D):
@@ -93,9 +93,20 @@ class NumericBallPredictor:
         sol = self._prepare_predictions(np.linspace(0, time, 2))
         return self._solution_to_coords(sol)[:, 1]
 
-    def get_optimal_hitting_point(self):
-        times = np.concatenate((np.arange(0, 0.51, 0.25), np.arange(0.6, 2.01, 0.1), np.arange(2.25, 3.01, 0.25)))
+    def _get_optimal_hitting_point_for_times(self, times):
         preds = self._prepare_predictions(times)
-        mask = np.any([preds[:, 0] <=self.XY_BOUND, preds[:, 3] >= self.Z_BOUND], axis=0)
-        times = times[mask]
-        times = np.linspace(times[0], times[1], 20)
+        mask = np.all([preds[:, 3] >= self.Z_BOUND, preds[:, 1] <= 0, preds[:, 0] <= self.XY_VEL_BOUND], axis=0)
+        return times[mask], preds[mask]
+
+    def get_optimal_hitting_point(self, start_time=0.5, end_time=3, jump=0.1):
+        times = np.arange(start_time, end_time + jump / 2, jump)
+        times, preds = self._get_optimal_hitting_point_for_times(times)
+        if len(preds) == 0:
+            return False
+        if len(preds) == 1:
+            return start_time, self._solution_to_coords(preds)[:, 0]
+        time = times[0]
+        jump = jump / 10
+        times = np.arange(time - jump, time + jump / 2, jump)
+        times, preds = self._get_optimal_hitting_point_for_times(times)
+        return times[0], self._solution_to_coords(preds)[:, 0]
