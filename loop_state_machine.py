@@ -93,8 +93,8 @@ class SEARCHING(State):
         Z_OFFSET = 40
         image_3d = kwargs['image_3d']
         loop_status = kwargs['loop_status']
-        x_dest = image_3d.get_phys_mean_balloon(0)
-        y_dest = image_3d.get_phys_mean_balloon(1)
+        x_dest = image_3d.get_phys_balloon(0)
+        y_dest = image_3d.get_phys_balloon(1)
         z_dest = loop_status.hit_coords[2] - Z_OFFSET
         loop_status.set_dest_coords((x_dest, y_dest, z_dest))
         track_3d(image_3d, kwargs['tello'], x_dest, y_dest, z_dest)
@@ -127,8 +127,8 @@ class HITTING(State):
         y_rel = int(image_3d.get_phys_balloon(1) - image_3d.get_phys_drone(1))
 
         loop_status = kwargs['loop_status']
-        x_dest = image_3d.get_phys_mean_balloon(0)
-        y_dest = image_3d.get_phys_mean_balloon(1)
+        x_dest = image_3d.get_phys_balloon(0)
+        y_dest = image_3d.get_phys_balloon(1)
         z_dest = loop_status.hit_coords[2]
         loop_status.set_dest_coords((x_dest, y_dest, z_dest))
 

@@ -193,10 +193,9 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
                 image_now.phys_x_drone, image_now.phys_y_drone, image_now.phys_z_drone = image_old.get_phys_drone(0), image_old.get_phys_drone(1), image_old.get_phys_drone(2)
 
             image_now.calculate_mean_velocities(old_images_vel)
-            image_now.calculate_mean_distances(old_images_coord)
         
-        text_balloon_coor = "c(%.0f,%.0f,%.0f)" % image_now.phys_balloon_median
-        text_drone_coor = "c(%.0f,%.0f,%.0f)" % image_now.phys_drone_median
+        text_balloon_coor = "c(%.0f,%.0f,%.0f)" % (image_now.phys_x_balloon, image_now.phys_y_balloon, image_now.phys_z_balloon)
+        text_drone_coor = "c(%.0f,%.0f,%.0f)" % (image_now.phys_x_drone, image_now.phys_y_drone, image_now.phys_z_drone)
         text_balloon_vel = "v(%.0f,%.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon)
         text_drone_vel = "v(%.0f,%.0f)" % (image_now.velocity_x_drone, image_now.velocity_y_drone)
     

@@ -24,11 +24,9 @@ def track_3d(image_3d: Image3D, tello: Tello, dest_x: float, dest_y: float, dest
 
 
 def track_balloon(image_3d: Image3D, tello: Tello):
-    dest_x = image_3d.get_phys_mean_balloon(0)
-    dest_y = image_3d.get_phys_mean_balloon(1)
-    dest_z = DRONE_DEFAULT_HEIGHT
-
-    track_3d(image_3d, tello, dest_x, dest_y, dest_z)
+    dest_x = image_3d.get_phys_balloon(0)
+    dest_y = image_3d.get_phys_balloon(1)
+    track_2d(image_3d, tello, dest_x, dest_y)
 
 
 def seek_middle(image_3d: Image3D, tello: Tello, borders: Borders):
