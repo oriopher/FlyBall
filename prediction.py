@@ -41,6 +41,16 @@ class BallPredictor:
         x, y, z = x * 100, y * 100, z * 100
         return x, y, z  # cm
 
+    def get_prediction_height(self, height):
+        times = np.linspace(0,2,60)
+
+        for i in range(len(times) - 1):
+            x1, y1, z1 = self.get_prediction(times[i])
+            x2, y2, z2 = self.get_prediction(times[i+1])
+            if z1>=height and z2<=height:
+                return x1, y1, z1
+
+        return 0, 0, 0
 
 class NumericBallPredictor:
     r = 0.1  # in meters
@@ -87,3 +97,14 @@ class NumericBallPredictor:
 
     def get_prediction(self, time):
         return self._prepare_predictions(np.linspace(0, time, 2))[:,1]
+
+    def get_prediction_height(self, height):
+        times = np.linspace(0,4,120)
+
+        for i in range(len(times) - 1):
+            x1, y1, z1 = self.get_prediction(times[i])
+            x2, y2, z2 = self.get_prediction(times[i+1])
+            if z1>=height and z2<=height:
+                return x1, y1, z1
+
+        return 0, 0, 0

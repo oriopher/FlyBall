@@ -20,6 +20,7 @@ class LoopStatus:
         self.dest_coords = (0,0,0)
         self.start_hit_timer = None
         self.end_hit_timer = None
+        self.test_state = 0
 
     def takeoff(self):
         self.tookoff = True

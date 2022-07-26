@@ -4,7 +4,7 @@ from djitellopy import Tello
 from borders import Borders
 
 FLOOR_HEIGHT = -80
-DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 80
+DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 40
 
 
 def track_3d(image_3d: Image3D, tello: Tello, dest_x: float, dest_y: float, dest_z: float):

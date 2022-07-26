@@ -138,3 +138,14 @@ class Image3D:
             return self.phys_y_drone
         elif index == 2:
             return self.phys_z_drone
+
+    def process_image(self, image_old, colors : ColorBounds, left : Camera, right : Camera, cameras_distance, old_images_vel, method='parallel'):
+        self.detect_all(colors, image_old)
+        balloon_exist, drone_exist = self.calculate_all_distances(left, right, cameras_distance, method=method)
+        if not balloon_exist:
+            self.phys_x_balloon, self.phys_y_balloon, self.phys_z_balloon = image_old.get_phys_balloon(0), image_old.get_phys_balloon(1), image_old.get_phys_balloon(2)
+        if not drone_exist:
+            self.phys_x_drone, self.phys_y_drone, self.phys_z_drone = image_old.get_phys_drone(0), image_old.get_phys_drone(1), image_old.get_phys_drone(2)
+
+        self.calculate_mean_velocities(old_images_vel)
+
