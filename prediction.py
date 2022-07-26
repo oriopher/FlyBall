@@ -55,7 +55,7 @@ class NumericBallPredictor:
     m = air_mass + rubber_weight  # Balloon mass.
 
     XY_VEL_BOUND = 5 / 100
-    Z_BOUND = 10 / 100
+    Z_BOUND = -10 / 100
 
     def __init__(self, image_3d: Image3D):
         self.time = image_3d.time
@@ -94,7 +94,7 @@ class NumericBallPredictor:
         return self._solution_to_coords(sol)[:, 1]
 
     def _get_optimal_hitting_point_for_times(self, times):
-        preds = self._prepare_predictions(times)
+        preds = self._prepare_predictions(np.insert(times, 0, 0))[1:]
         mask = np.all([preds[:, 3] >= self.Z_BOUND, preds[:, 1] <= 0, preds[:, 0] <= self.XY_VEL_BOUND], axis=0)
         return times[mask], preds[mask]
 
@@ -103,7 +103,7 @@ class NumericBallPredictor:
         times, preds = self._get_optimal_hitting_point_for_times(times)
         if len(preds) == 0:
             return False
-        if len(preds) == 1:
+        if times[0] == start_time:
             return start_time, self._solution_to_coords(preds)[:, 0]
         time = times[0]
         new_jump = jump / 10
