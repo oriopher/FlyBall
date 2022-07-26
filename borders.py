@@ -5,7 +5,7 @@ from utils import phys_to_left_pix
 import cv2
 import numpy as np
 
-FLOOR_HEIGHT = -60
+FLOOR_HEIGHT = -80
 
 class Borders:
     def __init__(self):

@@ -1,6 +1,6 @@
 from velocity_pot import track_3d, lin_velocity_with_two_params, seek_middle, track_2d
 
-FLOOR_HEIGHT = -60
+FLOOR_HEIGHT = -80
 DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 80
 
 
@@ -60,9 +60,9 @@ class STANDING_BY(State):
         else:
             # track_2d(kwargs['image_3d'],  kwargs['tello'], loop_status.x_0, loop_status.y_0)
             image_3d = kwargs['image_3d']
-            x_dest = -10
-            y_dest = 240
-            z_dest = 80
+            x_dest = 20
+            y_dest = 160
+            z_dest = -10
             track_3d(image_3d,  kwargs['tello'], x_dest, y_dest, z_dest)
 
         loop_status.set_dest_coords((x_dest, y_dest, z_dest))
@@ -75,9 +75,9 @@ class SEARCHING(State):
         return HITTING()
 
     def to_transition(self, *args, **kwargs):
-        UPPER_LIMIT = 60
-        LOWER_LIMIT = 35
-        XY_LIMIT = 10
+        UPPER_LIMIT = 50
+        LOWER_LIMIT = 25
+        XY_LIMIT = 8
         VEL_LIMIT = 15
 
         image_3d = kwargs['image_3d']
@@ -90,7 +90,7 @@ class SEARCHING(State):
                and abs(image_3d.velocity_x_drone) < VEL_LIMIT and abs(image_3d.velocity_y_drone) < VEL_LIMIT
 
     def run(self, *args, **kwargs):
-        Z_OFFSET = 50
+        Z_OFFSET = 40
         image_3d = kwargs['image_3d']
         loop_status = kwargs['loop_status']
         x_dest = image_3d.get_phys_mean_balloon(0)

@@ -3,7 +3,7 @@ from image_3d import Image3D
 from djitellopy import Tello
 from borders import Borders
 
-FLOOR_HEIGHT = -60
+FLOOR_HEIGHT = -80
 DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 80
 
 
@@ -69,35 +69,48 @@ def lin_velocity_with_acc(cm_rel, real_vel):
 
 def lin_velocity_with_two_params(cm_rel, real_velocity, direction):
     # this function assumes the drone is looking at the cameras.
-    # C = 2
-    # VELOCITY_LIMIT = 20
-    # STOPPING_VEL = 0
-    # MAX_VEL = 40
-    # A = 1.5
-    # B = 1
-    # VELOCITY_LIMIT = 10
-    # STOPPING_VEL = 20
 
-    MAX_VEL = 30
+    # about 3-4 seconds to hit for linear potential
+    # MIN_VEL = 9 # under this speed the tello recieves this as 0
+    # if direction == 'z':
+    #     MAX_VEL = 30
+    #     A = 0.9
+    #     B = 1.2
+    # elif direction == 'x':
+    #     MAX_VEL = 60
+    #     A = 1
+    #     B = 0.9
+    # elif direction == 'y':
+    #     MAX_VEL = 60
+    #     A = 1
+    #     B = 0.9
+    # else:
+    #     return 0
+
+    MIN_VEL = 9 # under this speed the tello recieves this as 0
+    LOWER_BOUND = 2 # when the drone is closer than this we will just let it stop
     if direction == 'z':
-        A = 1.5
+        MAX_VEL = 30
+        A_SQRT = 2
+        A_LINEAR = 0.9
         B = 1.2
-    else:
-        A = 1.5
+    elif direction == 'x' or direction == 'y':
+        MAX_VEL = 80
+        A_SQRT = 4
+        A_LINEAR = 0
         B = 1.5
+    else:
+        return 0
 
-    
-
-    limit = B * abs(real_velocity)
-    velocity_pot = int(min(A * (abs(cm_rel) - limit), MAX_VEL))
+    limit = max(B * abs(real_velocity), LOWER_BOUND)
 
     if abs(cm_rel) < limit:
-        velocity = 0
-        # if abs(real_velocity) > VELOCITY_LIMIT:
-        #     velocity = -np.sign(real_velocity) * STOPPING_VEL
-        #     # velocity = -np.sign(real_velocity)*min(abs(real_velocity), MAX_VEL)             
+        velocity = 0   
+        print("stopping", direction)
 
     else:
+        # velocity_pot = int(min(A * (abs(cm_rel) - limit) + MIN_VEL, MAX_VEL))
+        velocity_pot = int(min(max(A_SQRT * np.sqrt(abs(cm_rel) - limit), A_LINEAR * (abs(cm_rel) - limit)) + MIN_VEL, MAX_VEL))
         velocity = -np.sign(cm_rel) * velocity_pot
 
     if direction == 'x':

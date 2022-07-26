@@ -25,7 +25,7 @@ EFRAT_PHONE_NIR = Camera(77, 2, False)
 COLORS_FILENAME = "color_bounds.txt"
 BORDERS_FILENAME = "borders.txt"
 
-FLOOR_HEIGHT = -60
+FLOOR_HEIGHT = -80
 DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 80
 
 
@@ -253,6 +253,6 @@ if __name__ == "__main__":
     left = NIR_PHONE_NIR
     right = MAYA_PHONE
 
-    distance = 64
+    distance = 58
     while continue_test:
         continue_test, colors = capture_video(tello, distance, left, right, colors, borders, method='parallel')
