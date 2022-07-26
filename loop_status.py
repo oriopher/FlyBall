@@ -57,7 +57,6 @@ class LoopStatus:
     def hit_mode_off(self):
         self.hit = False
         self.end_hit_timer = datetime.now()
-        print("Hit Time: " + str((self.end_hit_timer - self.start_hit_timer).total_seconds()))
 
     def hit_mode(self):
         return self.hit

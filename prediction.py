@@ -53,7 +53,7 @@ class BallPredictor:
         return 0, 0, 0
 
 class NumericBallPredictor:
-    r = 0.1  # in meters
+    r = 0.115  # in meters
     g = 9.7803  # Gravitational constant
     rho = 1.225  # Air density kg/m^3
     V = 4 / 3 * np.pi * r ** 3  # Balloon Volume
@@ -99,12 +99,26 @@ class NumericBallPredictor:
         return self._prepare_predictions(np.linspace(0, time, 2))[:,1]
 
     def get_prediction_height(self, height):
-        times = np.linspace(0,4,120)
+        seconds = 4
+        fps = 30
+        times = np.linspace(0,seconds,seconds*fps)
 
-        for i in range(len(times) - 1):
-            x1, y1, z1 = self.get_prediction(times[i])
-            x2, y2, z2 = self.get_prediction(times[i+1])
-            if z1>=height and z2<=height:
-                return x1, y1, z1
+        return self.get_prediction_height_rec(times, 0, seconds*fps-1, height)
 
-        return 0, 0, 0
+    def get_prediction_height_rec(self, times, left, right, height):
+        if left >= right - 1:
+            return self.get_prediction(times[left])
+
+        middle = int(left/2 + right/2)
+        x1, y1, z1 = self.get_prediction(times[middle])
+        x2, y2, z2 = self.get_prediction(times[middle+1])
+
+        if z2 > z1:
+            return self.get_prediction_height_rec(times, middle, right, height)
+        if z1 >= height and z2 <= height:
+            return x1, y1, z1
+        
+        if z2 >= height:
+            return self.get_prediction_height_rec(times, middle, right, height)
+        if z1 <= height:
+            return self.get_prediction_height_rec(times, left, middle, height)

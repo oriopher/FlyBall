@@ -1,7 +1,7 @@
 from velocity_pot import track_3d, lin_velocity_with_two_params, seek_middle, track_2d
 from prediction import NumericBallPredictor
 
-FLOOR_HEIGHT = -80
+FLOOR_HEIGHT = -100
 DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 40
 
 
@@ -81,10 +81,10 @@ class SEARCHING(State):
         return HITTING()
 
     def to_transition(self, *args, **kwargs):
-        UPPER_LIMIT = 60
-        LOWER_LIMIT = 35
-        XY_LIMIT = 8
-        VEL_LIMIT = 15
+        UPPER_LIMIT = 120
+        LOWER_LIMIT = 20
+        XY_LIMIT = 50
+        VEL_LIMIT = 40
 
         image_3d = kwargs['image_3d']
         loop_status = kwargs['loop_status']
@@ -93,7 +93,8 @@ class SEARCHING(State):
         z_rel = int(image_3d.get_phys_balloon(2) - image_3d.get_phys_drone(2))
 
         return abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT and LOWER_LIMIT < z_rel < UPPER_LIMIT \
-               and abs(image_3d.velocity_x_drone) < VEL_LIMIT and abs(image_3d.velocity_y_drone) < VEL_LIMIT
+               and abs(image_3d.velocity_x_drone) < VEL_LIMIT and abs(image_3d.velocity_y_drone) < VEL_LIMIT \
+                and image_3d.velocity_z_balloon < 0
 
     def run(self, *args, **kwargs):
         Z_OFFSET = 50

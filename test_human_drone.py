@@ -25,7 +25,7 @@ EFRAT_PHONE_NIR = Camera(77, 2, False)
 COLORS_FILENAME = "color_bounds.txt"
 BORDERS_FILENAME = "borders.txt"
 
-FLOOR_HEIGHT = -80
+FLOOR_HEIGHT = -100
 DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 40
 
 
@@ -192,7 +192,6 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, m
         if not loop_status.continue_loop:
             break
     
-    print("Hit Time: " + str(loop_status.end_hit_timer - loop_status.start_hit_timer))
     if loop_status.tookoff:
         tello.land()
         print("battery = ", tello.get_battery(), "%")
@@ -214,6 +213,6 @@ if __name__ == "__main__":
     left = NIR_PHONE_NIR
     right = MAYA_PHONE
 
-    distance = 58
+    distance = 64
     while continue_test:
         continue_test = capture_video(tello, distance, left, right, method='parallel')
