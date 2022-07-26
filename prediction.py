@@ -106,7 +106,7 @@ class NumericBallPredictor:
         if len(preds) == 1:
             return start_time, self._solution_to_coords(preds)[:, 0]
         time = times[0]
-        jump = jump / 10
-        times = np.arange(time - jump, time + jump / 2, jump)
+        new_jump = jump / 10
+        times = np.arange(time - jump, time + new_jump / 2, new_jump)
         times, preds = self._get_optimal_hitting_point_for_times(times)
         return times[0], self._solution_to_coords(preds)[:, 0]
