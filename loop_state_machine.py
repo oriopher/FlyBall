@@ -81,8 +81,8 @@ class SEARCHING(State):
         return HITTING()
 
     def to_transition(self, *args, **kwargs):
-        UPPER_LIMIT = 50
-        LOWER_LIMIT = 25
+        UPPER_LIMIT = 60
+        LOWER_LIMIT = 35
         XY_LIMIT = 8
         VEL_LIMIT = 15
 
@@ -96,8 +96,8 @@ class SEARCHING(State):
                and abs(image_3d.velocity_x_drone) < VEL_LIMIT and abs(image_3d.velocity_y_drone) < VEL_LIMIT
 
     def run(self, *args, **kwargs):
-        Z_HIT = 0
-        Z_OFFSET = 40
+        Z_OFFSET = 50
+        Z_HIT = DRONE_DEFAULT_HEIGHT + Z_OFFSET
         image_3d = kwargs['image_3d']
         pred = NumericBallPredictor(image_3d)
         x_dest, y_dest, z_dest = pred.get_prediction_height(Z_HIT)

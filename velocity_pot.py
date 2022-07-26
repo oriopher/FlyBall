@@ -8,9 +8,9 @@ DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 40
 
 
 def track_3d(image_3d: Image3D, tello: Tello, dest_x: float, dest_y: float, dest_z: float):
-    x_cm_rel = dest_x - image_3d.phys_drone_median[0]
-    y_cm_rel = dest_y - image_3d.phys_drone_median[1]
-    z_cm_rel = dest_z - image_3d.phys_drone_median[2]
+    x_cm_rel = dest_x - image_3d.get_phys_drone(0)
+    y_cm_rel = dest_y - image_3d.get_phys_drone(1)
+    z_cm_rel = dest_z - image_3d.get_phys_drone(2)
 
     left_right, for_back, up_down = 0, 0, 0
     left_right = lin_velocity_with_two_params(x_cm_rel, image_3d.velocity_x_drone, 'x')
@@ -86,29 +86,36 @@ def lin_velocity_with_two_params(cm_rel, real_velocity, direction):
     #     return 0
 
     MIN_VEL = 9 # under this speed the tello recieves this as 0
-    LOWER_BOUND = 2 # when the drone is closer than this we will just let it stop
+    LOWER_BOUND = 5 # when the drone is closer than this we will just let it stop
     if direction == 'z':
         MAX_VEL = 30
         A_SQRT = 2
         A_LINEAR = 0.9
         B = 1.2
+        STOPPING_VEL = 0
+        C = 0
     elif direction == 'x' or direction == 'y':
-        MAX_VEL = 80
-        A_SQRT = 4
-        A_LINEAR = 0
-        B = 1.5
+        STOPPING_VEL = 20
+        MAX_VEL = 60
+        A_SQRT = 3
+        A_LINEAR = 1
+        B = 0.7
+        C = 5
     else:
         return 0
 
     limit = max(B * abs(real_velocity), LOWER_BOUND)
 
     if abs(cm_rel) < limit:
-        velocity = 0   
+        if abs(cm_rel) < LOWER_BOUND:
+            velocity = 0
+        else:
+            velocity = np.sign(real_velocity) * STOPPING_VEL
         print("stopping", direction)
 
     else:
         # velocity_pot = int(min(A * (abs(cm_rel) - limit) + MIN_VEL, MAX_VEL))
-        velocity_pot = int(min(max(A_SQRT * np.sqrt(abs(cm_rel) - limit), A_LINEAR * (abs(cm_rel) - limit)) + MIN_VEL, MAX_VEL))
+        velocity_pot = int(min(max(A_SQRT * np.sqrt(abs(cm_rel) - limit), A_LINEAR * (abs(cm_rel) - limit) - C) + MIN_VEL, MAX_VEL))
         velocity = -np.sign(cm_rel) * velocity_pot
 
     if direction == 'x':
