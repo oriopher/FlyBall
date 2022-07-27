@@ -8,9 +8,9 @@ DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
 
 
 def track_3d(image_3d: Image3D, tello: Tello, dest_x: float, dest_y: float, dest_z: float):
-    x_cm_rel = dest_x - image_3d.phys_x_drone
-    y_cm_rel = dest_y - image_3d.phys_y_drone
-    z_cm_rel = dest_z - image_3d.phys_z_drone
+    x_cm_rel = dest_x - image_3d.phys_x_drone_1
+    y_cm_rel = dest_y - image_3d.phys_y_drone_1
+    z_cm_rel = dest_z - image_3d.phys_z_drone_1
 
     left_right, for_back, up_down = 0, 0, 0
     left_right = lin_velocity_with_two_params(x_cm_rel, image_3d.velocity_x_balloon, 'x')
@@ -29,8 +29,8 @@ def track_balloon(image_3d: Image3D, tello: Tello):
 
 
 def seek_middle(image_3d: Image3D, tello: Tello, borders: Borders):
-    dest_x = borders.x_middle
-    dest_y = borders.y_middle
+    dest_x = borders.x_middle_1
+    dest_y = borders.y_middle_1
     dest_z = DRONE_DEFAULT_HEIGHT
 
     track_3d(image_3d, tello, dest_x, dest_y, dest_z)

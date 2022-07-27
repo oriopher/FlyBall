@@ -11,21 +11,28 @@ class Image3D:
     SEARCH_RANGE_SCALE_B = 140
     
 
-    def __init__(self, image_left, image_right, phys_x_balloon=0, phys_y_balloon=0, phys_z_balloon=0, phys_x_drone=0, phys_y_drone=0, phys_z_drone=0):
+    def __init__(self, image_left, image_right, phys_x_balloon=0, phys_y_balloon=0, phys_z_balloon=0, phys_x_drone_1=0,\
+         phys_y_drone_1=0, phys_z_drone_1=0, phys_x_drone_2=0, phys_y_drone_2=0, phys_z_drone_2=0):
         self.frame_left = Frame(image_left)
         self.frame_right = Frame(image_right)
         self.phys_x_balloon = phys_x_balloon
         self.phys_y_balloon = phys_y_balloon
         self.phys_z_balloon = phys_z_balloon
-        self.phys_x_drone = phys_x_drone
-        self.phys_y_drone = phys_y_drone
-        self.phys_z_drone = phys_z_drone
+        self.phys_x_drone_1 = phys_x_drone_1
+        self.phys_y_drone_1 = phys_y_drone_1
+        self.phys_z_drone_1 = phys_z_drone_1
+        self.phys_x_drone_2 = phys_x_drone_2
+        self.phys_y_drone_2 = phys_y_drone_2
+        self.phys_z_drone_2 = phys_z_drone_2
         self.velocity_x_balloon = 0
         self.velocity_y_balloon = 0
         self.velocity_z_balloon = 0
-        self.velocity_x_drone = 0
-        self.velocity_y_drone = 0
-        self.velocity_z_drone = 0
+        self.velocity_x_drone_1 = 0
+        self.velocity_y_drone_1 = 0
+        self.velocity_z_drone_1 = 0
+        self.velocity_x_drone_2 = 0
+        self.velocity_y_drone_2 = 0
+        self.velocity_z_drone_2 = 0
         self.time = datetime.datetime.now()
 
 
@@ -61,12 +68,17 @@ class Image3D:
         self.phys_z_balloon = self.calculate_height(left, self.phys_y_balloon, z_pix)
 
 
-    def calculate_drone_distance(self, left: Camera, right: Camera, d, method='parallel'):
-        x_left, x_right = self.frame_left.x_drone, self.frame_right.x_drone
-        self.phys_x_drone, self.phys_y_drone = self.calculate_distance(left, right, d, x_left, x_right, method)
-        z_pix = self.frame_left.y_drone  # y axis in the frame is actually the z axis in our system
-        self.phys_z_drone = self.calculate_height(left, self.phys_y_drone, z_pix)
+    def calculate_drone_1_distance(self, left: Camera, right: Camera, d, method='parallel'):
+        x_left, x_right = self.frame_left.x_drone_1, self.frame_right.x_drone_1
+        self.phys_x_drone_1, self.phys_y_drone_1 = self.calculate_distance(left, right, d, x_left, x_right, method)
+        z_pix = self.frame_left.y_drone_1  # y axis in the frame is actually the z axis in our system
+        self.phys_z_drone_1 = self.calculate_height(left, self.phys_y_drone_1, z_pix)
 
+    def calculate_drone_2_distance(self, left: Camera, right: Camera, d, method='parallel'):
+        x_left, x_right = self.frame_left.x_drone_2, self.frame_right.x_drone_2
+        self.phys_x_drone_2, self.phys_y_drone_2 = self.calculate_distance(left, right, d, x_left, x_right, method)
+        z_pix = self.frame_left.y_drone_2  # y axis in the frame is actually the z axis in our system
+        self.phys_z_drone_2 = self.calculate_height(left, self.phys_y_drone_2, z_pix)
 
     def search_range_scale(self, distance):
         if distance<50 or distance>500:
@@ -79,19 +91,25 @@ class Image3D:
         search_range_drone = self.search_range_scale(image_old.phys_y_drone)
         self.frame_left.detect_balloon(colors.ball_left, search_range_balloon, image_old.frame_left.x_balloon, image_old.frame_left.y_balloon)
         self.frame_right.detect_balloon(colors.ball_right, search_range_balloon, image_old.frame_right.x_balloon, image_old.frame_right.y_balloon)
-        self.frame_left.detect_drone(colors.drone_left, search_range_drone, image_old.frame_left.x_drone, image_old.frame_left.y_drone)
-        self.frame_right.detect_drone(colors.drone_right, search_range_drone, image_old.frame_right.x_drone, image_old.frame_right.y_drone)
+        self.frame_left.detect_drone_1(colors.drone_1_left, search_range_drone, image_old.frame_left.x_drone_1, image_old.frame_left.y_drone_1)
+        self.frame_right.detect_drone_1(colors.drone_1_right, search_range_drone, image_old.frame_right.x_drone_1, image_old.frame_right.y_drone_1)
+        self.frame_left.detect_drone_2(colors.drone_2_left, search_range_drone, image_old.frame_left.x_drone_2, image_old.frame_left.y_drone_2)
+        self.frame_right.detect_drone_2(colors.drone_2_right, search_range_drone, image_old.frame_right.x_drone_2, image_old.frame_right.y_drone_2)
+
 
     def calculate_all_distances(self, left: Camera, right: Camera, d, method='parallel'):
-        balloon_exist, drone_exist = False, False
+        balloon_exist, drone_1_exist, drone_2_exist = False, False, False
         if self.frame_left.x_balloon!=0 and self.frame_right.x_balloon!=0:
             balloon_exist = True
             self.calculate_balloon_distance(left, right, d, method)
-        if self.frame_left.x_drone!=0 and self.frame_right.x_drone!=0:
-            drone_exist = True
-            self.calculate_drone_distance(left, right, d, method)
+        if self.frame_left.x_drone_1!=0 and self.frame_right.x_drone_1!=0:
+            drone_1_exist = True
+            self.calculate_drone_1_distance(left, right, d, method)
+        if self.frame_left.x_drone_2!=0 and self.frame_right.x_drone_2!=0:
+            drone_2_exist = True
+            self.calculate_drone_2_distance(left, right, d, method)
+        return balloon_exist, drone_1_exist, drone_2_exist
 
-        return balloon_exist, drone_exist
 
     def calculate_velocities(self, other_image):
         diff_time = self.time - other_image.time
@@ -100,26 +118,36 @@ class Image3D:
         velocity_x_balloon = (self.phys_x_balloon - other_image.phys_x_balloon) / diff_time_sec
         velocity_y_balloon = (self.phys_y_balloon - other_image.phys_y_balloon) / diff_time_sec
         velocity_z_balloon = (self.phys_z_balloon - other_image.phys_z_balloon) / diff_time_sec
-        velocity_x_drone = (self.phys_x_drone - other_image.phys_x_drone) / diff_time_sec
-        velocity_y_drone = (self.phys_y_drone - other_image.phys_y_drone) / diff_time_sec
-        velocity_z_drone = (self.phys_z_drone - other_image.phys_z_drone) / diff_time_sec
+        velocity_x_drone_1 = (self.phys_x_drone_1 - other_image.phys_x_drone_1) / diff_time_sec
+        velocity_y_drone_1 = (self.phys_y_drone_1 - other_image.phys_y_drone_1) / diff_time_sec
+        velocity_z_drone_1 = (self.phys_z_drone_1 - other_image.phys_z_drone_1) / diff_time_sec
+        velocity_x_drone_2 = (self.phys_x_drone_2 - other_image.phys_x_drone_2) / diff_time_sec
+        velocity_y_drone_2 = (self.phys_y_drone_2 - other_image.phys_y_drone_2) / diff_time_sec
+        velocity_z_drone_2 = (self.phys_z_drone_2 - other_image.phys_z_drone_2) / diff_time_sec
 
-        return velocity_x_balloon, velocity_y_balloon, velocity_z_balloon, velocity_x_drone, velocity_y_drone, velocity_z_drone
+        return velocity_x_balloon, velocity_y_balloon, velocity_z_balloon, velocity_x_drone_1, velocity_y_drone_1, velocity_z_drone_1, velocity_x_drone_2, velocity_y_drone_2, velocity_z_drone_2
+
 
     def calculate_mean_velocities(self, images_list):
         x_balloon_vel = np.zeros(len(images_list))
         y_balloon_vel = np.zeros(len(images_list))
         z_balloon_vel = np.zeros(len(images_list))
-        x_drone_vel = np.zeros(len(images_list))
-        y_drone_vel = np.zeros(len(images_list))
-        z_drone_vel = np.zeros(len(images_list))
+        x_drone_1_vel = np.zeros(len(images_list))
+        y_drone_1_vel = np.zeros(len(images_list))
+        z_drone_1_vel = np.zeros(len(images_list))
+        x_drone_2_vel = np.zeros(len(images_list))
+        y_drone_2_vel = np.zeros(len(images_list))
+        z_drone_2_vel = np.zeros(len(images_list))
 
         for i in range(len(images_list)):
-            x_balloon_vel[i], y_balloon_vel[i], z_balloon_vel[i], x_drone_vel[i], y_drone_vel[i], z_drone_vel[i] = self.calculate_velocities(images_list[i])
+            x_balloon_vel[i], y_balloon_vel[i], z_balloon_vel[i], x_drone_1_vel[i], y_drone_1_vel[i], z_drone_1_vel[i], x_drone_2_vel[i], y_drone_2_vel[i], z_drone_2_vel[i] = self.calculate_velocities(images_list[i])
 
         self.velocity_x_balloon = np.mean(x_balloon_vel)
         self.velocity_y_balloon = np.mean(y_balloon_vel)
         self.velocity_z_balloon = np.mean(z_balloon_vel)
-        self.velocity_x_drone = np.mean(x_drone_vel)
-        self.velocity_y_drone = np.mean(y_drone_vel)
-
+        self.velocity_x_drone_1 = np.mean(x_drone_1_vel)
+        self.velocity_y_drone_1 = np.mean(y_drone_1_vel)
+        self.velocity_z_drone_1 = np.mean(z_drone_1_vel)
+        self.velocity_x_drone_2 = np.mean(x_drone_2_vel)
+        self.velocity_y_drone_2 = np.mean(y_drone_2_vel)
+        self.velocity_z_drone_2 = np.mean(z_drone_2_vel)

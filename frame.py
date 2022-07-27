@@ -13,8 +13,10 @@ class Frame:
 
     def __init__(self, image):
         self.image = image
-        self.x_drone = 0
-        self.y_drone = 0
+        self.x_drone_1 = 0
+        self.y_drone_1 = 0
+        self.x_drone_2 = 0
+        self.y_drone_2 = 0        
         self.x_balloon = 0
         self.y_balloon = 0
         self.THRESHOLD_SIZE = self.image.shape[1]/60
@@ -59,13 +61,23 @@ class Frame:
         #     self.x_balloon = 0.5 * self.x_balloon + 0.5 * x_old
         #     self.y_balloon = 0.5 * self.y_balloon + 0.5 * y_old
 
-    def detect_drone(self, bounds, search_range, x_old=0, y_old=0):
+    def detect_drone_1(self, bounds, search_range, x_old=0, y_old=0):
         x_coor, y_coor = self.detect_coordinates(bounds, x_old, y_old, search_range)
-        self.x_drone = x_coor
-        self.y_drone = y_coor
+        self.x_drone_1 = x_coor
+        self.y_drone_1 = y_coor
         # if x_old!=0 and y_old!=0:
         #     self.x_balloon = 0.5 * self.x_balloon + 0.5 * x_old
         #     self.y_balloon = 0.5 * self.y_balloon + 0.5 * y_old
+
+
+    def detect_drone_2(self, bounds, search_range, x_old=0, y_old=0):
+        x_coor, y_coor = self.detect_coordinates(bounds, x_old, y_old, search_range)
+        self.x_drone_2 = x_coor
+        self.y_drone_2 = y_coor
+        # if x_old!=0 and y_old!=0:
+        #     self.x_balloon = 0.5 * self.x_balloon + 0.5 * x_old
+        #     self.y_balloon = 0.5 * self.y_balloon + 0.5 * y_old
+
 
     def detect_color(self):
         y_shape = self.image.shape[0]
@@ -82,21 +94,30 @@ class Frame:
                      min(255, ball_color[2] + Frame.V_RANGE))
         return [min_color, max_color]
 
-    def image_to_show(self, detection_sign=True, text_balloon=None, text_drone=None, text_color=(250, 250, 250)):
+
+    def image_to_show(self, detection_sign=True, text_balloon=None, text_drone_1=None, text_drone_2=None, text_color=(250, 250, 250)):
         show_img = self.image
         if detection_sign and self.x_balloon != 0 and self.y_balloon != 0:
             show_img = cv2.circle(show_img, (int(self.x_balloon), int(self.y_balloon)), 15, (0, 0, 0), 3)
             if text_balloon:
                 show_img = cv2.putText(show_img, text_balloon, (int(self.x_balloon), int(self.y_balloon)),
                                        cv2.FONT_HERSHEY_DUPLEX, 1, text_color, 2, cv2.LINE_AA)
-        if detection_sign and self.x_drone != 0 and self.y_drone != 0:
-            if text_drone:
-                show_img = cv2.putText(show_img, text_drone, (int(self.x_drone), int(self.y_drone)),
+                                       
+        if detection_sign and self.x_drone_1 != 0 and self.y_drone_1 != 0:
+            if text_drone_1:
+                show_img = cv2.putText(show_img, text_drone_1, (int(self.x_drone_1), int(self.y_drone_1)),
                                        cv2.FONT_HERSHEY_DUPLEX, 1, text_color, 2, cv2.LINE_AA)
-            show_img = cv2.circle(show_img, (int(self.x_drone), int(self.y_drone)), 15, (0, 0, 0), 3)
+            show_img = cv2.circle(show_img, (int(self.x_drone_1), int(self.y_drone_1)), 15, (0, 0, 0), 3)
+
+        if detection_sign and self.x_drone_2 != 0 and self.y_drone_2 != 0:
+            if text_drone_2:
+                show_img = cv2.putText(show_img, text_drone_2, (int(self.x_drone_2), int(self.y_drone_2)),
+                                       cv2.FONT_HERSHEY_DUPLEX, 1, text_color, 2, cv2.LINE_AA)
+            show_img = cv2.circle(show_img, (int(self.x_drone_2), int(self.y_drone_2)), 15, (0, 0, 0), 3)
 
         return show_img
 
-    def show_image(self, window_name, detection_sign=True, text_balloon=None, text_drone=None, text_color=(250, 250, 250)):
-        show_img = self.image_to_show(detection_sign, text_balloon, text_drone, text_color)
+
+    def show_image(self, window_name, detection_sign=True, text_balloon=None, text_drone_1=None, text_drone_2=None, text_color=(250, 250, 250)):
+        show_img = self.image_to_show(detection_sign, text_balloon, text_drone_1, text_drone_2, text_color)
         cv2.imshow(window_name, show_img)

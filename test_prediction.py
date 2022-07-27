@@ -138,7 +138,7 @@ def capture_video( cameras_distance, left: Camera, right: Camera, method='parall
             if not balloon_exist:
                 image_now.phys_x_balloon, image_now.phys_y_balloon = image_old.phys_x_balloon, image_old.phys_y_balloon
             if not drone_exist:
-                image_now.phys_x_drone, image_now.phys_y_drone = image_old.phys_x_drone, image_old.phys_y_drone
+                image_now.phys_x_drone_1, image_now.phys_y_drone_1 = image_old.phys_x_drone_1, image_old.phys_y_drone_1
 
             image_now.calculate_mean_velocities(old_images)
 

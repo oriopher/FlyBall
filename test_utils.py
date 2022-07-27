@@ -7,6 +7,7 @@ from loop_status import Status
 from djitellopy import Tello
 from camera import Camera
 from time import sleep
+from velocity_pot import lin_velocity_with_two_params
 import utils
 
 ORI_WEB = Camera(51.3, 0, False)
@@ -21,11 +22,11 @@ NIR_PHONE_NIR = Camera(67, 0, False)
 EFRAT_PHONE_NIR = Camera(64, 2, False)
 
 def track_2d(image_3d: Image3D, tello: Tello):
-    x_cm_rel = image_3d.phys_x_balloon - image_3d.phys_x_drone
+    x_cm_rel = image_3d.phys_x_balloon - image_3d.phys_x_drone_1
     #print("x_ball_cm: ", image_3d.phys_x_balloon, "x_drone_cm: ", image_3d.phys_x_drone)
     #print("x_cm_rel: ", x_cm_rel)
 
-    y_cm_rel = image_3d.phys_y_balloon - image_3d.phys_y_drone
+    y_cm_rel = image_3d.phys_y_balloon - image_3d.phys_y_drone_1
     #print("y_ball_cm: ", image_3d.phys_y_balloon, "y_drone_cm: ", image_3d.phys_y_drone)
     #print("y_cm_rel: ", y_cm_rel)
 
@@ -106,7 +107,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
             if not balloon_exist:
                 image_now.phys_x_balloon, image_now.phys_y_balloon = image_old.phys_x_balloon, image_old.phys_y_balloon
             if not drone_exist:
-                image_now.phys_x_drone, image_now.phys_y_drone = image_old.phys_x_drone, image_old.phys_y_drone
+                image_now.phys_x_drone_1, image_now.phys_y_drone_1 = image_old.phys_x_drone_1, image_old.phys_y_drone_1
 
             image_now.calculate_mean_velocities(old_images)
         

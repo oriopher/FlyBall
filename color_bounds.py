@@ -28,8 +28,10 @@ class ColorBounds:
     def __init__(self):
         self.ball_left = ColorBound()
         self.ball_right = ColorBound()
-        self.drone_left = ColorBound()
-        self.drone_right = ColorBound()
+        self.drone_1_left = ColorBound()
+        self.drone_1_right = ColorBound()
+        self.drone_2_left = ColorBound()
+        self.drone_2_right = ColorBound()
 
     def change_ball_left(self, lower, upper):
         self.ball_left.change(lower, upper)
@@ -37,14 +39,21 @@ class ColorBounds:
     def change_ball_right(self, lower, upper):
         self.ball_right.change(lower, upper)
 
-    def change_drone_left(self, lower, upper):
-        self.drone_left.change(lower, upper)
+    def change_drone_1_left(self, lower, upper):
+        self.drone_1_left.change(lower, upper)
 
-    def change_drone_right(self, lower, upper):
-        self.drone_right.change(lower, upper)
+    def change_drone_1_right(self, lower, upper):
+        self.drone_1_right.change(lower, upper)
+
+    def change_drone_2_left(self, lower, upper):
+        self.drone_2_left.change(lower, upper)
+
+    def change_drone_2_right(self, lower, upper):
+        self.drone_2_right.change(lower, upper)
 
     def write_colors(self, filename):
-        file_text = str(self.ball_left) + str(self.ball_right) + str(self.drone_left) + str(self.drone_right)
+        file_text = str(self.ball_left) + str(self.ball_right) + str(self.drone_1_left) + str(self.drone_1_right) +\
+            str(self.drone_2_left) + str(self.drone_2_right)
 
         if os.path.exists(filename):
             os.remove(filename)
@@ -62,6 +71,8 @@ class ColorBounds:
 
         self.ball_left.str_to_color_bound(lines[0], lines[1])
         self.ball_right.str_to_color_bound(lines[2], lines[3])
-        self.drone_left.str_to_color_bound(lines[4], lines[5])
-        self.drone_right.str_to_color_bound(lines[6], lines[7])
+        self.drone_1_left.str_to_color_bound(lines[4], lines[5])
+        self.drone_1_right.str_to_color_bound(lines[6], lines[7])
+        self.drone_2_left.str_to_color_bound(lines[8], lines[9])
+        self.drone_2_right.str_to_color_bound(lines[10], lines[11])
         print("Colors Loaded")
