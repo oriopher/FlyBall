@@ -207,8 +207,9 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
 
         state.run(**{'image_3d': image_now, 'loop_status': loop_status, 'tello': tello, 'borders': borders})
-        if state.to_transition(**{'image_3d': image_now, 'loop_status': loop_status, 'tello': tello}):
-            loop_status.state = state.next
+        transition = state.to_transition(**{'image_3d': image_now, 'loop_status': loop_status, 'tello': tello})
+        if transition:
+            loop_status.state = state.next(transition)
 
         # balloon is out of borders. drone is seeking the middle until the balloon is back
         # if loop_status.first_seek and (not borders.balloon_in_borders(image_now) or not loop_status.start):

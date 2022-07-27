@@ -96,7 +96,7 @@ class NumericBallPredictor:
         mask = np.all([preds[:, 3] >= z_bound, preds[:, 1] <= 0, preds[:, 0] <= xy_vel_bounds], axis=0)
         return times[mask], preds[mask]
 
-    def get_optimal_hitting_point(self, start_time=0.5, end_time=3, jump=0.1, xy_vel_bound=5/100, z_bound=30/100):
+    def get_optimal_hitting_point(self, start_time=0, end_time=3, jump=0.1, xy_vel_bound=5/100, z_bound=30/100):
         # final precision of the time of the optimal hit is jump/10
         times = np.arange(start_time, end_time + jump / 2, jump)
         times, preds = self._get_optimal_hitting_point_for_times(times, xy_vel_bound, z_bound)
