@@ -61,6 +61,9 @@ class LoopStatus:
     def hit_mode(self):
         return self.hit
 
+    def ready_to_test(self):
+        self.prediction = 4
+
     def start_predictions(self):
         self.prediction = 1
 

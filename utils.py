@@ -6,7 +6,7 @@ def phys_to_left_pix_img(x_cm, y_cm, z_cm, image, cam : Camera): # image is a di
     x_n_pix = image.shape[1]
     z_n_pix = image.shape[0]
 
-    return phys_to_left_pix(x_cm, y_cm, z_cm, x_n_pix, z_n_pix, cam.fov)
+    return phys_to_left_pix(x_cm, y_cm, z_cm, x_n_pix, z_n_pix, cam.fov_horz)
 
 def phys_to_left_pix(x_cm, y_cm, z_cm, x_n_pix, z_n_pix, cam_fov):
     d_x = x_n_pix / 2 / np.tan(cam_fov / 2)

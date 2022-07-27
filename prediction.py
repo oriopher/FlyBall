@@ -43,7 +43,7 @@ class BallPredictor:
 
 
 class NumericBallPredictor:
-    r = 0.1098  # in meters
+    r = 0.1154  # in meters
     g = 9.7803  # Gravitational constant
     rho = 1.225  # Air density kg/m^3
     V = 4 / 3 * np.pi * r ** 3  # Balloon Volume
@@ -101,7 +101,7 @@ class NumericBallPredictor:
         times = np.arange(start_time, end_time + jump / 2, jump)
         times, preds = self._get_optimal_hitting_point_for_times(times, xy_vel_bound, z_bound)
         if len(preds) == 0:
-            return False
+            return 0, (0, 0, 0)
         if times[0] == start_time:
             return start_time, self._solution_to_coords(preds)[:, 0]
         time = times[0]
@@ -110,27 +110,28 @@ class NumericBallPredictor:
         times, preds = self._get_optimal_hitting_point_for_times(times, xy_vel_bound, z_bound)
         return times[0], self._solution_to_coords(preds)[:, 0]
 
-    def get_prediction_height(self, height):
+    def get_prediction_height(self, height, vel_limit=30):
         seconds = 4
-        fps = 30
+        fps = 50
         times = np.linspace(0,seconds,seconds*fps)
 
-        return self.get_prediction_height_rec(times, 0, seconds*fps-1, height)
+        return self.get_prediction_height_rec(times, 0, seconds*fps-1, height, 1/fps, vel_limit)
 
-    def get_prediction_height_rec(self, times, left, right, height):
+    def get_prediction_height_rec(self, times, left, right, height, jump=0.03, vel_limit=30):
         if left >= right - 1:
-            return self.get_prediction(times[left])
+            return left, self.get_prediction(times[left])
 
         middle = int(left/2 + right/2)
         x1, y1, z1 = self.get_prediction(times[middle])
         x2, y2, z2 = self.get_prediction(times[middle+1])
 
         if z2 > z1:
-            return self.get_prediction_height_rec(times, middle, right, height)
-        if z1 >= height and z2 <= height:
-            return x1, y1, z1
+            return self.get_prediction_height_rec(times, middle, right, height, jump, vel_limit)
+
+        if abs(x2-x1)/jump < vel_limit and abs(y2-y1)/jump < vel_limit:
+            return middle, (x1, y1, z1)
 
         if z2 >= height:
-            return self.get_prediction_height_rec(times, middle, right, height)
+            return self.get_prediction_height_rec(times, middle, right, height, jump, vel_limit)
         if z1 <= height:
-            return self.get_prediction_height_rec(times, left, middle, height)
+            return self.get_prediction_height_rec(times, left, middle, height, jump, vel_limit)

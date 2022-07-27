@@ -5,7 +5,7 @@ from utils import phys_to_left_pix
 import cv2
 import numpy as np
 
-FLOOR_HEIGHT = -100
+FLOOR_HEIGHT = -115
 
 class Borders:
     def __init__(self):
@@ -34,7 +34,7 @@ class Borders:
             self.coordinates[self.index] = np.array([image_3d.phys_x_balloon, image_3d.phys_y_balloon])
             self.index += 1
         if self.index == 4:
-            self.fov = left_cam.fov
+            self.fov = left_cam.fov_horz
             self.x_n_pix = image_3d.frame_left.image.shape[1]
             self.z_n_pix = image_3d.frame_left.image.shape[0]
             self.calc_borders()
@@ -54,9 +54,6 @@ class Borders:
         self.pixels_coordinates[2][0], self.pixels_coordinates[2][1] = phys_to_left_pix(self.coordinates[2][0], self.coordinates[2][1], FLOOR_HEIGHT - 10, self.x_n_pix, self.z_n_pix, self.fov)        
         self.pixels_coordinates[1][0], self.pixels_coordinates[1][1] = phys_to_left_pix(self.coordinates[1][0], self.coordinates[1][1], FLOOR_HEIGHT - 10, self.x_n_pix, self.z_n_pix, self.fov)        
         self.pixels_coordinates[0][0], self.pixels_coordinates[0][1] = phys_to_left_pix(self.coordinates[0][0], self.coordinates[0][1], FLOOR_HEIGHT - 10, self.x_n_pix, self.z_n_pix, self.fov)    
-
-        print(self.coordinates)    
-
 
     def calc_linear_eq(self, coor1, coor2):
         m = (coor2[1] - coor1[1]) / (coor2[0] - coor1[0])

@@ -17,9 +17,9 @@ NIR_PHONE = Camera(65, 0, False)
 MAYA_WEB = Camera(61, 0, True)
 EFRAT_WEB = Camera(61, 2, False)
 EFRAT_PHONE = Camera(64, 3, False)
-MAYA_PHONE = Camera(63, 2, False)
+MAYA_PHONE = Camera(67, 67, 2, False)
 
-NIR_PHONE_NIR = Camera(67, 0, False)
+NIR_PHONE_NIR = Camera(67, 52, 0, False)
 EFRAT_PHONE_NIR = Camera(77, 2, False)
 
 COLORS_FILENAME = "color_bounds.txt"
@@ -111,7 +111,6 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, l
     # the 'r' button is set as the read colors from file
     elif key == ord('r'):
         borders.read_borders(BORDERS_FILENAME)
-        print("middle is ({0:.3f},{1:.3f})".format(borders.x_middle, borders.y_middle))
 
     # the 'a' button is set to abort hitting state back to seek middle
     elif key == ord('a'):
@@ -126,8 +125,8 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, l
 def display_frames(image_now, loop_status, borders):
     text_balloon_coor = "c(%.0f,%.0f,%.0f)" % (image_now.phys_x_balloon, image_now.phys_y_balloon, image_now.phys_z_balloon)
     text_drone_coor = "c(%.0f,%.0f,%.0f)" % (image_now.phys_x_drone, image_now.phys_y_drone, image_now.phys_z_drone)
-    text_balloon_vel = "v(%.0f,%.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon)
-    text_drone_vel = "v(%.0f,%.0f)" % (image_now.velocity_x_drone, image_now.velocity_y_drone)
+    text_balloon_vel = "v(%.0f,%.0f,%.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon, image_now.velocity_z_balloon)
+    text_drone_vel = "v(%.0f,%.0f,%.0f)" % (image_now.velocity_x_drone, image_now.velocity_y_drone, image_now.velocity_z_drone)
 
     left_img = image_now.frame_left.image_to_show("left", text_balloon=text_balloon_coor, text_drone=text_drone_coor, text_color=(150,250,200))
     left_img = borders.draw_borders(left_img, image_now, color_in=(0, 240, 0), color_out=(0, 0, 240))
@@ -169,8 +168,9 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, m
         display_frames(image_now, loop_status, borders)
 
         state.run(**{'image_3d': image_now, 'loop_status': loop_status, 'tello': tello, 'borders': borders})
-        if state.to_transition(**{'image_3d': image_now, 'loop_status': loop_status, 'tello': tello}):
-            loop_status.state = state.next
+        transition = state.to_transition(**{'image_3d': image_now, 'loop_status': loop_status, 'tello': tello})
+        if transition:
+            loop_status.state = state.next(transition)
 
         # balloon is out of borders. drone is seeking the middle until the balloon is back
         # if loop_status.first_seek and (not borders.balloon_in_borders(image_now) or not loop_status.start):
@@ -213,6 +213,6 @@ if __name__ == "__main__":
     left = NIR_PHONE_NIR
     right = MAYA_PHONE
 
-    distance = 64
+    distance = 64.5
     while continue_test:
         continue_test = capture_video(tello, distance, left, right, method='parallel')

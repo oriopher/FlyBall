@@ -33,9 +33,9 @@ class Image3D:
         # Will return x,y which are the objects coordinates in cm. cam dist is the distance between the cameras.
         # p is just a used for calculation, see documentation.
         x, y = 0, 0
-        p_left = (self.frame_left.image.shape[1] / 2) / np.tan(left.fov / 2)
+        p_left = (self.frame_left.image.shape[1] / 2) / np.tan(left.fov_horz / 2)
         angle_left = np.pi / 2 - np.arctan2(left.flip*(x_left - self.frame_left.image.shape[1] / 2), p_left)
-        p_right = (self.frame_right.image.shape[1] / 2) / np.tan(right.fov / 2)
+        p_right = (self.frame_right.image.shape[1] / 2) / np.tan(right.fov_horz / 2)
         angle_right = np.pi / 2 - np.arctan2(right.flip*(-x_right + self.frame_right.image.shape[1] / 2), p_right)
         if method == 'parallel':
             # left camera is at (0,0) and right at (0,d)
@@ -51,7 +51,7 @@ class Image3D:
     def calculate_height(self, cam: Camera, y_cm, z_pix):
         # Will return the height in cm. Requires y in cm. assum
         n_pixels = self.frame_right.image.shape[0]  # Number of pixels in z axis.
-        p = (n_pixels / 2) / np.tan(cam.fov / 2)
+        p = (n_pixels / 2) / np.tan(cam.fov_vert / 2)
         return y_cm * (n_pixels / 2 - z_pix) / p
 
     def calculate_balloon_distance(self, left: Camera, right: Camera, d, method='parallel'):
@@ -122,6 +122,7 @@ class Image3D:
         self.velocity_z_balloon = np.mean(z_balloon_vel)
         self.velocity_x_drone = np.mean(x_drone_vel)
         self.velocity_y_drone = np.mean(y_drone_vel)
+        self.velocity_z_drone = np.mean(z_drone_vel)
 
     def get_phys_balloon(self, index):
         if index == 0:
