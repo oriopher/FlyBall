@@ -131,19 +131,10 @@ class SEARCHING(State):
 
     def run(self, *args, **kwargs):
         Z_OFFSET = 50
-        Z_HIT = DRONE_DEFAULT_HEIGHT + Z_OFFSET
         image_3d = kwargs['image_3d']
-        pred = NumericBallPredictor(image_3d)
-        x_dest, y_dest, z_dest = pred.get_prediction_height(Z_HIT)
         loop_status = kwargs['loop_status']
-        if (x_dest, y_dest, z_dest) == (0, 0, 0):
-            loop_status.stop_hit()
-            return
-        # x_dest = image_3d.get_phys_balloon(0)
-        # y_dest = image_3d.get_phys_balloon(1)
-        # z_dest = Z_HIT
-        loop_status.set_dest_coords((x_dest, y_dest, z_dest - Z_OFFSET))
-        track_3d(image_3d, kwargs['tello'], x_dest, y_dest, z_dest - Z_OFFSET)
+        track_3d(image_3d, kwargs['tello'], image_3d.phys_x_balloon,
+                 image_3d.phys_y_balloon, loop_status.hit_coords[2] - Z_OFFSET)
 
 
 class HITTING(State):
