@@ -41,16 +41,6 @@ class BallPredictor:
         x, y, z = x * 100, y * 100, z * 100
         return x, y, z  # cm
 
-    def get_prediction_height(self, height):
-        times = np.linspace(0,2,60)
-
-        for i in range(len(times) - 1):
-            x1, y1, z1 = self.get_prediction(times[i])
-            x2, y2, z2 = self.get_prediction(times[i+1])
-            if z1>=height and z2<=height:
-                return x1, y1, z1
-
-        return 0, 0, 0
 
 class NumericBallPredictor:
     r = 0.115  # in meters
@@ -85,8 +75,10 @@ class NumericBallPredictor:
         return np.array([c1 * np.sin(theta), c2 + c1 * np.cos(theta), variables[0], variables[1]])
 
     def _prepare_predictions(self, times):
-        sol = odeint(NumericBallPredictor._derivative_func, np.array([self.v_xy_0, self.v_z_0, 0, self.z_0]), times,
+        return odeint(NumericBallPredictor._derivative_func, np.array([self.v_xy_0, self.v_z_0, 0, self.z_0]), times,
                      args=(self.B, self.m, self.rho, self.V, self.g))
+
+    def _solution_to_coords(self, sol):
         d_xy = sol[:, 2]
         z = sol[:, 3]
         x = self.x_0 + d_xy * np.cos(self.phi)
@@ -96,7 +88,27 @@ class NumericBallPredictor:
         return np.array([x, y, z])
 
     def get_prediction(self, time):
-        return self._prepare_predictions(np.linspace(0, time, 2))[:,1]
+        sol = self._prepare_predictions(np.linspace(0, time, 2))
+        return self._solution_to_coords(sol)[:, 1]
+
+    def _get_optimal_hitting_point_for_times(self, times, xy_vel_bounds, z_bound):
+        preds = self._prepare_predictions(np.insert(times, 0, 0))[1:]
+        mask = np.all([preds[:, 3] >= z_bound, preds[:, 1] <= 0, preds[:, 0] <= xy_vel_bounds], axis=0)
+        return times[mask], preds[mask]
+
+    def get_optimal_hitting_point(self, start_time=0.5, end_time=3, jump=0.1, xy_vel_bound=5/100, z_bound=30/100):
+        # final precision of the time of the optimal hit is jump/10
+        times = np.arange(start_time, end_time + jump / 2, jump)
+        times, preds = self._get_optimal_hitting_point_for_times(times, xy_vel_bound, z_bound)
+        if len(preds) == 0:
+            return False
+        if times[0] == start_time:
+            return start_time, self._solution_to_coords(preds)[:, 0]
+        time = times[0]
+        new_jump = jump / 10
+        times = np.arange(time - jump, time + new_jump / 2, new_jump)
+        times, preds = self._get_optimal_hitting_point_for_times(times, xy_vel_bound, z_bound)
+        return times[0], self._solution_to_coords(preds)[:, 0]
 
     def get_prediction_height(self, height):
         seconds = 4
@@ -117,7 +129,7 @@ class NumericBallPredictor:
             return self.get_prediction_height_rec(times, middle, right, height)
         if z1 >= height and z2 <= height:
             return x1, y1, z1
-        
+
         if z2 >= height:
             return self.get_prediction_height_rec(times, middle, right, height)
         if z1 <= height:
