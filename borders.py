@@ -61,40 +61,42 @@ class Borders:
         return m, b
 
 
-    # checks if balloon is in borders
-    def balloon_in_borders(self, image_3d: Image3D):
-
-        # balloon is too far from camera
-        if (image_3d.phys_y_balloon - self.m_upper * image_3d.phys_x_balloon - self.b_upper > 0):
+    def coordinat_in_borders(self, x, y):
+        # coordinate is too far from camera
+        if (y - self.m_upper * x - self.b_upper > 0):
             return False
 
-        # balloon is too close to camera
-        if image_3d.phys_y_balloon - self.m_low * image_3d.phys_x_balloon - self.b_low < 0:
+        # coordinate is too close to camera
+        if y - self.m_low * x - self.b_low < 0:
             return False
 
-        # ballon is out of left border
+        # coordinate is out of left border
         if self.m_left >= 0:
-            if image_3d.phys_y_balloon - self.m_left * image_3d.phys_x_balloon - self.b_left > 0:
+            if y - self.m_left * x - self.b_left > 0:
                 return False
 
-        # ballon is out of left border
-        if self.m_left >= 0:
-            if image_3d.phys_y_balloon - self.m_left * image_3d.phys_x_balloon - self.b_left > 0:
-                return False
-
-        elif image_3d.phys_y_balloon - self.m_left * image_3d.phys_x_balloon - self.b_left < 0:   
+        elif y - self.m_left * x - self.b_left < 0:   
             return False
 
-        # ballon is out of right border
+        # coordinate is out of right border
         if self.m_right >= 0:     
-            if image_3d.phys_y_balloon - self.m_right * image_3d.phys_x_balloon - self.b_right < 0:
+            if y - self.m_right * x - self.b_right < 0:
                 return False
 
-        elif image_3d.phys_y_balloon - self.m_right * image_3d.phys_x_balloon - self.b_right > 0:
+        elif y - self.m_right * x - self.b_right > 0:
             return False                    
 
-        # balloon is in play area
+        # coordinate is in play area
         return True   
+
+
+    # checks if balloon is in borders
+    def balloon_in_borders(self, image_3d: Image3D):
+        return self.coordinat_in_borders(image_3d.phys_x_balloon, image_3d.phys_y_balloon)
+
+    # checks if drone is in borders
+    def drone_in_borders(self, image_3d: Image3D):
+        return self.coordinat_in_borders(image_3d.phys_x_drone, image_3d.phys_y_drone)     
 
     
     def draw_borders(self, show_img, image_3d, color_in = (240,0,240), color_out = (240, 0, 240)):
