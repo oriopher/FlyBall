@@ -206,6 +206,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, c
         cv2.imshow("left", left_img)
         image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
 
+
         state.run(**{'image_3d': image_now, 'loop_status': loop_status, 'tello': tello, 'borders': borders})
         transition = state.to_transition(**{'image_3d': image_now, 'loop_status': loop_status, 'tello': tello})
         if transition:

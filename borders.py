@@ -63,7 +63,7 @@ class Borders:
         return m, b
 
 
-    def coordinat_in_borders(self, x, y):
+    def coordinate_in_borders(self, x, y):
         # coordinate is too far from camera
         if (y - self.m_upper * x - self.b_upper > 0):
             return False
@@ -94,11 +94,11 @@ class Borders:
 
     # checks if balloon is in borders
     def balloon_in_borders(self, image_3d: Image3D):
-        return self.coordinat_in_borders(image_3d.phys_x_balloon, image_3d.phys_y_balloon)
+        return self.coordinate_in_borders(image_3d.phys_x_balloon, image_3d.phys_y_balloon)
 
     # checks if drone is in borders
     def drone_in_borders(self, image_3d: Image3D):
-        return self.coordinat_in_borders(image_3d.phys_x_drone, image_3d.phys_y_drone)     
+        return self.coordinate_in_borders(image_3d.phys_x_drone, image_3d.phys_y_drone)     
 
     
     def draw_borders(self, show_img, image_3d, color_in = (240,0,240), color_out = (240, 0, 240)):
