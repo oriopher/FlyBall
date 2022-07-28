@@ -2,10 +2,7 @@ import numpy as np
 from image_3d import Image3D
 from djitellopy import Tello
 from borders import Borders
-
-FLOOR_HEIGHT = -100
-DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 40
-
+from utils import FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
 
 def track_3d(image_3d: Image3D, tello: Tello, dest_x: float, dest_y: float, dest_z: float):
     x_cm_rel = dest_x - image_3d.get_phys_drone(0)
@@ -68,41 +65,42 @@ def lin_velocity_with_acc(cm_rel, real_vel):
 def lin_velocity_with_two_params(cm_rel, real_velocity, direction):
     # this function assumes the drone is looking at the cameras.
 
-    # about 3-4 seconds to hit for linear potential
+    # These parameters acheive a hit within 2-3 seconds using lin + sqrt. 
+    # there is a plot of this function in the documentation.
     # MIN_VEL = 9 # under this speed the tello recieves this as 0
+    # LOWER_BOUND = 5 # when the drone is closer than this we will just let it stop
     # if direction == 'z':
     #     MAX_VEL = 30
-    #     A = 0.9
+    #     A_SQRT = 2
+    #     A_LINEAR = 0.9
     #     B = 1.2
-    # elif direction == 'x':
+    #     STOPPING_VEL = 0
+    #     C = 0
+    # elif direction == 'x' or direction == 'y':
+    #     STOPPING_VEL = 20
     #     MAX_VEL = 60
-    #     A = 1
-    #     B = 0.9
-    # elif direction == 'y':
-    #     MAX_VEL = 60
-    #     A = 1
-    #     B = 0.9
+    #     A_SQRT = 3
+    #     A_LINEAR = 1
+    #     B = 0.7
+    #     C = 5
     # else:
     #     return 0
 
     MIN_VEL = 9 # under this speed the tello recieves this as 0
     LOWER_BOUND = 5 # when the drone is closer than this we will just let it stop
+
+    STOPPING_VEL = 30 # The velocity applied in order to stop faster
+    MAX_VEL = 70
+    A_SQRT = 3
+    A_LINEAR = 1
+    C = 5
+    B = 0.6 # Associated with the stopping distance
+
     if direction == 'z':
-        MAX_VEL = 30
-        A_SQRT = 2
-        A_LINEAR = 0.9
-        B = 1.2
         STOPPING_VEL = 0
-        C = 0
-    elif direction == 'x' or direction == 'y':
-        STOPPING_VEL = 20
-        MAX_VEL = 60
-        A_SQRT = 3
-        A_LINEAR = 1
-        B = 0.7
-        C = 5
-    else:
-        return 0
+        B = 0.3
+        A_LINEAR = 1.5
+        LOWER_BOUND = 2
 
     limit = max(B * abs(real_velocity), LOWER_BOUND)
 

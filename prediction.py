@@ -21,7 +21,7 @@ class BallPredictor:
     def get_prediction(self, time):
         r = 0.11  # in meters
         g = 9.7803  # Gravitational constatnt
-        rho = 1.225  # Air density kg/m^3
+        rho = 1.187  # Air density kg/m^3
         air_mass = 4 / 3 * np.pi * r ** 3 * rho
         m = air_mass + 0.00146  # Balloon mass.
         C_d = 0.47  # Dimensionless drag constant
@@ -43,7 +43,7 @@ class BallPredictor:
 
 
 class NumericBallPredictor:
-    r = (0.76+0.82)/4/np.pi  # in meters
+    r = (0.70+0.75)/4/np.pi  # in meters
     g = 9.7803  # Gravitational constant
     rho = 1.187  # Air density kg/m^3
     V = 4 / 3 * np.pi * r ** 3  # Balloon Volume
@@ -67,6 +67,7 @@ class NumericBallPredictor:
         self.v_xy_0 = np.sqrt(self.v_x_0 ** 2 + self.v_y_0 ** 2)
         self.theta = np.arctan2(self.v_xy_0, self.v_z_0)
 
+        
     @staticmethod
     def _derivative_func(variables, time, b, mass, density, volume, gravity):
         theta = np.arctan2(variables[0], variables[1])
@@ -135,3 +136,4 @@ class NumericBallPredictor:
             return self.get_prediction_height_rec(times, middle, right, height, jump, vel_limit)
         if z1 <= height:
             return self.get_prediction_height_rec(times, left, middle, height, jump, vel_limit)
+

@@ -1,11 +1,9 @@
 import os
 from image_3d import Image3D
 from camera import Camera
-from utils import phys_to_left_pix
+from utils import phys_to_left_pix, FLOOR_HEIGHT
 import cv2
 import numpy as np
-
-FLOOR_HEIGHT = -110
 
 class Borders:
     def __init__(self):

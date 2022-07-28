@@ -7,7 +7,7 @@ from loop_status import Status
 from djitellopy import Tello
 from camera import Camera
 from loop_state_machine import ON_GROUND
-from utils import image_with_circle
+from utils import image_with_circle, FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
 
 ORI_WEB = Camera(51.3, 0, False)
 ORI_PHONE = Camera(66.9, 3, False)
@@ -22,9 +22,6 @@ EFRAT_PHONE_NIR = Camera(77, 2, False)
 
 COLORS_FILENAME = "color_bounds.txt"
 BORDERS_FILENAME = "borders.txt"
-
-FLOOR_HEIGHT = -100
-DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 40
 
 
 def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, loop_status: Status, left_cam: Camera, tello: Tello) -> bool:

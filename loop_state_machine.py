@@ -1,8 +1,11 @@
+from datetime import datetime
 from velocity_pot import track_3d, lin_velocity_with_two_params, seek_middle, track_2d
 from prediction import NumericBallPredictor
 import numpy as np
+from utils import reachability, FLOOR_HEIGHT
 
-FLOOR_HEIGHT = -100
+
+MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
 DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 40
 
 
@@ -89,19 +92,29 @@ class SEARCHING_PREDICTION(State):
     def to_transition(self, *args, **kwargs):
         image_3d = kwargs['image_3d']
         borders = kwargs['borders']
+        loop_status = kwargs['loop_status']
 
         if np.sqrt(image_3d.velocity_x_balloon ** 2 + image_3d.velocity_y_balloon ** 2) <= self.XY_VEL_BOUND \
                 and image_3d.velocity_z_balloon <= 0 and image_3d.phys_z_balloon >= image_3d.phys_z_drone:
+            loop_status.drone_search_pred_time = 0
+            loop_status.drone_search_pred_coords = (0,0,0)
             return 1
         if image_3d.velocity_z_balloon <= 0 and image_3d.phys_z_balloon <= image_3d.phys_z_drone:
+            loop_status.drone_search_pred_time = 0
+            loop_status.drone_search_pred_coords = (0,0,0)
             return 2
         if not (borders.balloon_in_borders(image_3d) and borders.drone_in_borders(image_3d)):
+            loop_status.drone_search_pred_time = 0
+            loop_status.drone_search_pred_coords = (0,0,0)
             return 2
         return 0
 
     def run(self, *args, **kwargs):
-        Z_HIT = DRONE_DEFAULT_HEIGHT + self.Z_OFFSET
+        # Z_HIT = DRONE_DEFAULT_HEIGHT + self.Z_OFFSET
+        Z_OFF = 50 # the distance under the balloon for wich the drone is heading
+        
         image_3d = kwargs['image_3d']
+        
         pred = NumericBallPredictor(image_3d)
         pred_time, pred_coords = pred.get_optimal_hitting_point(z_bound=image_3d.phys_z_drone/100, xy_vel_bound=self.XY_VEL_BOUND/100)
         x_dest, y_dest, z_dest = pred_coords
@@ -112,8 +125,23 @@ class SEARCHING_PREDICTION(State):
         # x_dest = image_3d.get_phys_balloon(0)
         # y_dest = image_3d.get_phys_balloon(1)
         # z_dest = Z_HIT
+        
+        if loop_status.drone_search_pred_time == 0:
+            loop_status.drone_search_pred_time = datetime.now()
+            loop_status.drone_search_pred_coords = (image_3d.phys_x_drone, image_3d.phys_y_drone, image_3d.phys_z_drone)
+        
+        x_to_target = abs(x_dest - loop_status.drone_search_pred_coords[0])
+        y_to_target = abs(y_dest - loop_status.drone_search_pred_coords[1])
+        time_to_hit_from_start = max(reachability(x_to_target), reachability(y_to_target))
+        time_until_hit = time_to_hit_from_start + (loop_status.drone_search_pred_time - datetime.now()).total_seconds()
+        pred_time, pred_coords = pred.get_optimal_hitting_point(z_bound=image_3d.phys_z_drone/100, xy_vel_bound=self.XY_VEL_BOUND/100, start_time=time_until_hit)
+        if not np.any(pred_coords):  # if pred_coords != (0,0,0)
+            z_dest = pred_coords[2] - Z_OFF
+            if z_dest < MIN_SAFE_HEIGHT:
+                z_dest = MIN_SAFE_HEIGHT
+
         loop_status.set_dest_coords((x_dest, y_dest, z_dest))
-        track_3d(image_3d, kwargs['tello'], x_dest, y_dest, DRONE_DEFAULT_HEIGHT)
+        track_3d(image_3d, kwargs['tello'], x_dest, y_dest, z_dest)
 
 
 class SEARCHING(State):

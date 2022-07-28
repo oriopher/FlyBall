@@ -2,6 +2,10 @@ from camera import Camera
 import numpy as np
 import cv2
 
+FLOOR_HEIGHT = -100
+DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 40
+
+
 def phys_to_left_pix_img(x_cm, y_cm, z_cm, image, cam : Camera): # image is a direct image from the camera and not image3d
     x_n_pix = image.shape[1]
     z_n_pix = image.shape[0]
@@ -25,3 +29,21 @@ def image_with_circle(cam : Camera, show_img, coords_phys, rad_phys, color = (24
     show_img = cv2.circle(show_img, coordinates, radius, color, thickness=thickness)
 
     return show_img
+
+
+def reachability(distance, offset = 0.2):
+    # distance in cm, only one axis
+    plot = np.array([[0, 0.95], 
+                    [10, 1.35],
+                    [30,2.76],
+                    [50,2.76],
+                    [70,2.93],
+                    [90,4.15]])
+
+    for i in range(len(plot)-1): 
+        if plot[i,0] <= distance <= plot[i+1,0]:
+            a = (plot[i+1,1]-plot[i,1])/(plot[i+1,0] - plot[i,0])
+            b = - a * plot[i,0] + plot[i,1]
+            return a*distance + b + offset
+
+    return plot[-1,1]
