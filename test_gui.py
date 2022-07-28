@@ -32,7 +32,6 @@ DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
 def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, window, loop_status: Status, left_cam: Camera) -> bool:
     event, values = window.read(timeout=1)
     key = cv2.waitKey(1) & 0xFF
-    print(key)
     str_colors_changed = "color bounds changed"
 
     # the 'q' button is set as the quitting button or if user closes window
@@ -166,17 +165,17 @@ def capture_video(cameras_distance, left: Camera, right: Camera, colors: ColorBo
         if not borders.balloon_in_borders(image_now):
             color = (0, 0, 240)
         left_img = borders.draw_borders(left_img, color)
-        #cv2.imshow("left", left_img)
+        cv2.imshow("left", left_img)
         left_img = cv2.resize(left_img, (350, 350))
         image_right = cv2.resize(image_right, (350, 350))
         # displayin in gui
-        imgbytes_left = cv2.imencode('.png', left_img)[1].tobytes()  # ditto
-        window.finalize()
-        window['image_left'].update(data=imgbytes_left)
-        imgbytes_right = cv2.imencode('.png', image_right)[1].tobytes()  # ditto
-        window['image_right'].update(data=imgbytes_right)
+       #imgbytes_left = cv2.imencode('.png', left_img)[1].tobytes()  # ditto
+        #window.finalize()
+        #window['image_left'].update(data=imgbytes_left)
+        #imgbytes_right = cv2.imencode('.png', image_right)[1].tobytes()  # ditto
+        #window['image_right'].update(data=imgbytes_right)
 
-        #image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
+        image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
         # balloon is out of borders. drone is seeking the middle until the balloon is back
         if borders.set_borders and loop_status.first_seek and (not borders.balloon_in_borders(image_now) or not loop_status.start):
             print("seek middle")

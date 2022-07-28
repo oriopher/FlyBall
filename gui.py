@@ -29,11 +29,4 @@ class Gui:
 
     layout = [ [sg.Frame('Cameras', [[left_camera_col, right_camera_col]]), sg.Frame('Color Bounds', [[color_bounds_col1, color_bounds_col2]])],
                 [sg.Push(), sg.Frame('Colors', [[colors_column, read_column]]), sg.Frame('', [[distance_column]]), sg.Push()],
-                [sg.Image(filename='', key='image_left'), sg.Image(filename='', key='image_right')],
                 [sg.Push(), sg.Frame('Tello', [[Tello_func]]), sg.Frame('Play', [[play_func_col]]), sg.Frame('State', [[sg.Text('', key='-STATE-')]]), sg.Push()]]
-
-
-    def __init__(self):
-        #sg.theme('LightGreen')   # Add a touch of color
-        self.window = sg.Window('FlyBall', Gui.layout, finalize=True)  # Create the Window
-    
