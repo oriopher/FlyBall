@@ -11,16 +11,13 @@ class LoopStatus:
         self.first_seek = False
         self.continue_loop = True
         self.hit = False
-        self.hit_coords = (0, 0, 0)
         self.state = ON_GROUND()
-        self.hit_height = 0
         self.prediction = 0 # 0 - disabled, 1 - starting, 2 - printing and testing predictions
         self.x_0 = 0
         self.y_0 = 0
         self.dest_coords = (0,0,0)
         self.start_hit_timer = None
         self.end_hit_timer = None
-        self.test_state = 0
         self.drone_search_pred_coords = (0,0,0)
         self.drone_search_pred_time = 0
 
@@ -50,10 +47,9 @@ class LoopStatus:
     def reset(self):
         self.__init__()
 
-    def hit_mode_on(self, coords):
+    def hit_mode_on(self):
         if self.start:
             self.hit = True
-            self.hit_coords = coords
             self.start_hit_timer = datetime.now()
     
     def hit_mode_off(self):

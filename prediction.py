@@ -6,9 +6,9 @@ from scipy.integrate import odeint
 class BallPredictor:
     def __init__(self, image_3d: Image3D):
         self.time = image_3d.time
-        self.x_0 = image_3d.phys_x_balloon / 100
-        self.y_0 = image_3d.phys_y_balloon / 100
-        self.z_0 = image_3d.phys_z_balloon / 100
+        self.x_0 = image_3d.get_phys_balloon(0) / 100
+        self.y_0 = image_3d.get_phys_balloon(1) / 100
+        self.z_0 = image_3d.get_phys_balloon(3) / 100
         self.v_x_0 = image_3d.velocity_x_balloon / 100
         self.v_y_0 = image_3d.velocity_y_balloon / 100
         self.v_z_0 = image_3d.velocity_z_balloon / 100
@@ -57,9 +57,9 @@ class NumericBallPredictor:
 
     def __init__(self, image_3d: Image3D):
         self.time = image_3d.time
-        self.x_0 = image_3d.phys_x_balloon / 100
-        self.y_0 = image_3d.phys_y_balloon / 100
-        self.z_0 = image_3d.phys_z_balloon / 100
+        self.x_0 = image_3d.get_phys_balloon(0) / 100
+        self.y_0 = image_3d.get_phys_balloon(1) / 100
+        self.z_0 = image_3d.get_phys_balloon(2) / 100
         self.v_x_0 = image_3d.velocity_x_balloon / 100
         self.v_y_0 = image_3d.velocity_y_balloon / 100
         self.v_z_0 = image_3d.velocity_z_balloon / 100

@@ -20,7 +20,7 @@ class Frame:
         self.THRESHOLD_SIZE = self.image.shape[1]/80
         self.SEARCH_RANGE = self.image.shape[1]/20
 
-    def detect_coordinates(self, bounds, x_old, y_old, search_range):
+    def _detect_coordinates(self, bounds, x_old, y_old, search_range):
         search_range = max(1, search_range)
         x_min, x_max, y_min, y_max = 0, self.image.shape[1], 0, self.image.shape[0]
         if x_old != 0 and y_old != 0 and search_range!=0:
@@ -52,20 +52,14 @@ class Frame:
         return x_coor + x_min, y_coor + y_min
 
     def detect_balloon(self, bounds, search_range, x_old=0, y_old=0):
-        x_coor, y_coor = self.detect_coordinates(bounds, x_old, y_old, search_range)
+        x_coor, y_coor = self._detect_coordinates(bounds, x_old, y_old, search_range)
         self.x_balloon = x_coor
         self.y_balloon = y_coor
-        # if x_old!=0 and y_old!=0:
-        #     self.x_balloon = 0.5 * self.x_balloon + 0.5 * x_old
-        #     self.y_balloon = 0.5 * self.y_balloon + 0.5 * y_old
 
     def detect_drone(self, bounds, search_range, x_old=0, y_old=0):
-        x_coor, y_coor = self.detect_coordinates(bounds, x_old, y_old, search_range)
+        x_coor, y_coor = self._detect_coordinates(bounds, x_old, y_old, search_range)
         self.x_drone = x_coor
         self.y_drone = y_coor
-        # if x_old!=0 and y_old!=0:
-        #     self.x_balloon = 0.5 * self.x_balloon + 0.5 * x_old
-        #     self.y_balloon = 0.5 * self.y_balloon + 0.5 * y_old
 
     def detect_color(self):
         y_shape = self.image.shape[0]

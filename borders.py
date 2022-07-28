@@ -1,7 +1,7 @@
 import os
 from image_3d import Image3D
 from camera import Camera
-from utils import phys_to_left_pix, FLOOR_HEIGHT
+from common import phys_to_left_pix, FLOOR_HEIGHT
 import cv2
 import numpy as np
 
@@ -30,7 +30,7 @@ class Borders:
     # saving the image in the array
     def set_image(self, image_3d: Image3D, left_cam: Camera):
         if (self.index <= 3):
-            self.coordinates[self.index] = np.array([image_3d.phys_x_balloon, image_3d.phys_y_balloon])
+            self.coordinates[self.index] = np.array([image_3d.get_phys_balloon(0), image_3d.get_phys_balloon(1)])
             self.index += 1
         if self.index == 4:
             self.fov_horz = left_cam.fov_horz
@@ -92,11 +92,11 @@ class Borders:
 
     # checks if balloon is in borders
     def balloon_in_borders(self, image_3d: Image3D):
-        return self.coordinat_in_borders(image_3d.phys_x_balloon, image_3d.phys_y_balloon)
+        return self.coordinat_in_borders(image_3d.get_phys_balloon(0), image_3d.get_phys_balloon(1))
 
     # checks if drone is in borders
     def drone_in_borders(self, image_3d: Image3D):
-        return self.coordinat_in_borders(image_3d.phys_x_drone, image_3d.phys_y_drone)     
+        return self.coordinat_in_borders(image_3d.get_phys_drone(0), image_3d.get_phys_drone(1))     
 
     
     def draw_borders(self, show_img, image_3d, color_in = (240,0,240), color_out = (240, 0, 240)):

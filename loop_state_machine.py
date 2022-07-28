@@ -1,8 +1,8 @@
 from datetime import datetime
-from velocity_pot import track_3d, lin_velocity_with_two_params, seek_middle, track_2d
+from tracking import track_3d, velocity_control_function, seek_middle, track_2d
 from prediction import NumericBallPredictor
 import numpy as np
-from utils import reachability, FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
+from common import reachability, FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
 
 
 MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
@@ -48,11 +48,10 @@ class STANDING_BY(State):
         return SEARCHING_PREDICTION()
 
     def to_transition(self, *args, **kwargs):
-        loop_status = kwargs['loop_status']
-        if loop_status.test_state == 2:
-            loop_status.test_state = 0
-            return 1
-        return 0
+        borders = kwargs['borders']
+        image_3d = kwargs['image_3d']
+
+        return borders.balloon_in_borders(image_3d)
 
     def run(self, *args, **kwargs):
         borders = kwargs['borders']
@@ -216,8 +215,8 @@ class HITTING(State):
         z_dest = image_3d.get_phys_balloon(2)
         loop_status.set_dest_coords((x_dest, y_dest, z_dest))
 
-        left_right = lin_velocity_with_two_params(x_rel, image_3d.velocity_x_balloon, 'x')
-        for_back = lin_velocity_with_two_params(y_rel, image_3d.velocity_y_balloon, 'y')
+        left_right = velocity_control_function(x_rel, image_3d.velocity_x_balloon, 'x')
+        for_back = velocity_control_function(y_rel, image_3d.velocity_y_balloon, 'y')
         up_down = 100
         while not tello.send_rc_control:
             continue

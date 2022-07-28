@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta
 import numpy as np
 import cv2
 from borders import Borders
@@ -8,58 +7,7 @@ from loop_status import Status
 from djitellopy import Tello
 from camera import Camera
 from loop_state_machine import ON_GROUND
-from velocity_pot import lin_velocity_with_two_params, track_balloon
-from utils import image_with_circle, FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
-
-ORI_WEB = Camera(51.3, 0, False)
-ORI_PHONE = Camera(66.9, 3, False)
-NIR_PHONE = Camera(65, 0, False)
-MAYA_WEB = Camera(61, 0, True)
-EFRAT_WEB = Camera(61, 2, False)
-EFRAT_PHONE = Camera(64, 3, False)
-MAYA_PHONE = Camera(63, 2, False)
-
-NIR_PHONE_NIR = Camera(67, 0, False)
-EFRAT_PHONE_NIR = Camera(77, 2, False)
-
-COLORS_FILENAME = "color_bounds.txt"
-BORDERS_FILENAME = "borders.txt"
-
-def hit_ball_rc(image_3d: Image3D, tello: Tello, loop_status: Status):
-    UPPER_LIMIT = 200
-    LOWER_LIMIT = 0
-    XY_LIMIT = 10
-    Z_LIMIT = 15
-    VEL_LIMIT = 5
-
-    x_rel = int(image_3d.get_phys_balloon(0) - image_3d.get_phys_drone(0))
-    y_rel = int(image_3d.get_phys_balloon(1) - image_3d.get_phys_drone(1))
-    z_rel = int(loop_status.hit_coords[2] - image_3d.get_phys_drone(2))
-
-    if abs(x_rel) < XY_LIMIT \
-            and abs(y_rel) < XY_LIMIT \
-            and LOWER_LIMIT < z_rel < UPPER_LIMIT \
-            and abs(image_3d.velocity_x_drone) < VEL_LIMIT \
-            and abs(image_3d.velocity_y_drone) < VEL_LIMIT:
-        if z_rel < Z_LIMIT:
-            left_right, for_back = 0, 0
-            up_down = -100
-            while not tello.send_rc_control:
-                continue
-            tello.send_rc_control(left_right, for_back, up_down, 0)
-            loop_status.hit_mode_off()
-            return
-
-        left_right = lin_velocity_with_two_params(x_rel, image_3d.velocity_x_balloon, 'x')
-        for_back = lin_velocity_with_two_params(y_rel, image_3d.velocity_y_balloon, 'y')
-        up_down = 100
-        while not tello.send_rc_control:
-            continue
-        tello.send_rc_control(left_right, for_back, up_down, 0)
-
-    else:
-        track_balloon(image_3d, tello)
-
+from common import *
 
 
 def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, loop_status: Status, left_cam: Camera, tello: Tello) -> bool:
@@ -116,8 +64,7 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, l
 
     # the 'h' button is set as the hitting balloon method
     elif key == ord("h"):
-        coords = (image_3d.phys_x_balloon, image_3d.phys_y_balloon, image_3d.phys_z_balloon)
-        loop_status.hit_mode_on(coords)
+        loop_status.hit_mode_on()
 
     elif key == ord("w"):
         tello.flip_forward()
@@ -133,7 +80,7 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, l
     # the 'j' button is set as the saving the borders. can save 4 coordinates
     elif key == ord('j'):
         borders.set_image(image_3d, left_cam)
-        print("saved the %.0f coordinate: (%.0f,%.0f,%.0f)" % (borders.index, image_3d.phys_x_balloon, image_3d.phys_y_balloon, image_3d.phys_z_balloon))
+        print("saved the %.0f coordinate: (%.0f,%.0f,%.0f)" % (borders.index, image_3d.get_phys_balloon(0), image_3d.get_phys_balloon(1), image_3d.get_phys_balloon(2)))
         if borders.index == 4:
             borders.write_borders(BORDERS_FILENAME)
 

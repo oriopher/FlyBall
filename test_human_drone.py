@@ -7,21 +7,7 @@ from loop_status import Status
 from djitellopy import Tello
 from camera import Camera
 from loop_state_machine import ON_GROUND
-from utils import image_with_circle, FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
-
-ORI_WEB = Camera(51.3, 0, False)
-ORI_PHONE = Camera(66.9, 3, False)
-NIR_PHONE = Camera(65, 0, False)
-MAYA_WEB = Camera(61, 0, True)
-EFRAT_WEB = Camera(61, 2, False)
-EFRAT_PHONE = Camera(64, 3, False)
-MAYA_PHONE = Camera(67, 67, 2, False)
-
-NIR_PHONE_NIR = Camera(67, 52, 0, False)
-EFRAT_PHONE_NIR = Camera(77, 2, False)
-
-COLORS_FILENAME = "color_bounds.txt"
-BORDERS_FILENAME = "borders.txt"
+from common import *
 
 
 def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, loop_status: Status, left_cam: Camera, tello: Tello) -> bool:
@@ -78,8 +64,7 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, l
 
     # the 'h' button is set as the hitting balloon method
     elif key == ord("h"):
-        coords = (image_3d.phys_x_balloon, image_3d.phys_y_balloon, image_3d.phys_z_balloon)
-        loop_status.hit_mode_on(coords)
+        loop_status.hit_mode_on()
 
     elif key == ord("w"):
         tello.flip_forward()
@@ -95,7 +80,7 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, l
     # the 'j' button is set as the saving the borders. can save 4 coordinates
     elif key == ord('j'):
         borders.set_image(image_3d, left_cam)
-        print("saved the %.0f coordinate: (%.0f,%.0f,%.0f)" % (borders.index, image_3d.phys_x_balloon, image_3d.phys_y_balloon, image_3d.phys_z_balloon))
+        print("saved the %.0f coordinate: (%.0f,%.0f)" % (borders.index, image_3d.get_phys_balloon(0), image_3d.get_phys_balloon(1)))
         if borders.index == 4:
             borders.write_borders(BORDERS_FILENAME)
 
@@ -111,15 +96,12 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, l
     elif key == ord('a'):
         loop_status.stop_hit()
 
-    elif key == ord('z'):
-        loop_status.test_state = 1
-
     return True
 
 
-def display_frames(image_now, loop_status, borders):
-    text_balloon_coor = "c(%.0f,%.0f,%.0f)" % (image_now.phys_x_balloon, image_now.phys_y_balloon, image_now.phys_z_balloon)
-    text_drone_coor = "c(%.0f,%.0f,%.0f)" % (image_now.phys_x_drone, image_now.phys_y_drone, image_now.phys_z_drone)
+def display_frames(image_now : Image3D, loop_status, borders : Borders):
+    text_balloon_coor = "c(%.0f,%.0f,%.0f)" % (image_now.get_phys_balloon(0), image_now.get_phys_balloon(1), image_now.get_phys_balloon(2))
+    text_drone_coor = "c(%.0f,%.0f,%.0f)" % (image_now.get_phys_drone(0), image_now.get_phys_drone(1), image_now.get_phys_drone(2))
     text_balloon_vel = "v(%.0f,%.0f,%.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon, image_now.velocity_z_balloon)
     text_drone_vel = "v(%.0f,%.0f,%.0f)" % (image_now.velocity_x_drone, image_now.velocity_y_drone, image_now.velocity_z_drone)
 
@@ -141,6 +123,8 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, m
     loop_status = Status()
     colors = ColorBounds()
     borders = Borders()
+    colors.read_colors(COLORS_FILENAME)
+    borders.read_borders(BORDERS_FILENAME)
     old_images_vel = [None]*10
 
     while(True):
@@ -166,9 +150,6 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, m
         transition = state.to_transition(**{'image_3d': image_now, 'loop_status': loop_status, 'tello': tello, 'borders': borders})
         if transition:
             loop_status.state = state.next(transition)
-
-        if loop_status.test_state == 1 and borders.balloon_in_borders(image_now):
-            loop_status.test_state = 2
 
         old_images_vel[frame_counter % len(old_images_vel)] = image_now
         image_old = image_now
@@ -196,7 +177,7 @@ if __name__ == "__main__":
     continue_test = True
 
     left = NIR_PHONE_NIR
-    right = MAYA_PHONE
+    right = MAYA_PHONE_NIR
 
     distance = 72
     while continue_test:

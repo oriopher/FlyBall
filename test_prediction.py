@@ -6,32 +6,7 @@ from loop_status import Status
 from camera import Camera
 from prediction import NumericBallPredictor
 from borders import Borders
-import utils
-
-ORI_WEB = Camera(51.3, 0, False)
-ORI_PHONE = Camera(66.9, 2, False)
-NIR_PHONE = Camera(67, 3, False)
-MAYA_WEB = Camera(61, 0, True)
-EFRAT_WEB = Camera(61, 0, True)
-EFRAT_PHONE = Camera(77, 2, True)
-
-ORI_PHONE_NIR = Camera(66.9, 0, False)
-MAYA_PHONE_NIR = Camera(67, 67, 2, False)
-NIR_PHONE_NIR = Camera(67, 52, 0, False)
-
-COLORS_FILENAME = "color_bounds.txt"
-BORDERS_FILENAME = "borders.txt"
-
-
-def image_with_circle(cam : Camera, show_img, x_phys, y_phys, z_phys, color = (240, 240, 240), thickness = 3):
-    radius = utils.phys_to_left_pix_img(x_phys + 11, y_phys, z_phys, show_img, cam)[0] - utils.phys_to_left_pix_img(x_phys, y_phys, z_phys, show_img, cam)[0]
-    coordinates = utils.phys_to_left_pix_img(x_phys, y_phys, z_phys, show_img, cam)
-    show_img = cv2.circle(show_img, coordinates, radius, color, thickness=thickness)
-    # print("radius: ", radius)
-    # print("coordinates: ", coordinates)
-    # cv2.imshow("left", show_img)
-
-    return show_img
+from common import *
 
 
 def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders : Borders, loop_status: Status, left_cam : Camera) -> bool:
