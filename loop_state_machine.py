@@ -51,7 +51,6 @@ class STANDING_BY(State):
             loop_status.test_state = 0
             return 1
         return 0
-        return kwargs['loop_status'].hit
 
     def run(self, *args, **kwargs):
         borders = kwargs['borders']
@@ -101,18 +100,17 @@ class SEARCHING_PREDICTION(State):
         Z_HIT = DRONE_DEFAULT_HEIGHT + self.Z_OFFSET
         image_3d = kwargs['image_3d']
         pred = NumericBallPredictor(image_3d)
-        # pred_time, pred_coords = pred.get_optimal_hitting_point(z_bound=Z_HIT/100, xy_vel_bound=self.XY_VEL_BOUND/100)
-        # x_dest, y_dest, z_dest = pred_coords
-        pred_time, (x_dest, y_dest, z_dest) = pred.get_prediction_height(Z_HIT)
+        pred_time, pred_coords = pred.get_optimal_hitting_point(z_bound=image_3d.phys_z_drone/100, xy_vel_bound=self.XY_VEL_BOUND/100)
+        x_dest, y_dest, z_dest = pred_coords
+        # pred_time, (x_dest, y_dest, z_dest) = pred.get_prediction_height(Z_HIT)
         loop_status = kwargs['loop_status']
         if (x_dest, y_dest, z_dest) == (0, 0, 0):
             x_dest, y_dest, z_dest = loop_status.dest_coords
-            z_dest += self.Z_OFFSET
         # x_dest = image_3d.get_phys_balloon(0)
         # y_dest = image_3d.get_phys_balloon(1)
         # z_dest = Z_HIT
-        loop_status.set_dest_coords((x_dest, y_dest, z_dest - self.Z_OFFSET))
-        track_3d(image_3d, kwargs['tello'], x_dest, y_dest, z_dest - self.Z_OFFSET)
+        loop_status.set_dest_coords((x_dest, y_dest, z_dest))
+        track_3d(image_3d, kwargs['tello'], x_dest, y_dest, DRONE_DEFAULT_HEIGHT)
 
 
 class SEARCHING(State):
@@ -126,10 +124,10 @@ class SEARCHING(State):
         return HITTING() if state == 1 else STANDING_BY()
 
     def to_transition(self, *args, **kwargs):
-        UPPER_LIMIT = 120
+        UPPER_LIMIT = 110
         LOWER_LIMIT = 20
-        XY_LIMIT = 50
-        VEL_LIMIT = 40
+        XY_LIMIT = 30
+        VEL_LIMIT = 30
 
         image_3d = kwargs['image_3d']
         x_rel = int(image_3d.get_phys_balloon(0) - image_3d.get_phys_drone(0))

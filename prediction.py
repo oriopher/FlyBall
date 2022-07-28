@@ -93,7 +93,7 @@ class NumericBallPredictor:
 
     def _get_optimal_hitting_point_for_times(self, times, xy_vel_bounds, z_bound):
         preds = self._prepare_predictions(np.insert(times, 0, 0))[1:]
-        mask = np.all([preds[:, 3] >= z_bound, preds[:, 1] <= 0, preds[:, 0] <= xy_vel_bounds], axis=0)
+        mask = np.all([preds[:, 3] >= z_bound, preds[:, 1] <= 0, np.abs(preds[:, 0]) <= xy_vel_bounds], axis=0)
         return times[mask], preds[mask]
 
     def get_optimal_hitting_point(self, start_time=0, end_time=3, jump=0.1, xy_vel_bound=5/100, z_bound=30/100):
