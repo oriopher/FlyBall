@@ -1,12 +1,11 @@
-from datetime import datetime
 import numpy as np
 import cv2
 from color_bounds import ColorBounds
 from image_3d import Image3D
 from loop_status import Status
-from djitellopy import Tello
 from camera import Camera
-from prediction import BallPredictor, NumericBallPredictor
+from prediction import NumericBallPredictor
+from borders import Borders
 import utils
 
 ORI_WEB = Camera(51.3, 0, False)
@@ -17,10 +16,12 @@ EFRAT_WEB = Camera(61, 0, True)
 EFRAT_PHONE = Camera(77, 2, True)
 
 ORI_PHONE_NIR = Camera(66.9, 0, False)
-MAYA_PHONE_NIR = Camera(76, 2, False)
-NIR_PHONE_NIR = Camera(67, 0, False)
+MAYA_PHONE_NIR = Camera(67, 67, 2, False)
+NIR_PHONE_NIR = Camera(67, 52, 0, False)
 
 COLORS_FILENAME = "color_bounds.txt"
+BORDERS_FILENAME = "borders.txt"
+
 
 def image_with_circle(cam : Camera, show_img, x_phys, y_phys, z_phys, color = (240, 240, 240), thickness = 3):
     radius = utils.phys_to_left_pix_img(x_phys + 11, y_phys, z_phys, show_img, cam)[0] - utils.phys_to_left_pix_img(x_phys, y_phys, z_phys, show_img, cam)[0]
@@ -33,7 +34,7 @@ def image_with_circle(cam : Camera, show_img, x_phys, y_phys, z_phys, color = (2
     return show_img
 
 
-def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status) -> bool:
+def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders : Borders, loop_status: Status, left_cam : Camera) -> bool:
     key = cv2.waitKey(1) & 0xFF
 
     # the 'v' button is set as the detect color of balloon in the left cam
@@ -63,7 +64,7 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status
 
     # the 'z' button is set as the start predictions
     elif key == ord('z'):
-        loop_status.start_predictions()
+        loop_status.ready_to_test()
 
     # the 'x' button is set as the test predictions
     elif key == ord('x'):
@@ -72,6 +73,18 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, loop_status: Status
     # the 'c' button is set as the test predictions
     elif key == ord('c'):
         loop_status.stop_predictions()
+
+    # the 'j' button is set as the saving the borders. can save 4 coordinates
+    elif key == ord('j'):
+        borders.set_image(image_3d, left_cam)
+        print("saved the %.0f coordinate: (%.0f,%.0f,%.0f)" % (borders.index, image_3d.phys_x_balloon, image_3d.phys_y_balloon, image_3d.phys_z_balloon))
+        if borders.index == 4:
+            borders.write_borders(BORDERS_FILENAME)
+
+    # the 'r' button is set as the read colors from file
+    elif key == ord('r'):
+        borders.read_borders(BORDERS_FILENAME)
+        print("middle is ({0:.3f},{1:.3f})".format(borders.x_middle, borders.y_middle))
 
     return True
 
@@ -120,6 +133,7 @@ def capture_video( cameras_distance, left: Camera, right: Camera, method='parall
 
     loop_status = Status()
     colors = ColorBounds()
+    borders = Borders()
     old_images = [None]*10
     prediction_table = np.zeros((40,7))
 
@@ -155,13 +169,15 @@ def capture_video( cameras_distance, left: Camera, right: Camera, method='parall
         text_balloon_vel = "v(%.0f,%.0f,%.0f)" % (image_now.velocity_x_balloon, image_now.velocity_y_balloon, image_now.velocity_z_balloon)
     
         # Display the resulting frame
-        if loop_status.get_predict_stat() != 2:
-            image_now.frame_left.show_image("left", text_balloon=text_balloon_coor, text_color=(240,240,240))
-        else:
-            left_show_img = image_now.frame_left.image_to_show(text_balloon=text_balloon_coor, text_color=(240,240,240))
+        left_show_img = image_now.frame_left.image_to_show(text_balloon=text_balloon_coor, text_color=(240,240,240))
+        left_show_img = borders.draw_borders(left_show_img, image_now, color_in=(0, 240, 0), color_out=(0, 0, 240))
+        if loop_status.get_predict_stat() == 2: 
             left_show_img = image_with_circle(left, left_show_img, x_pred, y_pred, z_pred)
-            cv2.imshow("left", left_show_img)
+        cv2.imshow("left", left_show_img)
         image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_color=(200,50,50))
+
+        if loop_status.get_predict_stat() == 4 and borders.balloon_in_borders(image_now):
+            loop_status.start_predictions()
 
         if loop_status.get_predict_stat() == 1: # start prediction
             predictor = NumericBallPredictor(image_now)
@@ -171,7 +187,7 @@ def capture_video( cameras_distance, left: Camera, right: Camera, method='parall
         old_images[frame_counter % len(old_images)] = image_now
         image_old = image_now
    
-        continue_test = interactive_loop(image_now, colors, loop_status)
+        continue_test = interactive_loop(image_now, colors, borders, loop_status, left)
         if not loop_status.continue_loop:
             break
 
@@ -194,10 +210,10 @@ def pixels_to_cm(distance, num_pixels, fov_angle):
 if __name__ == "__main__":
     continue_test = True
 
-    left = NIR_PHONE
-    right = ORI_PHONE
+    left = NIR_PHONE_NIR
+    right = MAYA_PHONE_NIR
 
-    distance = 77.5
+    distance = 64
     while continue_test:
         continue_test, prediction_table, shape = capture_video(distance, left, right, method='parallel')
 

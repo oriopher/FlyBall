@@ -33,9 +33,9 @@ class Image3D:
         # Will return x,y which are the objects coordinates in cm. cam dist is the distance between the cameras.
         # p is just a used for calculation, see documentation.
         x, y = 0, 0
-        p_left = (self.frame_left.image.shape[1] / 2) / np.tan(left.fov / 2)
+        p_left = (self.frame_left.image.shape[1] / 2) / np.tan(left.fov_horz / 2)
         angle_left = np.pi / 2 - np.arctan2(left.flip*(x_left - self.frame_left.image.shape[1] / 2), p_left)
-        p_right = (self.frame_right.image.shape[1] / 2) / np.tan(right.fov / 2)
+        p_right = (self.frame_right.image.shape[1] / 2) / np.tan(right.fov_horz / 2)
         angle_right = np.pi / 2 - np.arctan2(right.flip*(-x_right + self.frame_right.image.shape[1] / 2), p_right)
         if method == 'parallel':
             # left camera is at (0,0) and right at (0,d)
@@ -51,7 +51,7 @@ class Image3D:
     def calculate_height(self, cam: Camera, y_cm, z_pix):
         # Will return the height in cm. Requires y in cm. assum
         n_pixels = self.frame_right.image.shape[0]  # Number of pixels in z axis.
-        p = (n_pixels / 2) / np.tan(cam.fov / 2)
+        p = (n_pixels / 2) / np.tan(cam.fov_vert / 2)
         return y_cm * (n_pixels / 2 - z_pix) / p
 
     def calculate_balloon_distance(self, left: Camera, right: Camera, d, method='parallel'):
@@ -122,4 +122,31 @@ class Image3D:
         self.velocity_z_balloon = np.mean(z_balloon_vel)
         self.velocity_x_drone = np.mean(x_drone_vel)
         self.velocity_y_drone = np.mean(y_drone_vel)
+        self.velocity_z_drone = np.mean(z_drone_vel)
+
+    def get_phys_balloon(self, index):
+        if index == 0:
+            return self.phys_x_balloon
+        elif index == 1:
+            return self.phys_y_balloon
+        elif index == 2:
+            return self.phys_z_balloon
+
+    def get_phys_drone(self, index):
+        if index == 0:
+            return self.phys_x_drone
+        elif index == 1:
+            return self.phys_y_drone
+        elif index == 2:
+            return self.phys_z_drone
+
+    def process_image(self, image_old, colors : ColorBounds, left : Camera, right : Camera, cameras_distance, old_images_vel, method='parallel'):
+        self.detect_all(colors, image_old)
+        balloon_exist, drone_exist = self.calculate_all_distances(left, right, cameras_distance, method=method)
+        if not balloon_exist:
+            self.phys_x_balloon, self.phys_y_balloon, self.phys_z_balloon = image_old.get_phys_balloon(0), image_old.get_phys_balloon(1), image_old.get_phys_balloon(2)
+        if not drone_exist:
+            self.phys_x_drone, self.phys_y_drone, self.phys_z_drone = image_old.get_phys_drone(0), image_old.get_phys_drone(1), image_old.get_phys_drone(2)
+
+        self.calculate_mean_velocities(old_images_vel)
 

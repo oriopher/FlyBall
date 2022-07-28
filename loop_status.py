@@ -1,5 +1,8 @@
 from datetime import datetime
 
+from loop_state_machine import ON_GROUND, STANDING_BY
+
+
 class LoopStatus:
 
     def __init__(self):
@@ -8,22 +11,36 @@ class LoopStatus:
         self.first_seek = False
         self.continue_loop = True
         self.hit = False
-        self.hit_coords = 0
-        self.hit_time = None
+        self.hit_coords = (0, 0, 0)
+        self.state = ON_GROUND()
         self.hit_height = 0
         self.prediction = 0 # 0 - disabled, 1 - starting, 2 - printing and testing predictions
+        self.x_0 = 0
+        self.y_0 = 0
+        self.dest_coords = (0,0,0)
+        self.start_hit_timer = None
+        self.end_hit_timer = None
+        self.test_state = 0
 
     def takeoff(self):
         self.tookoff = True
 
-    def start_track(self):
+    def start_track(self, x_0=0, y_0=0):
         if self.tookoff:
             self.start = True
             if not self.first_seek:
                 self.first_seek = True
+                self.x_0 = x_0
+                self.y_0 = y_0
 
     def stop_track(self):
-        self.start = False
+        if self.start:
+            self.start = False
+
+    def stop_hit(self):
+        if self.hit:
+            self.hit = False
+            self.state = STANDING_BY()
 
     def stop_loop(self):
         self.continue_loop = False
@@ -35,15 +52,17 @@ class LoopStatus:
         if self.start:
             self.hit = True
             self.hit_coords = coords
+            self.start_hit_timer = datetime.now()
     
     def hit_mode_off(self):
         self.hit = False
-
-    def set_hit_time(self):
-        self.hit_time = datetime.now()
+        self.end_hit_timer = datetime.now()
 
     def hit_mode(self):
         return self.hit
+
+    def ready_to_test(self):
+        self.prediction = 4
 
     def start_predictions(self):
         self.prediction = 1
@@ -57,6 +76,8 @@ class LoopStatus:
     def get_predict_stat(self):
         return self.prediction
 
+    def set_dest_coords(self, coords):
+        self.dest_coords = coords
 
 class Status(LoopStatus):
     _instance = None

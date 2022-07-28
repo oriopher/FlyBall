@@ -5,8 +5,9 @@ from time import time
 
 class Camera:
 
-    def __init__(self, fov: float, index: int, is_flipped=False) -> None:
-        self.fov = np.radians(fov)
+    def __init__(self, fov_horz: float, fov_vert : float, index: int, is_flipped=False) -> None:
+        self.fov_horz = np.radians(fov_horz)
+        self.fov_vert = np.radians(fov_vert) 
         self.index = index
         self.flip = -1 if is_flipped else 1
         self.is_flipped = is_flipped
