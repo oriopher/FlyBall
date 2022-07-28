@@ -1,4 +1,5 @@
 from datetime import datetime
+from loop_status import Status
 from tracking import track_3d, velocity_control_function, seek_middle, track_2d
 from prediction import NumericBallPredictor
 import numpy as np
@@ -32,8 +33,8 @@ class ON_GROUND(State):
 
 class HOVERING(State):
     def next(self, state=1):
-        print("Stand By")
-        return STANDING_BY()
+        print("Waiting")
+        return WAITING()
 
     def to_transition(self, *args, **kwargs):
         return kwargs['loop_status'].start
@@ -41,6 +42,35 @@ class HOVERING(State):
     def run(self, **kwargs):
         return
 
+
+class WAITING(State):
+    def next(self, state=1):
+        print("Stand By")
+        return STANDING_BY()
+
+    def to_transition(self, *args, **kwargs):
+        loop_status = Status()
+        if loop_status.testing:
+            loop_status.testing = 0
+            return 1
+        return 0
+
+    def run(self, *args, **kwargs):
+        borders = kwargs['borders']
+        loop_status = Status()
+
+        if borders.set_borders:
+            seek_middle(kwargs['image_3d'], kwargs['tello'], borders)
+            x_dest = borders.x_middle
+            y_dest = borders.y_middle
+            z_dest = DRONE_DEFAULT_HEIGHT
+        else:
+            x_dest = loop_status.x_0
+            y_dest = loop_status.y_0
+            z_dest = DRONE_DEFAULT_HEIGHT
+            track_2d(kwargs['image_3d'], kwargs['tello'], x_dest, y_dest)
+
+        loop_status.set_dest_coords((x_dest, y_dest, z_dest))
 
 class STANDING_BY(State):
     def next(self, state=1):
@@ -67,11 +97,6 @@ class STANDING_BY(State):
             y_dest = loop_status.y_0
             z_dest = DRONE_DEFAULT_HEIGHT
             track_2d(kwargs['image_3d'], kwargs['tello'], x_dest, y_dest)
-            # image_3d = kwargs['image_3d']
-            # x_dest = 20
-            # y_dest = 160
-            # z_dest = -10
-            # track_3d(image_3d,  kwargs['tello'], x_dest, y_dest, z_dest)
 
         loop_status.set_dest_coords((x_dest, y_dest, z_dest))
 
@@ -225,7 +250,7 @@ class HITTING(State):
 
 class DESCENDING(State):
     def next(self, state=1):
-        return STANDING_BY()
+        return WAITING()
 
     def to_transition(self, *args, **kwargs):
         Z_OFFSET = 15

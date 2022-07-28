@@ -12,12 +12,7 @@ from common import *
 
 def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, loop_status: Status, left_cam: Camera, tello: Tello) -> bool:
     key = cv2.waitKey(1) & 0xFF
-    str_colors_changed = "Color Bounds Changed"
-
-    # the 'c' button reconnects to the drone
-    if key == ord('c'):
-        tello.connect()
-        loop_status.reset()
+    str_colors_changed = "Color bounds changed"
 
     # the 'v' button is set as the detect color of balloon in the left cam
     if key == ord('v'):
@@ -54,20 +49,11 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, l
 
     # the 'q' button is set as the quitting button
     elif key == ord('q'):
-        loop_status.stop_loop()
         return False
-
-    # the 'l' button is set as the landing button
-    elif key == ord('l'):
-        loop_status.stop_loop()
-        loop_status.state = ON_GROUND()
 
     # the 'h' button is set as the hitting balloon method
     elif key == ord("h"):
         loop_status.hit_mode_on()
-
-    elif key == ord("w"):
-        tello.flip_forward()
 
     # the 'p' button is set as the save colors to file
     elif key == ord('p'):
@@ -80,13 +66,9 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, l
     # the 'j' button is set as the saving the borders. can save 4 coordinates
     elif key == ord('j'):
         borders.set_image(image_3d, left_cam)
-        print("saved the %.0f coordinate: (%.0f,%.0f)" % (borders.index, image_3d.get_phys_balloon(0), image_3d.get_phys_balloon(1)))
+        print("Saved the %.0f coordinate: (%.0f,%.0f)" % (borders.index, image_3d.get_phys_balloon(0), image_3d.get_phys_balloon(1)))
         if borders.index == 4:
             borders.write_borders(BORDERS_FILENAME)
-
-    # the 'b' button is set as the save borders to file
-    # elif key == ord('b'):
-    #     borders.write_borders(BORDERS_FILENAME)
 
     # the 'r' button is set as the read colors from file
     elif key == ord('r'):
@@ -95,6 +77,9 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, l
     # the 'a' button is set to abort hitting state back to seek middle
     elif key == ord('a'):
         loop_status.stop_hit()
+
+    elif key == ord('z'):
+        loop_status.testing = 1
 
     return True
 
@@ -107,7 +92,7 @@ def display_frames(image_now : Image3D, loop_status, borders : Borders):
 
     left_img = image_now.frame_left.image_to_show("left", text_balloon=text_balloon_coor, text_drone=text_drone_coor, text_color=(150,250,200))
     left_img = borders.draw_borders(left_img, image_now, color_in=(0, 240, 0), color_out=(0, 0, 240))
-    left_img = image_with_circle(left, left_img, loop_status.dest_coords, rad_phys=6, thickness=2)
+    left_img = image_with_circle(left, left_img, loop_status.dest_coords, rad_phys=7, thickness=2)
     cv2.imshow("left", left_img)
     image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
 
@@ -125,7 +110,7 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, m
     borders = Borders()
     colors.read_colors(COLORS_FILENAME)
     borders.read_borders(BORDERS_FILENAME)
-    old_images_vel = [None]*10
+    old_images = [None]*10
 
     while(True):
         state = loop_status.state
@@ -141,8 +126,8 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, m
         image_now = Image3D(real_image_left, image_right)
     
         # Process frames
-        if frame_counter > len(old_images_vel):
-            image_now.process_image(image_old, colors, left, right, cameras_distance, old_images_vel, method)
+        if frame_counter > len(old_images):
+            image_now.process_image(image_old, colors, left, right, cameras_distance, old_images, method)
         
         display_frames(image_now, loop_status, borders)
 
@@ -151,11 +136,11 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, m
         if transition:
             loop_status.state = state.next(transition)
 
-        old_images_vel[frame_counter % len(old_images_vel)] = image_now
+        old_images[frame_counter % len(old_images)] = image_now
         image_old = image_now
     
         continue_test = interactive_loop(image_now, colors, borders, loop_status, left, tello)
-        if not loop_status.continue_loop:
+        if not continue_test:
             break
     
     if loop_status.tookoff:
@@ -168,8 +153,6 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, m
     # Destroy all the windows
     cv2.destroyAllWindows()
 
-    return continue_test
-
 
 if __name__ == "__main__":
     tello = Tello()
@@ -180,5 +163,4 @@ if __name__ == "__main__":
     right = MAYA_PHONE_NIR
 
     distance = 72
-    while continue_test:
-        continue_test = capture_video(tello, distance, left, right, method='parallel')
+    capture_video(tello, distance, left, right, method='parallel')

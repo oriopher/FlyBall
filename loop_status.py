@@ -20,6 +20,7 @@ class LoopStatus:
         self.end_hit_timer = None
         self.drone_search_pred_coords = (0,0,0)
         self.drone_search_pred_time = 0
+        self.testing = 0
 
     def takeoff(self):
         self.tookoff = True
