@@ -194,7 +194,7 @@ if __name__ == "__main__":
     continue_test = True
 
     left = NIR_PHONE_NIR
-    right = MAYA_PHONE
+    right = MAYA_PHONE_NIR
 
     distance = 58
     while continue_test:
