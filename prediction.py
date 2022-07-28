@@ -43,9 +43,9 @@ class BallPredictor:
 
 
 class NumericBallPredictor:
-    r = 0.1154  # in meters
+    r = (0.76+0.82)/4/np.pi  # in meters
     g = 9.7803  # Gravitational constant
-    rho = 1.225  # Air density kg/m^3
+    rho = 1.187  # Air density kg/m^3
     V = 4 / 3 * np.pi * r ** 3  # Balloon Volume
     air_mass = V * rho
     C_d = 0.47  # Dimensionless drag constant

@@ -88,11 +88,14 @@ class SEARCHING_PREDICTION(State):
 
     def to_transition(self, *args, **kwargs):
         image_3d = kwargs['image_3d']
+        borders = kwargs['borders']
 
         if np.sqrt(image_3d.velocity_x_balloon ** 2 + image_3d.velocity_y_balloon ** 2) <= self.XY_VEL_BOUND \
                 and image_3d.velocity_z_balloon <= 0 and image_3d.phys_z_balloon >= image_3d.phys_z_drone:
             return 1
         if image_3d.velocity_z_balloon <= 0 and image_3d.phys_z_balloon <= image_3d.phys_z_drone:
+            return 2
+        if not (borders.balloon_in_borders(image_3d) and borders.drone_in_borders(image_3d)):
             return 2
         return 0
 
@@ -130,6 +133,7 @@ class SEARCHING(State):
         VEL_LIMIT = 30
 
         image_3d = kwargs['image_3d']
+        borders = kwargs['borders']
         x_rel = int(image_3d.get_phys_balloon(0) - image_3d.get_phys_drone(0))
         y_rel = int(image_3d.get_phys_balloon(1) - image_3d.get_phys_drone(1))
         z_rel = int(image_3d.get_phys_balloon(2) - image_3d.get_phys_drone(2))
@@ -139,6 +143,8 @@ class SEARCHING(State):
                and image_3d.velocity_z_balloon <= 0:
             return 1
         if image_3d.velocity_z_balloon <= 0 and image_3d.phys_z_balloon <= image_3d.phys_z_drone:
+            return 2
+        if not (borders.balloon_in_borders(image_3d) and borders.drone_in_borders(image_3d)):
             return 2
         return 0
 

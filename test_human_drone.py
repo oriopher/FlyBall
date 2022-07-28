@@ -1,4 +1,3 @@
-from datetime import datetime, timedelta
 import numpy as np
 import cv2
 from borders import Borders
@@ -8,7 +7,6 @@ from loop_status import Status
 from djitellopy import Tello
 from camera import Camera
 from loop_state_machine import ON_GROUND
-from velocity_pot import lin_velocity_with_two_params, track_balloon
 from utils import image_with_circle
 
 ORI_WEB = Camera(51.3, 0, False)
@@ -168,22 +166,12 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, m
         display_frames(image_now, loop_status, borders)
 
         state.run(**{'image_3d': image_now, 'loop_status': loop_status, 'tello': tello, 'borders': borders})
-        transition = state.to_transition(**{'image_3d': image_now, 'loop_status': loop_status, 'tello': tello})
+        transition = state.to_transition(**{'image_3d': image_now, 'loop_status': loop_status, 'tello': tello, 'borders': borders})
         if transition:
             loop_status.state = state.next(transition)
 
-        # balloon is out of borders. drone is seeking the middle until the balloon is back
-        # if loop_status.first_seek and (not borders.balloon_in_borders(image_now) or not loop_status.start):
-        #     print("seek middle")
-        #     loop_status.stop_hit()
-
         if loop_status.test_state == 1 and borders.balloon_in_borders(image_now):
             loop_status.test_state = 2
-
-        # balloon returned to the play area, we can continue to play
-        #if borders.in_borders(image_now) and not loop_status.start_track:
-        #   loop_status.out_of_borders = False
-        #   loop_status.start_track = True
 
         old_images_vel[frame_counter % len(old_images_vel)] = image_now
         image_old = image_now
@@ -213,6 +201,6 @@ if __name__ == "__main__":
     left = NIR_PHONE_NIR
     right = MAYA_PHONE
 
-    distance = 64.5
+    distance = 72
     while continue_test:
         continue_test = capture_video(tello, distance, left, right, method='parallel')
