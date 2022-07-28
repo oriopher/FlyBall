@@ -2,11 +2,10 @@ from datetime import datetime
 from velocity_pot import track_3d, lin_velocity_with_two_params, seek_middle, track_2d
 from prediction import NumericBallPredictor
 import numpy as np
-from utils import reachability, FLOOR_HEIGHT
+from utils import reachability, FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
 
 
 MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
-DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 40
 
 
 class State:
