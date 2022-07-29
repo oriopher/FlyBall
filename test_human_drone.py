@@ -6,8 +6,6 @@ from color_bounds import ColorBounds
 from image_3d import Image3D
 from loop_status import Status
 from djitellopy import Tello
-from camera import Camera
-from loop_state_machine import ON_GROUND
 from common import *
 
 
@@ -130,10 +128,15 @@ def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, m
         
         display_frames(image_now, loop_status, borders)
 
-        state.run(**{'image_3d': image_now, 'loop_status': loop_status, 'tello': tello, 'borders': borders})
-        transition = state.to_transition(**{'image_3d': image_now, 'loop_status': loop_status, 'tello': tello, 'borders': borders})
+        # State Machine
+        state_kwargs = {'image_3d': image_now, 'loop_status': loop_status, 'tello': tello, 'borders': borders}
+        state.run(**state_kwargs)
+        transition = state.to_transition(**state_kwargs)
         if transition:
-            loop_status.state = state.next(transition)
+            state.cleanup(transition, **state_kwargs)
+            state = loop_status.state = state.next(transition)
+            state.setup(**state_kwargs)
+
 
         old_images[frame_counter % len(old_images)] = image_now
         image_old = image_now

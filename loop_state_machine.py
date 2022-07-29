@@ -18,6 +18,11 @@ class State:
     def run(self, *args, **kwargs):
         raise NotImplemented
 
+    def setup(self, *args, **kwargs):
+        pass
+
+    def cleanup(self, state, *args, **kwargs):
+        pass
 
 class ON_GROUND(State):
     def next(self, state=1):
