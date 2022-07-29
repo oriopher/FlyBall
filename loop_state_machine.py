@@ -136,8 +136,9 @@ class SEARCHING_PREDICTION(State):
         if np.sqrt(image_3d.velocity_x_balloon ** 2 + image_3d.velocity_y_balloon ** 2) <= self.XY_VEL_BOUND \
                 and image_3d.phys_z_balloon >= image_3d.phys_z_drone:
             return 1
-        if image_3d.velocity_z_balloon <= 0 and image_3d.phys_z_balloon <= image_3d.phys_z_drone \
-                or not (borders.balloon_in_borders(image_3d) and borders.drone_in_borders(image_3d)):
+        if image_3d.velocity_z_balloon <= 0 and image_3d.phys_z_balloon <= image_3d.phys_z_drone:
+            return 2
+        if not (borders.balloon_in_borders(image_3d) and borders.drone_in_borders(image_3d)):
             return 2
         return 0
 
@@ -197,8 +198,9 @@ class SEARCHING(State):
                 and abs(image_3d.velocity_x_drone) < VEL_LIMIT and abs(image_3d.velocity_y_drone) < VEL_LIMIT \
                 and image_3d.velocity_z_balloon <= 0:
             return 1
-        if image_3d.velocity_z_balloon <= 0 and image_3d.phys_z_balloon <= image_3d.phys_z_drone \
-                or not (borders.balloon_in_borders(image_3d) and borders.drone_in_borders(image_3d)):
+        if image_3d.velocity_z_balloon <= 0 and image_3d.phys_z_balloon <= image_3d.phys_z_drone:
+            return 2
+        if not (borders.balloon_in_borders(image_3d) and borders.drone_in_borders(image_3d)):
             return 2
         return 0
 
