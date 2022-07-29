@@ -5,8 +5,8 @@ from camera import Camera
 
 class Frame:
     THRESHOLD_SIZE = 8  # pixels
-    H_RANGE = 20
-    S_RANGE = 30
+    H_RANGE = 30
+    S_RANGE = 50
     V_RANGE = 170
 
     SEARCH_RANGE = 50  # pixels
@@ -16,13 +16,13 @@ class Frame:
         self.x_drone_1 = 0
         self.y_drone_1 = 0
         self.x_drone_2 = 0
-        self.y_drone_2 = 0        
+        self.y_drone_2 = 0
         self.x_balloon = 0
         self.y_balloon = 0
-        self.THRESHOLD_SIZE = self.image.shape[1]/60
-        self.SEARCH_RANGE = self.image.shape[1]/10
+        self.THRESHOLD_SIZE = self.image.shape[1]/80
+        self.SEARCH_RANGE = self.image.shape[1]/20
 
-    def detect_coordinates(self, bounds, x_old, y_old, search_range):
+    def _detect_coordinates(self, bounds, x_old, y_old, search_range):
         search_range = max(1, search_range)
         x_min, x_max, y_min, y_max = 0, self.image.shape[1], 0, self.image.shape[0]
         if x_old != 0 and y_old != 0 and search_range!=0:
@@ -54,20 +54,14 @@ class Frame:
         return x_coor + x_min, y_coor + y_min
 
     def detect_balloon(self, bounds, search_range, x_old=0, y_old=0):
-        x_coor, y_coor = self.detect_coordinates(bounds, x_old, y_old, search_range)
+        x_coor, y_coor = self._detect_coordinates(bounds, x_old, y_old, search_range)
         self.x_balloon = x_coor
         self.y_balloon = y_coor
-        # if x_old!=0 and y_old!=0:
-        #     self.x_balloon = 0.5 * self.x_balloon + 0.5 * x_old
-        #     self.y_balloon = 0.5 * self.y_balloon + 0.5 * y_old
 
     def detect_drone_1(self, bounds, search_range, x_old=0, y_old=0):
         x_coor, y_coor = self.detect_coordinates(bounds, x_old, y_old, search_range)
         self.x_drone_1 = x_coor
         self.y_drone_1 = y_coor
-        # if x_old!=0 and y_old!=0:
-        #     self.x_balloon = 0.5 * self.x_balloon + 0.5 * x_old
-        #     self.y_balloon = 0.5 * self.y_balloon + 0.5 * y_old
 
 
     def detect_drone_2(self, bounds, search_range, x_old=0, y_old=0):
@@ -102,7 +96,7 @@ class Frame:
             if text_balloon:
                 show_img = cv2.putText(show_img, text_balloon, (int(self.x_balloon), int(self.y_balloon)),
                                        cv2.FONT_HERSHEY_DUPLEX, 1, text_color, 2, cv2.LINE_AA)
-                                       
+
         if detection_sign and self.x_drone_1 != 0 and self.y_drone_1 != 0:
             if text_drone_1:
                 show_img = cv2.putText(show_img, text_drone_1, (int(self.x_drone_1), int(self.y_drone_1)),
