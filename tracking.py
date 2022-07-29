@@ -2,7 +2,8 @@ import numpy as np
 from image_3d import Image3D
 from djitellopy import Tello
 from borders import Borders
-from common import DRONE_DEFAULT_HEIGHT
+from common import DRONE_DEFAULT_HEIGHT, reachability
+from prediction import NumericBallPredictor
 
 def track_3d(image_3d: Image3D, tello: Tello, dest_x: float, dest_y: float, dest_z: float):
     x_cm_rel = dest_x - image_3d.get_phys_drone(0)
@@ -93,3 +94,22 @@ def velocity_control_function(cm_rel, real_velocity, direction):
         return int(velocity)
     elif direction == 'z':
         return -int(velocity)
+
+
+def track_searching(image_3d: Image3D, tello: Tello, dest_x: float, dest_y: float, go_up = False):
+    pass
+
+def track_hitting(image_3d: Image3D, tello: Tello, dest_x : float, dest_y : float, dest_z : float):
+    rx = dest_x - image_3d.get_phys_drone(0)
+    ry = dest_y - image_3d.get_phys_drone(1)
+    rz = dest_z - image_3d.get_phys_drone(2)
+    r = np.sqrt(rx**2 + ry**2 + rz**2)
+    theta = np.arccos(rz/r)
+    phi = np.arctan2(ry,rx)
+    vz = 100
+    vx = int(vz*np.tan(theta)*np.cos(phi))
+    vy = int(vz*np.tan(theta)*np.sin(phi))
+
+    left_right, for_back, up_down = vx, vy, vz
+    if tello.send_rc_control:
+        tello.send_rc_control(left_right, for_back, up_down, 0)

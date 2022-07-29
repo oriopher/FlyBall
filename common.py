@@ -11,10 +11,10 @@ NIR_PHONE = Camera(65, 0, False)
 MAYA_WEB = Camera(61, 0, True)
 EFRAT_WEB = Camera(61, 2, False)
 EFRAT_PHONE = Camera(64, 3, False)
-MAYA_PHONE_NIR = Camera(67, 67, 2, False)
+MAYA_PHONE_NIR = Camera(67, 55, 0, False)
 
 NIR_PHONE_NIR = Camera(67, 52, 0, False)
-EFRAT_PHONE_NIR = Camera(77, 2, False)
+EFRAT_PHONE_NIR = Camera(68, 77, 2, False)
 
 COLORS_FILENAME = "color_bounds.txt"
 BORDERS_FILENAME = "borders.txt"
@@ -35,7 +35,7 @@ def phys_to_left_pix(x_cm, y_cm, z_cm, x_n_pix, z_n_pix, cam_fov_horz, cam_fov_v
 
 
 def image_with_circle(cam : Camera, show_img, coords_phys, rad_phys, color = (240, 240, 240), thickness = 3):
-    if coords_phys == (0, 0, 0):
+    if not np.any(coords_phys):
         return show_img
     x_phys, y_phys, z_phys = coords_phys
     radius = phys_to_left_pix_img(x_phys + rad_phys, y_phys, z_phys, show_img, cam)[0] - phys_to_left_pix_img(x_phys, y_phys, z_phys, show_img, cam)[0]
@@ -45,7 +45,7 @@ def image_with_circle(cam : Camera, show_img, coords_phys, rad_phys, color = (24
     return show_img
 
 
-def reachability(distance, offset = 0.2):
+def reachability(distance, offset = 0.4):
     # distance in cm, only one axis
     plot = np.array([[0, 0.95], 
                     [10, 1.35],

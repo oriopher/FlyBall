@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 from borders import Borders
+from xy_display import draw_xy_display
 from color_bounds import ColorBounds
 from image_3d import Image3D
 from loop_status import Status
@@ -51,10 +52,6 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, l
     elif key == ord('q'):
         return False
 
-    # the 'h' button is set as the hitting balloon method
-    elif key == ord("h"):
-        loop_status.hit_mode_on()
-
     # the 'p' button is set as the save colors to file
     elif key == ord('p'):
         colors.write_colors(COLORS_FILENAME)
@@ -95,6 +92,8 @@ def display_frames(image_now : Image3D, loop_status, borders : Borders):
     left_img = image_with_circle(left, left_img, loop_status.dest_coords, rad_phys=7, thickness=2)
     cv2.imshow("left", left_img)
     image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
+    draw_xy_display(borders, image_now.phys_x_balloon, image_now.phys_y_balloon, image_now.phys_x_drone, image_now.phys_y_drone, loop_status.dest_coords[0], loop_status.dest_coords[1])
+
 
 
 def capture_video(tello: Tello, cameras_distance, left: Camera, right: Camera, method='parallel'):
@@ -159,8 +158,8 @@ if __name__ == "__main__":
 
     continue_test = True
 
-    left = NIR_PHONE_NIR
-    right = MAYA_PHONE_NIR
+    left = MAYA_PHONE_NIR
+    right = EFRAT_PHONE_NIR
 
-    distance = 72
+    distance = 69
     capture_video(tello, distance, left, right, method='parallel')

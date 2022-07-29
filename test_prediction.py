@@ -147,7 +147,7 @@ def capture_video( cameras_distance, left: Camera, right: Camera, method='parall
         left_show_img = image_now.frame_left.image_to_show(text_balloon=text_balloon_coor, text_color=(240,240,240))
         left_show_img = borders.draw_borders(left_show_img, image_now, color_in=(0, 240, 0), color_out=(0, 0, 240))
         if loop_status.get_predict_stat() == 2: 
-            left_show_img = image_with_circle(left, left_show_img, x_pred, y_pred, z_pred)
+            left_show_img = image_with_circle(left, left_show_img, (x_pred, y_pred, z_pred), rad_phys=11.3)
         cv2.imshow("left", left_show_img)
         image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_color=(200,50,50))
 
@@ -185,10 +185,10 @@ def pixels_to_cm(distance, num_pixels, fov_angle):
 if __name__ == "__main__":
     continue_test = True
 
-    left = NIR_PHONE_NIR
-    right = MAYA_PHONE_NIR
+    left = MAYA_PHONE_NIR
+    right = EFRAT_PHONE_NIR
 
-    distance = 64
+    distance = 69
     while continue_test:
         continue_test, prediction_table, shape = capture_video(distance, left, right, method='parallel')
 

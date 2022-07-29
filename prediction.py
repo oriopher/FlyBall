@@ -43,16 +43,16 @@ class BallPredictor:
 
 
 class NumericBallPredictor:
-    r = (0.70+0.75)/4/np.pi  # in meters
-    g = 9.7803  # Gravitational constant
-    rho = 1.187  # Air density kg/m^3
+    r = (0.68+0.74)/4/np.pi  # in meters
+    g = 9.807  # Gravitational constant
+    rho = 1.83  # Air density kg/m^3
     V = 4 / 3 * np.pi * r ** 3  # Balloon Volume
-    air_mass = V * rho
-    C_d = 0.47  # Dimensionless drag constant
+    disp_air_mass = V * rho
+    C_d = 0.78  # Dimensionless drag constant
     A = np.pi * r ** 2  # Balloon cross section in m^2
     B = 0.5*rho*A*C_d  # Buoyancy
-    balloon_weight = 2.5 * 10 ** -3
-    m = air_mass + balloon_weight  # Balloon mass.
+    balloon_weight = 2.7 * 10 ** -3
+    m = disp_air_mass + balloon_weight  # Balloon mass.
 
 
     def __init__(self, image_3d: Image3D):
@@ -94,7 +94,7 @@ class NumericBallPredictor:
 
     def _get_optimal_hitting_point_for_times(self, times, xy_vel_bounds, z_bound):
         preds = self._prepare_predictions(np.insert(times, 0, 0))[1:]
-        mask = np.all([preds[:, 3] >= z_bound, preds[:, 1] <= 0, np.abs(preds[:, 0]) <= xy_vel_bounds], axis=0)
+        mask = np.all([preds[:, 3] >= z_bound, np.abs(preds[:, 0]) <= xy_vel_bounds], axis=0)
         return times[mask], preds[mask]
 
     def get_optimal_hitting_point(self, start_time=0, end_time=3, jump=0.1, xy_vel_bound=5/100, z_bound=30/100):

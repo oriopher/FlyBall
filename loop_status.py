@@ -1,5 +1,4 @@
 from datetime import datetime
-
 from loop_state_machine import ON_GROUND, STANDING_BY
 
 
@@ -47,18 +46,6 @@ class LoopStatus:
 
     def reset(self):
         self.__init__()
-
-    def hit_mode_on(self):
-        if self.start:
-            self.hit = True
-            self.start_hit_timer = datetime.now()
-    
-    def hit_mode_off(self):
-        self.hit = False
-        self.end_hit_timer = datetime.now()
-
-    def hit_mode(self):
-        return self.hit
 
     def ready_to_test(self):
         self.prediction = 4
