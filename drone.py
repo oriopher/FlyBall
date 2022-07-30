@@ -1,14 +1,19 @@
-from djitellopy import Tello
-from image_3d import Image3D
+import datetime
+import numpy as np
+
+from common import DRONE_DEFAULT_HEIGHT
+from recognizable_object import RecognizableObject
 from loop_state_machine import ON_GROUND, STANDING_BY
+from tello import Tello
 
 
-class Drone:
-    def __init__(self, ident: int, tello: Tello, middle: tuple[int, int]):
-        self.tello = tello
+class Drone(RecognizableObject):
+    def __init__(self, ident: int, text_colors: tuple[int, int, int], middle: tuple[int, int] = (0, 0),
+                 iface_ip: str = '192.168.10.2'):
+        super().__init__(text_colors)
+        self.tello = Tello(iface_ip=iface_ip)
         self.middle = middle
         self.id = ident
-        self.x = self.y = self.z = self.vx = self.vy = self.vz = 0
         self.tookoff = self.start = self.first_seek = self.hit = False
         self.state = ON_GROUND()
         self.prediction = 0  # 0 - disabled, 1 - starting, 2 - printing and testing predictions
@@ -20,34 +25,39 @@ class Drone:
         self.drone_search_pred_time = 0
         self.testing = 0
 
-    def connect(self):
+    def battery_status(self, to_print):
+        if to_print:
+            print("battery = ", self.tello.get_battery(), "%")
+
+    def takeoff(self, battery=True):
         self.tello.connect()
-
-    def save_coords(self, image_3d: Image3D):
-        if self.id == 1:
-            self.x = image_3d.phys_x_drone_1
-            self.y = image_3d.phys_y_drone_1
-            self.z = image_3d.phys_z_drone_1
-            self.vx = image_3d.velocity_x_drone_1
-            self.vy = image_3d.velocity_y_drone_1
-            self.vz = image_3d.velocity_z_drone_1
-        elif self.id == 2:
-            self.y = image_3d.phys_y_drone_2
-            self.z = image_3d.phys_z_drone_2
-            self.vx = image_3d.velocity_x_drone_2
-            self.vy = image_3d.velocity_y_drone_2
-            self.vz = image_3d.velocity_z_drone_2
-
-    def takeoff(self):
+        self.tello.takeoff()
         self.tookoff = True
+        self.battery_status(battery)
 
-    def start_track(self, x_0=0, y_0=0):
+    def land(self, battery=True):
+        self.tello.land()
+        self.battery_status(battery)
+
+    def send_rc_control(self, left_right_velocity: int, forward_backward_velocity: int, up_down_velocity: int,
+                        yaw_velocity: int):
+        self.tello.send_rc_control(left_right_velocity, forward_backward_velocity, up_down_velocity, yaw_velocity)
+
+    def wait_rc_control(self):
+        while not self.tello.send_rc_control:
+            continue
+        return
+
+    def get_battery(self):
+        return self.tello.get_battery()
+
+    def start_track(self):
         if self.tookoff:
             self.start = True
             if not self.first_seek:
                 self.first_seek = True
-                self.x_0 = x_0
-                self.y_0 = y_0
+                self.x_0 = self.x
+                self.y_0 = self.y
 
     def stop_track(self):
         if self.start:
@@ -58,22 +68,114 @@ class Drone:
             self.hit = False
             self.state = STANDING_BY()
 
-    def ready_to_test(self):
-        self.prediction = 4
-
-    def start_predictions(self):
-        self.prediction = 1
-
-    def test_predictions(self):
-        self.prediction = 2
-
-    def stop_predictions(self):
-        self.prediction = 0
-
-    def get_predict_stat(self):
-        return self.prediction
-
-    def set_dest_coords(self, coords):
+    def set_dest_coords(self, coords: tuple[float, float, float]):
         self.dest_coords = coords
 
+    def search_pred_start(self):
+        self.drone_search_pred_time = datetime.datetime.now()
+        self.drone_search_pred_coords = (self.x, self.y, self.z)
 
+    def start_hit(self):
+        self.start_hit_timer = datetime.datetime.now()
+
+    def set_middle(self, middle: tuple[float, float]):
+        self.middle = middle
+
+    def track_3d(self, dest_x: float, dest_y: float, dest_z: float):
+        x_cm_rel = dest_x - self.x
+        y_cm_rel = dest_y - self.y
+        z_cm_rel = dest_z - self.z
+        self.set_dest_coords((dest_x, dest_y, dest_z))
+
+        left_right = self.velocity_control_function(x_cm_rel, self.vx, 'x')
+        for_back = self.velocity_control_function(y_cm_rel, self.vy, 'y')
+        up_down = self.velocity_control_function(z_cm_rel, self.vz, 'z')
+        if self.tello.send_rc_control:
+            self.send_rc_control(left_right, for_back, up_down, 0)
+
+    def track_balloon(self, balloon: RecognizableObject):
+        self.track_2d(balloon.x, balloon.y)
+
+    def seek_middle(self):
+        self.track_2d(*self.middle)
+
+    def track_2d(self, dest_x: int, dest_y: int):
+        self.track_3d(dest_x, dest_y, DRONE_DEFAULT_HEIGHT)
+
+    @staticmethod
+    def velocity_control_function(cm_rel, real_velocity, direction):
+        # this function assumes the drone is looking at the cameras.
+
+        # These parameters achieve a hit within 2-3 seconds using lin + sqrt.
+        # there is a plot of this function in the documentation.
+        # MIN_VEL = 9 # under this speed the tello receives this as 0
+        # LOWER_BOUND = 5 # when the drone is closer than this we will just let it stop
+        # if direction == 'z':
+        #     MAX_VEL = 30
+        #     A_SQRT = 2
+        #     A_LINEAR = 0.9
+        #     B = 1.2
+        #     STOPPING_VEL = 0
+        #     C = 0
+        # elif direction == 'x' or direction == 'y':
+        #     STOPPING_VEL = 20
+        #     MAX_VEL = 60
+        #     A_SQRT = 3
+        #     A_LINEAR = 1
+        #     B = 0.7
+        #     C = 5
+        # else:
+        #     return 0
+
+        MIN_VEL = 9  # under this speed the tello receives this as 0
+        LOWER_BOUND = 5  # when the drone is closer than this we will just let it stop
+
+        STOPPING_VEL = 30  # The velocity applied in order to stop faster
+        MAX_VEL = 70
+        A_SQRT = 3
+        A_LINEAR = 1
+        C = 5
+        B = 0.6  # Associated with the stopping distance
+
+        if direction == 'z':
+            STOPPING_VEL = 0
+            B = 0.3
+            A_LINEAR = 1.5
+            LOWER_BOUND = 2
+
+        limit = max(B * abs(real_velocity), LOWER_BOUND)
+
+        if abs(cm_rel) < limit:
+            if abs(cm_rel) < LOWER_BOUND:
+                velocity = 0
+            else:
+                velocity = np.sign(real_velocity) * STOPPING_VEL
+
+        else:
+            # velocity_pot = int(min(A * (abs(cm_rel) - limit) + MIN_VEL, MAX_VEL))
+            velocity_pot = int(
+                min(max(A_SQRT * np.sqrt(abs(cm_rel) - limit), A_LINEAR * (abs(cm_rel) - limit) - C) + MIN_VEL,
+                    MAX_VEL))
+            velocity = -np.sign(cm_rel) * velocity_pot
+
+        if direction == 'x':
+            return int(velocity)
+        elif direction == 'y':
+            return int(velocity)
+        elif direction == 'z':
+            return -int(velocity)
+
+    def track_hitting(self, dest_x: float, dest_y: float, dest_z: float):
+        rx = dest_x - self.x
+        ry = dest_y - self.y
+        rz = dest_z - self.z
+        r = np.sqrt(rx ** 2 + ry ** 2 + rz ** 2)
+        theta = np.arccos(rz / r)
+        phi = np.arctan2(ry, rx)
+        vz = 100
+        vx = int(vz * np.tan(theta) * np.cos(phi))
+        vy = int(vz * np.tan(theta) * np.sin(phi))
+
+        left_right, for_back, up_down = vx, vy, vz
+        if self.tello.send_rc_control:
+            self.send_rc_control(left_right, for_back, up_down, 0)

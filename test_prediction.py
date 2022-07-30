@@ -12,13 +12,13 @@ from common import *
 def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders : Borders, loop_status: Status, left_cam : Camera) -> bool:
     key = cv2.waitKey(1) & 0xFF
 
-    # the 'v' button is set as the detect color of balloon in the left cam
+    # the 'v' button is set as the detect color of recognizable_object in the left cam
     if key == ord('v'):
         lower, upper = image_3d.frame_left.detect_color()
         colors.ball_left.change(lower, upper)
         print("color bounds changed")
 
-    # the 'n' button is set as the detect color of balloon in the right cam
+    # the 'n' button is set as the detect color of recognizable_object in the right cam
     elif key == ord('n'):
         lower, upper = image_3d.frame_right.detect_color()
         colors.ball_right.change(lower, upper)
@@ -29,11 +29,11 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders : Borders, 
         loop_status.stop_loop()
         return False
 
-    # the 'p' button is set as the save colors to file
+    # the 'p' button is set as the save text_colors to file
     elif key == ord('p'):
         colors.write_colors(COLORS_FILENAME)
 
-    # the 'k' button is set as the read colors from file
+    # the 'k' button is set as the read text_colors from file
     elif key == ord('k'):
         colors.read_colors(COLORS_FILENAME)
 
@@ -56,7 +56,7 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders : Borders, 
         if borders.index == 4:
             borders.write_borders(BORDERS_FILENAME)
 
-    # the 'r' button is set as the read colors from file
+    # the 'r' button is set as the read text_colors from file
     elif key == ord('r'):
         borders.read_borders(BORDERS_FILENAME)
         print("middle is ({0:.3f},{1:.3f})".format(borders.x_middle, borders.y_middle))
@@ -151,7 +151,7 @@ def capture_video( cameras_distance, left: Camera, right: Camera, method='parall
         cv2.imshow("left", left_show_img)
         image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_color=(200,50,50))
 
-        if loop_status.get_predict_stat() == 4 and borders.balloon_in_borders(image_now):
+        if loop_status.get_predict_stat() == 4 and borders.in_borders(image_now):
             loop_status.start_predictions()
 
         if loop_status.get_predict_stat() == 1: # start prediction

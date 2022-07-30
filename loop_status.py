@@ -5,44 +5,9 @@ from loop_state_machine import ON_GROUND, STANDING_BY
 class LoopStatus:
 
     def __init__(self):
-        self.tookoff = False
-        self.start = False
-        self.first_seek = False
-        self.continue_loop = True
-        self.hit = False
-        self.state = ON_GROUND()
         self.prediction = 0 # 0 - disabled, 1 - starting, 2 - printing and testing predictions
-        self.x_0 = 0
-        self.y_0 = 0
-        self.dest_coords = (0,0,0)
-        self.start_hit_timer = None
-        self.end_hit_timer = None
-        self.drone_search_pred_coords = (0,0,0)
-        self.drone_search_pred_time = 0
+        self.dest_coords = (0, 0, 0)
         self.testing = 0
-
-    def takeoff(self):
-        self.tookoff = True
-
-    def start_track(self, x_0=0, y_0=0):
-        if self.tookoff:
-            self.start = True
-            if not self.first_seek:
-                self.first_seek = True
-                self.x_0 = x_0
-                self.y_0 = y_0
-
-    def stop_track(self):
-        if self.start:
-            self.start = False
-
-    def stop_hit(self):
-        if self.hit:
-            self.hit = False
-            self.state = STANDING_BY()
-
-    def stop_loop(self):
-        self.continue_loop = False
 
     def reset(self):
         self.__init__()
