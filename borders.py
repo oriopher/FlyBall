@@ -1,7 +1,7 @@
 import os
-from image_3d import Image3D
 from camera import Camera
 from common import phys_to_left_pix, FLOOR_HEIGHT
+from recognizable_object import RecognizableObject
 import cv2
 import numpy as np
 
@@ -30,15 +30,15 @@ class Borders:
 
 
     # saving the image in the array
-    def set_image(self, image_3d: Image3D, left_cam: Camera):
+    def set_image(self, balloon: RecognizableObject, left_cam: Camera):
         if (self.index <= 3):
-            self.coordinates[self.index] = np.array([image_3d.get_phys_balloon(0), image_3d.get_phys_balloon(1)])
+            self.coordinates[self.index] = np.array([balloon.x, balloon.y])
             self.index += 1
         if self.index == 4:
             self.fov_horz = left_cam.fov_horz
             self.fov_vert = left_cam.fov_vert
-            self.x_n_pix = image_3d.frame_left.image.shape[1]
-            self.z_n_pix = image_3d.frame_left.image.shape[0]
+            self.x_n_pix = balloon.frame_left.image.shape[1]
+            self.z_n_pix = balloon.frame_left.image.shape[0]
             self.calc_borders()
 
 
@@ -95,17 +95,17 @@ class Borders:
 
 
     # checks if balloon is in borders
-    def balloon_in_borders(self, image_3d: Image3D):
-        return self.coordinate_in_borders(image_3d.get_phys_balloon(0), image_3d.get_phys_balloon(1))
+    def balloon_in_borders(self, balloon: RecognizableObject):
+        return self.coordinate_in_borders(balloon.x, balloon.y)
 
     # checks if drone is in borders
-    def drone_in_borders(self, image_3d: Image3D):
-        return self.coordinate_in_borders(image_3d.get_phys_drone(0), image_3d.get_phys_drone(1))     
+    def drone_in_borders(self, drone: RecognizableObject):
+        return self.coordinate_in_borders(drone.x, drone.y)
 
     
-    def draw_borders(self, show_img, image_3d, color_in = (240,0,240), color_out = (240, 0, 240)):
+    def draw_borders(self, show_img, balloon, color_in = (240,0,240), color_out = (240, 0, 240)):
         color = color_in
-        if not self.balloon_in_borders(image_3d):
+        if not self.balloon_in_borders(balloon):
             color = color_out
         if self.set_borders:
             show_img = cv2.line(show_img, (self.pixels_coordinates[0][0], self.pixels_coordinates[0][1]), (self.pixels_coordinates[1][0], self.pixels_coordinates[1][1]), color, thickness=2)
