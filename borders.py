@@ -90,7 +90,7 @@ class Borders:
         if y - self.m_low * x - self.b_low < 0:
             return False
 
-        # coordinate is out of left border
+        # coordinate is out of left_cam border
         if self.m_left >= 0:
             if y - self.m_left * x - self.b_left > 0:
                 return False
@@ -98,7 +98,7 @@ class Borders:
         elif y - self.m_left * x - self.b_left < 0:
             return False
 
-        # coordinate is out of right border
+        # coordinate is out of right_cam border
         if self.m_right >= 0:
             if y - self.m_right * x - self.b_right < 0:
                 return False

@@ -12,13 +12,13 @@ from common import *
 def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders : Borders, loop_status: Status, left_cam : Camera) -> bool:
     key = cv2.waitKey(1) & 0xFF
 
-    # the 'v' button is set as the detect color of recognizable_object in the left cam
+    # the 'v' button is set as the detect color of recognizable_object in the left_cam cam
     if key == ord('v'):
         lower, upper = image_3d.frame_left.detect_color()
         colors.ball_left.change(lower, upper)
         print("color bounds changed")
 
-    # the 'n' button is set as the detect color of recognizable_object in the right cam
+    # the 'n' button is set as the detect color of recognizable_object in the right_cam cam
     elif key == ord('n'):
         lower, upper = image_3d.frame_right.detect_color()
         colors.ball_right.change(lower, upper)
@@ -148,8 +148,8 @@ def capture_video( cameras_distance, left: Camera, right: Camera, method='parall
         left_show_img = borders.draw_borders(left_show_img, image_now, color_in=(0, 240, 0), color_out=(0, 0, 240))
         if loop_status.get_predict_stat() == 2: 
             left_show_img = image_with_circle(left, left_show_img, (x_pred, y_pred, z_pred), rad_phys=11.3)
-        cv2.imshow("left", left_show_img)
-        image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_color=(200,50,50))
+        cv2.imshow("left_cam", left_show_img)
+        image_now.frame_right.show_image("right_cam", text_balloon=text_balloon_vel, text_color=(200,50,50))
 
         if loop_status.get_predict_stat() == 4 and borders.in_borders(image_now):
             loop_status.start_predictions()

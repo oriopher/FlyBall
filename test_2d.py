@@ -22,25 +22,25 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, l
         tello_2.connect()
         loop_status.reset()
 
-    # the 'v' button is set as the detect color of recognizable_object in the left cam
+    # the 'v' button is set as the detect color of recognizable_object in the left_cam cam
     if key == ord('v'):
         lower, upper = image_3d.frame_left.detect_color()
         colors.ball_left.change(lower, upper)
         print(str_colors_changed)
 
-    # the 'n' button is set as the detect color of recognizable_object in the right cam
+    # the 'n' button is set as the detect color of recognizable_object in the right_cam cam
     elif key == ord('n'):
         lower, upper = image_3d.frame_right.detect_color()
         colors.ball_right.change(lower, upper)
         print(str_colors_changed)
 
-    # the 's' button is set as the detect color of drone in the left cam
+    # the 's' button is set as the detect color of drone in the left_cam cam
     elif key == ord('s'):
         lower, upper = image_3d.frame_left.detect_color()
         colors.drone_1_left.change(lower, upper)
         print(str_colors_changed)
 
-    # the 'f' button is set as the detect color of drone in the right cam
+    # the 'f' button is set as the detect color of drone in the right_cam cam
     elif key == ord('f'):
         lower, upper = image_3d.frame_right.detect_color()
         colors.drone_1_right.change(lower, upper)
@@ -163,13 +163,13 @@ def capture_video(tello_1: Tello, tello_2: Tello, cameras_distance, left: Camera
         text_drone_2_vel = "v(%.0f,%.0f)" % (image_now.velocity_x_drone_2, image_now.velocity_y_drone_2)
 
         # Display the resulting frame
-        left_img = image_now.frame_left.image_to_show("left", text_balloon=text_balloon_coor,
+        left_img = image_now.frame_left.image_to_show("left_cam", text_balloon=text_balloon_coor,
                                                       text_drone_1=text_drone_1_coor, text_drone_2=text_drone_2_coor,
                                                       text_color=(150, 250, 200))
         left_img = borders.draw_borders(left_img, image_now, color_in=(0, 240, 0), color_out=(0, 0, 240))
         left_img = image_with_circle(left, left_img, loop_status.dest_coords, rad_phys=5, thickness=2)
-        cv2.imshow("left", left_img)
-        image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_drone_1=text_drone_1_vel,
+        cv2.imshow("left_cam", left_img)
+        image_now.frame_right.show_image("right_cam", text_balloon=text_balloon_vel, text_drone_1=text_drone_1_vel,
                                          text_drone_2=text_drone_2_vel, text_color=(240, 150, 240))
 
         draw_xy_display(borders, image_now.phys_x_balloon, image_now.phys_y_balloon, image_now.phys_x_drone_1,

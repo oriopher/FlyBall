@@ -8,22 +8,22 @@ def interactive_loop(borders: Borders, loop_status: Status, left_cam: Camera, ba
     key = cv2.waitKey(1) & 0xFF
     str_colors_changed = "Color bounds changed"
 
-    # the 'v' button is set as the detect color of recognizable_object in the left cam
+    # the 'v' button is set as the detect color of recognizable_object in the left_cam cam
     if key == ord('v'):
         balloon.frame_left.detect_color()
         print(str_colors_changed)
 
-    # the 'n' button is set as the detect color of recognizable_object in the right cam
+    # the 'n' button is set as the detect color of recognizable_object in the right_cam cam
     elif key == ord('n'):
         balloon.frame_right.detect_color()
         print(str_colors_changed)
 
-    # the 's' button is set as the detect color of drone in the left cam
+    # the 's' button is set as the detect color of drone in the left_cam cam
     elif key == ord('s'):
         drone.frame_left.detect_color()
         print(str_colors_changed)
 
-    # the 'f' button is set as the detect color of drone in the right cam
+    # the 'f' button is set as the detect color of drone in the right_cam cam
     elif key == ord('f'):
         drone.frame_right.detect_color()
         print(str_colors_changed)
@@ -67,37 +67,30 @@ def interactive_loop(borders: Borders, loop_status: Status, left_cam: Camera, ba
     return True
 
 
-def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, left: Camera, right: Camera, method='parallel'):
-    vid_left = cv2.VideoCapture(left.index)
-    vid_right = cv2.VideoCapture(right.index)
+def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, left: Camera, right: Camera):
 
-    frame_counter = 0
     continue_loop = True
 
     loop_status = Status()
     borders = Borders()
-    read_colors(COLORS_FILENAME, [balloon, drone])
-    borders.read_borders(BORDERS_FILENAME)
     recognizable_objects = [balloon, drone]
+    cameras = [left, right]
+    read_colors(COLORS_FILENAME, recognizable_objects)
+    borders.read_borders(BORDERS_FILENAME)
 
     while continue_loop:
         state = drone.state
-        frame_counter = frame_counter+1
         # Capture the video frame by frame
-        ret_left, image_left = vid_left.read()
-        if not ret_left:
+        if not left.capture():
             continue
-        real_image_left = image_left
-        ret_right, image_right = vid_right.read()
-        if not ret_right:
+        if not right.capture():
             continue
+
         for recognizable_object in recognizable_objects:
-            recognizable_object.set_frames(real_image_left, image_right)
-
             # Process frames
-            recognizable_object.detect_and_set_coordinates(left, right, cameras_distance, frame_counter)
+            recognizable_object.detect_and_set_coordinates(left, right, cameras_distance)
 
-        display_frames(recognizable_objects, real_image_left, image_right, left, borders, loop_status)
+        display_frames(recognizable_objects, left, right, borders, loop_status)
 
         # State Machine
         state_kwargs = {'drone': drone, 'balloon': balloon, 'loop_status': loop_status, 'borders': borders}
@@ -105,7 +98,7 @@ def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, l
         transition = state.to_transition(**state_kwargs)
         if transition:
             state.cleanup(transition, **state_kwargs)
-            state = loop_status.state = state.next(transition)
+            state = drone.state = state.next(transition)
             state.setup(**state_kwargs)
 
         continue_loop = interactive_loop(borders, loop_status, left, balloon, drone)
@@ -114,8 +107,8 @@ def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, l
         drone.land()
 
     # After the loop release the cap object
-    vid_left.release()
-    vid_right.release()
+    left.release()
+    right.release()
     # Destroy all the windows
     cv2.destroyAllWindows()
 
@@ -123,8 +116,8 @@ def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, l
 if __name__ == "__main__":
     continue_test = True
 
-    left = MAYA_PHONE_NIR
-    right = EFRAT_PHONE_NIR
+    left_cam = MAYA_PHONE_NIR
+    right_cam = EFRAT_PHONE_NIR
 
     distance = 69
-    capture_video(Drone(1,  (0, 191, 255), iface_ip="192.168.0.1"), RecognizableObject((255, 54, 89)), distance, left, right, method='parallel')
+    capture_video(Drone(1,  (0, 191, 255), 7, iface_ip="192.168.0.1"), RecognizableObject((255, 54, 89), 11.3), distance, left_cam, right_cam)

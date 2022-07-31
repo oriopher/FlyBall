@@ -8,22 +8,20 @@ from tello import Tello
 
 
 class Drone(RecognizableObject):
-    def __init__(self, ident: int, text_colors: tuple[int, int, int], middle: tuple[int, int] = (0, 0),
+    def __init__(self, ident: int, text_colors: tuple[int, int, int], radius: int ,middle: tuple[int, int] = (0, 0),
                  iface_ip: str = '192.168.10.2'):
-        super().__init__(text_colors)
+        super().__init__(text_colors, radius)
         self.tello = Tello(iface_ip=iface_ip)
         self.middle = middle
         self.id = ident
-        self.tookoff = self.start = self.first_seek = self.hit = False
+        self.tookoff = self.start = self.first_seek = False
         self.state = ON_GROUND()
-        self.prediction = 0  # 0 - disabled, 1 - starting, 2 - printing and testing predictions
         self.x_0 = 0
         self.y_0 = 0
         self.dest_coords = (0, 0, 0)
         self.start_hit_timer = self.end_hit_timer = None
         self.drone_search_pred_coords = (0, 0, 0)
         self.drone_search_pred_time = 0
-        self.testing = 0
 
     def battery_status(self, to_print):
         if to_print:

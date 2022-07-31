@@ -44,28 +44,28 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, w
         #distance = int(values[4])
         window['Ok'].update(button_color = ('white','blue'))  
 
-    # the 'v' button is set as the detect color of recognizable_object in the left cam
+    # the 'v' button is set as the detect color of recognizable_object in the left_cam cam
     elif event == 'Balloon color (L)' or key == ord('v'):
         lower, upper = image_3d.frame_left.detect_color()
         colors.ball_left.change(lower, upper)
         print(str_colors_changed)
         window['Balloon color (L)'].update(button_color = ('white','blue'))
 
-    # the 'n' button is set as the detect color of recognizable_object in the right cam
+    # the 'n' button is set as the detect color of recognizable_object in the right_cam cam
     elif event == 'Balloon color (R)' or key == ord('n'):
         lower, upper = image_3d.frame_right.detect_color()
         colors.ball_right.change(lower, upper)
         print(str_colors_changed)
         window['Balloon color (R)'].update(button_color = ('white','blue')) 
 
-    # the 's' button is set as the detect color of drone in the left cam
+    # the 's' button is set as the detect color of drone in the left_cam cam
     elif event == 'Drone color (L)' or key == ord('s'):
         lower, upper = image_3d.frame_left.detect_color()
         colors.drone_left.change(lower, upper)
         print(str_colors_changed)
         window['Drone color (L)'].update(button_color = ('white','blue'))
 
-    # the 'f' button is set as the detect color of drone in the right cam
+    # the 'f' button is set as the detect color of drone in the right_cam cam
     elif event == 'Drone color (R)' or key == ord('f'):
         lower, upper = image_3d.frame_right.detect_color()
         colors.drone_right.change(lower, upper)
@@ -160,12 +160,12 @@ def capture_video(cameras_distance, left: Camera, right: Camera, colors: ColorBo
         text_drone_vel = "v(%.0f,%.0f)" % (image_now.velocity_x_drone, image_now.velocity_y_drone)
 
         # Display the resulting frame
-        left_img = image_now.frame_left.image_to_show("left", text_balloon=text_balloon_coor, text_drone=text_drone_coor, text_color=(150,250,200))
+        left_img = image_now.frame_left.image_to_show("left_cam", text_balloon=text_balloon_coor, text_drone=text_drone_coor, text_color=(150,250,200))
         color = (0, 240, 0)
         if not borders.in_borders(image_now):
             color = (0, 0, 240)
         left_img = borders.draw_borders(left_img, color)
-        cv2.imshow("left", left_img)
+        cv2.imshow("left_cam", left_img)
         left_img = cv2.resize(left_img, (350, 350))
         image_right = cv2.resize(image_right, (350, 350))
         # displayin in gui
@@ -175,7 +175,7 @@ def capture_video(cameras_distance, left: Camera, right: Camera, colors: ColorBo
         #imgbytes_right = cv2.imencode('.png', image_right)[1].tobytes()  # ditto
         #window['image_right'].update(data=imgbytes_right)
 
-        image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
+        image_now.frame_right.show_image("right_cam", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
         # recognizable_object is out of borders. drone is seeking the middle until the recognizable_object is back
         if borders.set_borders and loop_status.first_seek and (not borders.in_borders(image_now) or not loop_status.start):
             print("seek middle")

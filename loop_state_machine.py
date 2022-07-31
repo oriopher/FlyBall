@@ -1,5 +1,4 @@
 from datetime import datetime
-from tracking import track_3d, track_hitting, velocity_control_function, seek_middle, track_2d
 from prediction import NumericBallPredictor
 import numpy as np
 from common import reachability, FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
@@ -69,7 +68,7 @@ class WAITING(State):
             drone.seek_middle()
         else:
             x_dest, y_dest = drone.x_0, drone.y_0
-            track_2d(x_dest, y_dest)
+            drone.track_2d(x_dest, y_dest)
         z_dest = DRONE_DEFAULT_HEIGHT
         loop_status.set_dest_coords((x_dest, y_dest, z_dest))
 
@@ -81,7 +80,7 @@ class STANDING_BY(State):
 
     def to_transition(self, *args, **kwargs):
         borders = kwargs['borders']
-        balloon = kwargs['recognizable_object']
+        balloon = kwargs['balloon']
 
         return borders.in_borders(balloon)
 
@@ -95,7 +94,7 @@ class STANDING_BY(State):
             drone.seek_middle()
         else:
             x_dest, y_dest = drone.x_0, drone.y_0
-            track_2d(x_dest, y_dest)
+            drone.track_2d(x_dest, y_dest)
         z_dest = DRONE_DEFAULT_HEIGHT
         loop_status.set_dest_coords((x_dest, y_dest, z_dest))
 

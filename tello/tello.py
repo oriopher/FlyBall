@@ -605,10 +605,10 @@ class Tello:
         self.send_control_command("emergency")
 
     def move(self, direction: str, x: int):
-        """Tello fly up, down, left, right, forward or back with distance x cm.
+        """Tello fly up, down, left_cam, right_cam, forward or back with distance x cm.
         Users would normally call one of the move_x functions instead.
         Arguments:
-            direction: up, down, left, right, forward or back
+            direction: up, down, left_cam, right_cam, forward or back
             x: 20-500
         """
         self.send_control_command("{} {}".format(direction, x))
@@ -628,18 +628,18 @@ class Tello:
         self.move("down", x)
 
     def move_left(self, x: int):
-        """Fly x cm left.
+        """Fly x cm left_cam.
         Arguments:
             x: 20-500
         """
-        self.move("left", x)
+        self.move("left_cam", x)
 
     def move_right(self, x: int):
-        """Fly x cm right.
+        """Fly x cm right_cam.
         Arguments:
             x: 20-500
         """
-        self.move("right", x)
+        self.move("right_cam", x)
 
     def move_forward(self, x: int):
         """Fly x cm forward.
@@ -673,17 +673,17 @@ class Tello:
         """Do a flip maneuver.
         Users would normally call one of the flip_x functions instead.
         Arguments:
-            direction: l (left), r (right), f (forward) or b (back)
+            direction: l (left_cam), r (right_cam), f (forward) or b (back)
         """
         self.send_control_command("flip {}".format(direction))
 
     def flip_left(self):
-        """Flip to the left.
+        """Flip to the left_cam.
         """
         self.flip("l")
 
     def flip_right(self):
-        """Flip to the right.
+        """Flip to the right_cam.
         """
         self.flip("r")
 
@@ -809,7 +809,7 @@ class Tello:
                         yaw_velocity: int):
         """Send RC control via four channels. Command is sent every self.TIME_BTW_RC_CONTROL_COMMANDS seconds.
         Arguments:
-            left_right_velocity: -100~100 (left/right)
+            left_right_velocity: -100~100 (left_cam/right_cam)
             forward_backward_velocity: -100~100 (forward/backward)
             up_down_velocity: -100~100 (up/down)
             yaw_velocity: -100~100 (yaw)
