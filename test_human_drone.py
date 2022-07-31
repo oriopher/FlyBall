@@ -74,7 +74,6 @@ def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, l
     loop_status = Status()
     borders = Borders()
     recognizable_objects = [balloon, drone]
-    cameras = [left, right]
     read_colors(COLORS_FILENAME, recognizable_objects)
     borders.read_borders(BORDERS_FILENAME)
 
@@ -113,11 +112,14 @@ def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, l
     cv2.destroyAllWindows()
 
 
-if __name__ == "__main__":
-    continue_test = True
-
+def main():
     left_cam = MAYA_PHONE_NIR
     right_cam = EFRAT_PHONE_NIR
 
     distance = 69
-    capture_video(Drone(1,  (0, 191, 255), 7, iface_ip="192.168.0.2"), RecognizableObject((255, 54, 89), 11.3), distance, left_cam, right_cam)
+    capture_video(Drone(1, (0, 191, 255), 7, iface_ip="192.168.0.2"), RecognizableObject((255, 54, 89), 11.3), distance,
+                  left_cam, right_cam)
+
+
+if __name__ == "__main__":
+    main()
