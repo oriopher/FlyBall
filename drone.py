@@ -8,6 +8,8 @@ from tello import Tello
 
 
 class Drone(RecognizableObject):
+    OLD_DEST_NUM = 4
+
     def __init__(self, ident: int, text_colors: tuple[int, int, int], radius: int ,middle: tuple[int, int] = (0, 0),
                  iface_ip: str = '192.168.10.2'):
         super().__init__(text_colors, radius, "drone" + str(ident))
@@ -19,9 +21,11 @@ class Drone(RecognizableObject):
         self.x_0 = 0
         self.y_0 = 0
         self.dest_coords = (0, 0, 0)
+        self.old_dest_coords = None
         self.start_hit_timer = self.end_hit_timer = None
         self.drone_search_pred_coords = (0, 0, 0)
         self.drone_search_pred_time = 0
+        self.testing = 0
 
     def battery_status(self, to_print):
         if to_print:
@@ -72,12 +76,19 @@ class Drone(RecognizableObject):
     def search_pred_start(self):
         self.drone_search_pred_time = datetime.datetime.now()
         self.drone_search_pred_coords = (self.x, self.y, self.z)
-
+        self.old_dest_coords = np.zeros((0, 3))
+        
     def start_hit(self):
         self.start_hit_timer = datetime.datetime.now()
 
     def set_middle(self, middle: tuple[float, float]):
         self.middle = middle
+
+    def new_pred(self, coords):
+        if len(self.old_dest_coords) >= self.OLD_DEST_NUM:
+            self.old_dest_coords = self.old_dest_coords[1:]
+        self.old_dest_coords = np.vstack([self.old_dest_coords, coords])
+        return np.mean(self.old_dest_coords, axis=0)
 
     def track_3d(self, dest_x: float, dest_y: float, dest_z: float):
         x_cm_rel = dest_x - self.x
@@ -164,6 +175,7 @@ class Drone(RecognizableObject):
             return -int(velocity)
 
     def track_hitting(self, dest_x: float, dest_y: float, dest_z: float):
+        self.set_dest_coords((dest_x, dest_y, dest_z))
         rx = dest_x - self.x
         ry = dest_y - self.y
         rz = dest_z - self.z

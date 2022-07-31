@@ -1,13 +1,12 @@
 import cv2
 from recognizable_object import RecognizableObject
-from loop_status import Status
 from drone import Drone
 from common import read_colors, write_colors, display_frames, BORDERS_FILENAME, COLORS_FILENAME, EFRAT_WEB, NIR_PHONE_NIR
 from borders import Borders
 from camera import Camera
 
 
-def interactive_loop(borders: Borders, loop_status: Status, left_cam: Camera, balloon: RecognizableObject, drone: Drone) -> bool:
+def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableObject, drone: Drone) -> bool:
     key = cv2.waitKey(1) & 0xFF
     str_colors_changed = "Color bounds changed"
 
@@ -67,7 +66,7 @@ def interactive_loop(borders: Borders, loop_status: Status, left_cam: Camera, ba
         drone.stop_hit()
 
     elif key == ord('z'):
-        loop_status.testing = 1
+        drone.testing = 1
 
     return True
 
@@ -76,7 +75,6 @@ def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, l
 
     continue_loop = True
 
-    loop_status = Status()
     borders = Borders()
     recognizable_objects = [balloon, drone]
     read_colors(COLORS_FILENAME, recognizable_objects)
@@ -97,10 +95,10 @@ def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, l
             # Process frames
             recognizable_object.detect_and_set_coordinates(left, right, cameras_distance)
             
-        display_frames(recognizable_objects, left, right, borders, loop_status)
+        display_frames(balloon, drone, left, right, borders)
 
         # State Machine
-        state_kwargs = {'drone': drone, 'balloon': balloon, 'loop_status': loop_status, 'borders': borders}
+        state_kwargs = {'drone': drone, 'balloon': balloon, 'borders': borders}
         state.run(**state_kwargs)
         transition = state.to_transition(**state_kwargs)
         if transition:
@@ -108,7 +106,7 @@ def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, l
             state = drone.state = state.next(transition)
             state.setup(**state_kwargs)
 
-        continue_loop = interactive_loop(borders, loop_status, left, balloon, drone)
+        continue_loop = interactive_loop(borders, left, balloon, drone)
     
     if drone.tookoff:
         drone.land()

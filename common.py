@@ -104,7 +104,8 @@ def image_to_show(show_img, frames, detection_sign=True, texts=None, text_color=
     return show_img
 
 
-def display_frames(recognizable_objects, left_cam, right_cam, borders, loop_status):
+def display_frames(balloon, drone, left_cam, right_cam, borders):
+    recognizable_objects = [balloon, drone]
     texts_coor = ["c({:.0f},{:.0f},{:.0f})".format(recognizable_object.x, recognizable_object.y, recognizable_object.z)
                   for recognizable_object in recognizable_objects]
     texts_vel = [
@@ -114,12 +115,12 @@ def display_frames(recognizable_objects, left_cam, right_cam, borders, loop_stat
     left_img = image_to_show(left_cam.last_capture,
                              [recognizable_object.frame_left for recognizable_object in recognizable_objects],
                              True, texts_coor, (150, 250, 200))
-    left_img = borders.draw_borders(left_img, recognizable_objects[0], color_in=(0, 240, 0), color_out=(0, 0, 240))
-    if loop_status.dest_coords != (0, 0, 0):
-        left_img = image_with_circle(left_cam, left_img, loop_status.dest_coords, rad_phys=7, thickness=2)
+    left_img = borders.draw_borders(left_img, balloon, color_in=(0, 240, 0), color_out=(0, 0, 240))
+    if drone.dest_coords != (0, 0, 0):
+        left_img = image_with_circle(left_cam, left_img, drone.dest_coords, rad_phys=7, thickness=2)
     cv2.imshow("left_cam", left_img)
     right_img = image_to_show(right_cam.last_capture,
                               [recognizable_object.frame_right for recognizable_object in recognizable_objects], True,
                               texts_vel, (240, 150, 240))
     cv2.imshow("right_cam", right_img)
-    draw_xy_display(borders, recognizable_objects, loop_status.dest_coords[0], loop_status.dest_coords[1])
+    draw_xy_display(borders, recognizable_objects, drone.dest_coords[0], drone.dest_coords[1])

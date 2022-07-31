@@ -61,15 +61,14 @@ class WAITING(State):
         return STANDING_BY()
 
     def to_transition(self, *args, **kwargs):
-        loop_status = kwargs['loop_status']
-        if loop_status.testing:
-            loop_status.testing = 0
+        drone = kwargs['drone']
+        if drone.testing:
+            drone.testing = 0
             return 1
         return 0
 
     def run(self, *args, **kwargs):
         borders = kwargs['borders']
-        loop_status = kwargs['loop_status']
         drone = kwargs['drone']
 
         if borders.set_borders:
@@ -79,7 +78,6 @@ class WAITING(State):
             x_dest, y_dest = drone.x_0, drone.y_0
             drone.track_2d(x_dest, y_dest)
         z_dest = DRONE_DEFAULT_HEIGHT
-        loop_status.set_dest_coords((x_dest, y_dest, z_dest))
 
 
 class STANDING_BY(State):
@@ -98,7 +96,6 @@ class STANDING_BY(State):
 
     def run(self, *args, **kwargs):
         borders = kwargs['borders']
-        loop_status = kwargs['loop_status']
         drone = kwargs['drone']
 
         if borders.set_borders:
@@ -108,7 +105,6 @@ class STANDING_BY(State):
             x_dest, y_dest = drone.x_0, drone.y_0
             drone.track_2d(x_dest, y_dest)
         z_dest = DRONE_DEFAULT_HEIGHT
-        loop_status.set_dest_coords((x_dest, y_dest, z_dest))
 
 
 class SEARCHING_PREDICTION(State):
@@ -134,11 +130,6 @@ class SEARCHING_PREDICTION(State):
         drone = kwargs['drone']
         borders = kwargs['borders']
 
-        # if np.sqrt(recognizable_object.velocity_x_balloon ** 2 + recognizable_object.velocity_y_balloon ** 2) <= self.XY_VEL_BOUND \
-        #         and recognizable_object.velocity_z_balloon <= 0 and recognizable_object.phys_z_balloon >= recognizable_object.phys_z_drone:
-        #     loop_status.drone_search_pred_time = 0
-        #     loop_status.drone_search_pred_coords = (0,0,0)
-        #     return 1
         if np.sqrt(balloon.vx ** 2 + balloon.vy ** 2) <= self.XY_VEL_BOUND \
                 and balloon.z >= drone.z:
             return 1
@@ -155,10 +146,11 @@ class SEARCHING_PREDICTION(State):
         pred = NumericBallPredictor(balloon)
         pred_time, pred_coords = pred.get_optimal_hitting_point(z_bound=drone.z / 100,
                                                                 xy_vel_bound=self.XY_VEL_BOUND / 100)
-        x_dest, y_dest, z_dest = pred_coords
-        loop_status = kwargs['loop_status']
-        if (x_dest, y_dest, z_dest) == (0, 0, 0):
-            x_dest, y_dest, z_dest = loop_status.dest_coords
+
+        if pred_coords != (0,0,0):
+            x_dest, y_dest, z_dest = drone.new_pred(pred_coords)
+        else:
+            x_dest, y_dest, z_dest = drone.dest_coords
         # x_dest = recognizable_object.get_phys_balloon(0)
         # y_dest = recognizable_object.get_phys_balloon(1)
         # z_dest = Z_HIT
@@ -175,7 +167,6 @@ class SEARCHING_PREDICTION(State):
             if z_dest < MIN_SAFE_HEIGHT:
                 z_dest = MIN_SAFE_HEIGHT
 
-        loop_status.set_dest_coords((x_dest, y_dest, z_dest))
         drone.track_3d(x_dest, y_dest, z_dest)
 
 
@@ -219,9 +210,7 @@ class SEARCHING(State):
     def run(self, *args, **kwargs):
         drone = kwargs['drone']
         balloon = kwargs['balloon']
-        loop_status = kwargs['loop_status']
         x_dest, y_dest, z_dest = balloon.x, balloon.y, balloon.z
-        loop_status.set_dest_coords((x_dest, y_dest, z_dest))
         drone.track_3d(x_dest, y_dest, z_dest)
 
 
@@ -252,13 +241,10 @@ class HITTING(State):
     def run(self, *args, **kwargs):
         drone = kwargs['drone']
         balloon = kwargs['balloon']
-        loop_status = kwargs['loop_status']
 
         time_since_hitting = (datetime.now() - drone.start_hit_timer).total_seconds()
         pred = NumericBallPredictor(balloon)
         x_dest, y_dest, z_dest = pred.get_prediction(reachability(0, 0) - time_since_hitting)
-
-        loop_status.set_dest_coords((x_dest, y_dest, z_dest))
 
         drone.track_hitting(x_dest, y_dest, z_dest)
 
