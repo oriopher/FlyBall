@@ -120,4 +120,4 @@ if __name__ == "__main__":
     right_cam = EFRAT_PHONE_NIR
 
     distance = 69
-    capture_video(Drone(1,  (0, 191, 255), 7, iface_ip="192.168.0.1"), RecognizableObject((255, 54, 89), 11.3), distance, left_cam, right_cam)
+    capture_video(Drone(1,  (0, 191, 255), 7, iface_ip="192.168.0.2"), RecognizableObject((255, 54, 89), 11.3), distance, left_cam, right_cam)
