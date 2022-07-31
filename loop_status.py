@@ -1,6 +1,4 @@
 from datetime import datetime
-from loop_state_machine import ON_GROUND, STANDING_BY
-
 
 class LoopStatus:
 

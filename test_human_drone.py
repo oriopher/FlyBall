@@ -1,7 +1,10 @@
+import cv2
 from recognizable_object import RecognizableObject
 from loop_status import Status
 from drone import Drone
-from common import *
+from common import read_colors, write_colors, display_frames, BORDERS_FILENAME, COLORS_FILENAME, EFRAT_WEB, NIR_PHONE_NIR
+from borders import Borders
+from camera import Camera
 
 
 def interactive_loop(borders: Borders, loop_status: Status, left_cam: Camera, balloon: RecognizableObject, drone: Drone) -> bool:
@@ -52,10 +55,12 @@ def interactive_loop(borders: Borders, loop_status: Status, left_cam: Camera, ba
         print("Saved the %.0f coordinate: (%.0f,%.0f)" % (borders.index, balloon.x, balloon.y))
         if borders.index == 4:
             borders.write_borders(BORDERS_FILENAME)
+            drone.set_middle((borders.x_middle, borders.y_middle))
 
     # the 'r' button is set as the read text_colors from file
     elif key == ord('r'):
         borders.read_borders(BORDERS_FILENAME)
+        drone.set_middle((borders.x_middle, borders.y_middle))
 
     # the 'a' button is set to abort hitting state back to seek middle
     elif key == ord('a'):
@@ -76,9 +81,12 @@ def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, l
     recognizable_objects = [balloon, drone]
     read_colors(COLORS_FILENAME, recognizable_objects)
     borders.read_borders(BORDERS_FILENAME)
+    if borders.set_borders:
+        drone.set_middle((borders.x_middle, borders.y_middle))
 
     while continue_loop:
         state = drone.state
+        print(state)
         # Capture the video frame by frame
         if not left.capture():
             continue
@@ -88,7 +96,7 @@ def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, l
         for recognizable_object in recognizable_objects:
             # Process frames
             recognizable_object.detect_and_set_coordinates(left, right, cameras_distance)
-
+            
         display_frames(recognizable_objects, left, right, borders, loop_status)
 
         # State Machine
@@ -113,11 +121,11 @@ def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, l
 
 
 def main():
-    left_cam = MAYA_PHONE_NIR
-    right_cam = EFRAT_PHONE_NIR
+    left_cam = NIR_PHONE_NIR
+    right_cam = EFRAT_WEB
 
-    distance = 69
-    capture_video(Drone(1, (0, 191, 255), 7, iface_ip="192.168.0.2"), RecognizableObject((255, 54, 89), 11.3), distance,
+    distance = 74
+    capture_video(Drone(1, (0, 191, 255), 7, iface_ip="192.168.10.2"), RecognizableObject((255, 54, 89), 11.3, "balloon"), distance,
                   left_cam, right_cam)
 
 

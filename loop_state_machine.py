@@ -24,6 +24,9 @@ class State:
 
 
 class ON_GROUND(State):
+    def __str__(self):
+        return "On Ground"
+
     def next(self, state=1):
         return HOVERING()
 
@@ -35,6 +38,9 @@ class ON_GROUND(State):
 
 
 class HOVERING(State):
+    def __str__(self):
+        return "Hovering"
+
     def next(self, state=1):
         print("Waiting")
         return WAITING()
@@ -47,6 +53,9 @@ class HOVERING(State):
 
 
 class WAITING(State):
+    def __str__(self):
+        return "Waiting"
+
     def next(self, state=1):
         print("Stand By")
         return STANDING_BY()
@@ -74,6 +83,9 @@ class WAITING(State):
 
 
 class STANDING_BY(State):
+    def __str__(self):
+        return "Standing By"
+
     def next(self, state=1):
         print("Search Prediction")
         return SEARCHING_PREDICTION()
@@ -102,6 +114,9 @@ class STANDING_BY(State):
 class SEARCHING_PREDICTION(State):
     Z_OFFSET = 50
     XY_VEL_BOUND = 30
+
+    def __str__(self):
+        return "Searching Prediction"
 
     def next(self, state=1):
         if state == 1:
@@ -167,6 +182,9 @@ class SEARCHING_PREDICTION(State):
 class SEARCHING(State):
     Z_OFFSET = 50
 
+    def __str__(self):
+        return "Searching"
+
     def next(self, state=1):
         if state == 1:
             print("Hitting")
@@ -208,6 +226,9 @@ class SEARCHING(State):
 
 
 class HITTING(State):
+    def __str__(self):
+        return "Hitting"
+
     def next(self, state=1):
         return DESCENDING()
 
@@ -243,6 +264,9 @@ class HITTING(State):
 
 
 class DESCENDING(State):
+    def __str__(self):
+        return "Descending"
+
     def next(self, state=1):
         return WAITING()
 

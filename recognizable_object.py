@@ -9,7 +9,7 @@ class RecognizableObject:
     SEARCH_RANGE_SCALE_B = 140
     NUM_OF_PREVS = 10
 
-    def __init__(self, text_colors, radius):
+    def __init__(self, text_colors, radius, name):
         self.frame_left = Frame()
         self.frame_right = Frame()
         self.x = self.y = self.z = 0
@@ -20,18 +20,19 @@ class RecognizableObject:
         self.prev_coordinates = np.zeros((0, 3))
         self.prev_times = np.zeros(0, dtype='datetime64')
         self.radius = radius
+        self.name = name
 
     @property
     def colors_string(self):
         return self.frame_left.color_str + self.frame_right.color_str
 
-    @staticmethod
-    def save_colors_side(lower, upper, side):
+    def save_colors_side(self, lower, upper, side):
         side.save_bounds(lower, upper)
 
     def save_colors(self, bounds):
-        for i, side in enumerate([self.frame_left, self.frame_right]):
-            self.save_colors_side(bounds[i * len(bounds)], bounds[i * len(bounds) + 1], side)
+        sides = [self.frame_left, self.frame_right]
+        for i, side in enumerate(sides):
+            self.save_colors_side(bounds[i * len(sides)], bounds[i * len(sides) + 1], side)
 
     def set_frames(self, image_left, image_right):
         self.frame_left.set_image(image_left)

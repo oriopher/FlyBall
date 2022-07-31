@@ -45,12 +45,14 @@ class Frame:
 
         balloon_pixels = np.argwhere(mask)
         if len(balloon_pixels) == 0:
-            return 0, 0
+            self.x, self.y =  0, 0
+            return
         x_coor = np.mean(balloon_pixels[:, 1])
         y_coor = np.mean(balloon_pixels[:, 0])
 
         self.x = x_coor + x_min
         self.y = y_coor + y_min
+
 
     def detect_color(self):
         y_shape = self.image.shape[0]
@@ -66,6 +68,7 @@ class Frame:
         self.upper = (min(255, ball_color[0] + Frame.H_RANGE), min(255, ball_color[1] + Frame.S_RANGE),
                       min(255, ball_color[2] + Frame.V_RANGE))
 
+
     @property
     def color_str(self):
         return "%.0f,%.0f,%.0f\n%.0f,%.0f,%.0f\n" % \
@@ -77,8 +80,8 @@ class Frame:
         return int(bound[0]), int(bound[1]), int(bound[2])
 
     def save_bounds(self, lower, upper):
-        self.str_to_color_bound(lower)
-        self.str_to_color_bound(upper)
+        self.lower = self.str_to_color_bound(lower)
+        self.upper = self.str_to_color_bound(upper)
 
     def set_image(self, image):
         self.image = image
