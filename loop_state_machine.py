@@ -183,10 +183,10 @@ class SEARCHING(State):
         drone = kwargs['drone']
         balloon = kwargs['balloon']
         borders = kwargs['borders']
-        # todo: why not float?
-        x_rel = int(balloon.x - drone.x)
-        y_rel = int(balloon.y - drone.y)
-        z_rel = int(balloon.z - drone.z)
+
+        x_rel = balloon.x - drone.x
+        y_rel = balloon.y - drone.y
+        z_rel = balloon.z - drone.z
 
         if abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT and LOWER_LIMIT < z_rel < UPPER_LIMIT \
                 and abs(drone.vx) < VEL_LIMIT and abs(drone.vy) < VEL_LIMIT \
@@ -221,10 +221,9 @@ class HITTING(State):
 
         drone = kwargs['drone']
         balloon = kwargs['balloon']
-        # todo: why not float?
-        x_rel = int(balloon.x - drone.x)
-        y_rel = int(balloon.y - drone.y)
-        z_rel = int(balloon.z - drone.z)
+        x_rel = balloon.x - drone.x
+        y_rel = balloon.y - drone.y
+        z_rel = balloon.z - drone.z
 
         transition = not (abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT) or (z_rel < Z_LIMIT)
         return transition
