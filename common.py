@@ -52,10 +52,10 @@ def image_with_circle(cam: Camera, show_img, coords_phys, rad_phys, color=(240, 
     return show_img
 
 
-def reachability(distance, offset=0.4):
+def reachability(distance, offset=0.6):
     # distance in cm, only one axis
     plot = np.array([[0, 0.95],
-                     [10, 1.35],
+                     [2, 2],
                      [30, 2.76],
                      [50, 2.76],
                      [70, 2.93],

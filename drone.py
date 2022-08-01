@@ -8,7 +8,7 @@ from tello import Tello
 
 
 class Drone(RecognizableObject):
-    OLD_DEST_NUM = 4
+    OLD_DEST_NUM = 2
 
     def __init__(self, ident: int, text_colors: tuple[int, int, int], radius: int ,middle: tuple[int, int] = (0, 0),
                  iface_ip: str = '192.168.10.2'):
@@ -187,7 +187,7 @@ class Drone(RecognizableObject):
         phi = np.arctan2(ry, rx)
         MAX_VEL = 100
         MIN_VEL = 9
-        A = 1.7
+        A = 1
         vz = MAX_VEL
         vx = min(int(A * (vz-MIN_VEL) * np.tan(theta) * np.cos(phi)) + MIN_VEL, MAX_VEL)
         vy = min(int(A * (vz-MIN_VEL) * np.tan(theta) * np.sin(phi)) + MIN_VEL, MAX_VEL)

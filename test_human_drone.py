@@ -119,10 +119,10 @@ def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, l
 
 
 def main():
-    left_cam = MAYA_PHONE_NIR
-    right_cam = NIR_PHONE_NIR
+    left_cam = NIR_PHONE_NIR
+    right_cam = EFRAT_PHONE_NIR
 
-    distance = 72.7
+    distance = 66
     capture_video(Drone(1, (0, 191, 255), 7, iface_ip="192.168.10.2"), RecognizableObject((255, 54, 89), 11.3, "balloon"), distance,
                   left_cam, right_cam)
 

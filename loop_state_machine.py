@@ -210,7 +210,7 @@ class SEARCHING(State):
     def run(self, *args, **kwargs):
         drone = kwargs['drone']
         balloon = kwargs['balloon']
-        x_dest, y_dest, z_dest = balloon.x, balloon.y, balloon.z
+        x_dest, y_dest, z_dest = balloon.x, balloon.y, drone.z
         drone.track_3d(x_dest, y_dest, z_dest)
 
 
