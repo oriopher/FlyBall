@@ -22,8 +22,8 @@ def add_2d_object(borders, x, y, color, name, xy_display, radius=15, circle_thic
 
 def draw_xy_display(borders, recognizable_objects, x_pred_phys=None, y_pred_phys=None):
     xy_display = np.zeros((NUM_PIXELS_X, NUM_PIXELS_Y, 3), np.uint8)
-    x_lower_limit, x_upper_limit = np.min(borders.coordinates[:, 0]) + MARGINS, np.max(borders.coordinates[:, 0]) + MARGINS
-    y_lower_limit, y_upper_limit = np.min(borders.coordinates[:, 1]) + MARGINS, np.max(borders.coordinates[:, 1]) + MARGINS
+    x_lower_limit, x_upper_limit = np.min(borders.coordinates[:, 0]) - MARGINS, np.max(borders.coordinates[:, 0]) + MARGINS
+    y_lower_limit, y_upper_limit = np.min(borders.coordinates[:, 1]) - MARGINS, np.max(borders.coordinates[:, 1]) + MARGINS
 
     pix_in_cm_x = NUM_PIXELS_X / (x_upper_limit - x_lower_limit)
     pix_in_cm_y = NUM_PIXELS_Y / (y_upper_limit - y_lower_limit)

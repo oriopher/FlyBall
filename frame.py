@@ -1,3 +1,5 @@
+from cv2 import threshold
+from matplotlib import image
 import numpy as np
 import cv2
 
@@ -34,7 +36,7 @@ class Frame:
         hsv = cv2.cvtColor(detection_image, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, self.lower, self.upper)
         # define kernel size
-        kernel = np.ones((Frame.THRESHOLD_SIZE, Frame.THRESHOLD_SIZE), np.uint8)
+        kernel = np.ones((self.THRESHOLD_SIZE, self.THRESHOLD_SIZE), np.uint8)
         # Remove unnecessary noise from mask
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
         mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
@@ -85,5 +87,5 @@ class Frame:
 
     def set_image(self, image):
         self.image = image
-        self.THRESHOLD_SIZE = image.shape[1] / 80
-        self.SEARCH_RANGE = image.shape[1] / 20
+        self.THRESHOLD_SIZE = image.shape[1] // 120
+        self.SEARCH_RANGE = image.shape[1] // 20
