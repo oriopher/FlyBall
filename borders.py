@@ -17,8 +17,9 @@ class Borders:
         self.b_upper = 0
         self.m_low = 0
         self.b_low = 0
-        self.x_middle = 0
         self.y_middle = 0
+        self.x_middle_1 = 0
+        self.x_middle_2 = 0
         self.coordinates = np.zeros((4, 2))
         self.pixels_coordinates = np.zeros((4, 2), dtype=int)
         self.fov_horz = 0
@@ -46,9 +47,10 @@ class Borders:
         self.m_low, self.b_low = self.calc_linear_eq(self.coordinates[1], self.coordinates[0])
 
         # calculate the middle coordinates
-        self.x_middle = (self.coordinates[0][0] + self.coordinates[1][0]) / 2
         self.y_middle = (self.coordinates[0][1] + self.coordinates[1][1] + self.coordinates[2][1] +
-                           self.coordinates[3][1]) / 4
+                    self.coordinates[3][1]) / 4
+        self.x_middle_1 = (self.coordinates[0][0] + self.coordinates[1][0]) * (2/9)
+        self.x_middle_2 = (self.coordinates[0][0] + self.coordinates[1][0]) * (7/9)
 
         self.pixels_coordinates[3][0], self.pixels_coordinates[3][1] = phys_to_left_pix(self.coordinates[3][0],
                                                                                         self.coordinates[3][1],
@@ -109,10 +111,12 @@ class Borders:
     def in_borders(self, recognizable_object: RecognizableObject):
         return self.coordinate_in_borders(recognizable_object.x, recognizable_object.y)
 
-    def draw_borders(self, show_img, balloon, color_in=(240, 0, 240), color_out=(240, 0, 240)):
+    def draw_borders(self, show_img, recognizable_objects, color_in=(240, 0, 240), color_out=(240, 0, 240)):
         color = color_in
-        if not self.in_borders(balloon):
-            color = color_out
+        for recognizable_object in recognizable_objects: 
+            if not self.in_borders(recognizable_object):       
+                color = color_out
+
         if self.set_borders:
             show_img = cv2.line(show_img, (self.pixels_coordinates[0][0], self.pixels_coordinates[0][1]),
                                 (self.pixels_coordinates[1][0], self.pixels_coordinates[1][1]), color, thickness=2)

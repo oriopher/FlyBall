@@ -5,6 +5,7 @@ from common import DRONE_DEFAULT_HEIGHT
 from recognizable_object import RecognizableObject
 from loop_state_machine import ON_GROUND, STANDING_BY
 from tello import Tello
+import tello
 
 
 class Drone(RecognizableObject):
@@ -13,10 +14,11 @@ class Drone(RecognizableObject):
     def __init__(self, ident: int, text_colors: tuple[int, int, int], radius: int ,middle: tuple[int, int] = (0, 0),
                  iface_ip: str = '192.168.10.2'):
         super().__init__(text_colors, radius, "drone" + str(ident))
-        self.tello = Tello(iface_ip=iface_ip)
+        self.iface_ip = iface_ip
+        self.tello = None
         self.middle = middle
         self.id = ident
-        self.tookoff = self.start = self.first_seek = False
+        self.tookoff = self.start = self.first_seek = self.active = False
         self.state = ON_GROUND()
         self.x_0 = 0
         self.y_0 = 0
@@ -32,6 +34,8 @@ class Drone(RecognizableObject):
             print("battery = ", self.tello.get_battery(), "%")
 
     def takeoff(self, battery=True):
+        if not self.tello:
+            self.tello = Tello(iface_ip=self.iface_ip)
         self.tello.connect()
         self.battery_status(battery)
         self.tello.takeoff()

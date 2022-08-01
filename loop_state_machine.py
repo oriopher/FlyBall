@@ -104,7 +104,6 @@ class STANDING_BY(State):
         else:
             x_dest, y_dest = drone.x_0, drone.y_0
             drone.track_2d(x_dest, y_dest)
-        z_dest = DRONE_DEFAULT_HEIGHT
 
 
 class SEARCHING_PREDICTION(State):
@@ -252,6 +251,11 @@ class HITTING(State):
 class DESCENDING(State):
     def __str__(self):
         return "Descending"
+
+    def setup(self, *args, **kwargs):
+        drone, other_drone = kwargs['drone'], kwargs['other_drone']
+        drone.active = False
+        other_drone.active = True
 
     def next(self, state=1):
         return WAITING()
