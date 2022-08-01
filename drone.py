@@ -13,7 +13,8 @@ class Drone(RecognizableObject):
     def __init__(self, ident: int, text_colors: tuple[int, int, int], radius: int ,middle: tuple[int, int] = (0, 0),
                  iface_ip: str = '192.168.10.2'):
         super().__init__(text_colors, radius, "drone" + str(ident))
-        self.tello = Tello(iface_ip=iface_ip)
+        self.iface_ip = iface_ip
+        self.tello = None
         self.middle = middle
         self.id = ident
         self.tookoff = self.start = self.first_seek = False
@@ -32,6 +33,8 @@ class Drone(RecognizableObject):
             print("battery = ", self.tello.get_battery(), "%")
 
     def takeoff(self, battery=True):
+        if not self.tello:
+            self.tello = Tello(iface_ip=self.iface_ip)
         self.tello.connect()
         self.battery_status(battery)
         self.tello.takeoff()
@@ -182,10 +185,13 @@ class Drone(RecognizableObject):
         r = np.sqrt(rx ** 2 + ry ** 2 + rz ** 2)
         theta = np.arccos(rz / r)
         phi = np.arctan2(ry, rx)
-        vz = 100
-        vx = int(vz * np.tan(theta) * np.cos(phi))
-        vy = int(vz * np.tan(theta) * np.sin(phi))
+        MAX_VEL = 100
+        MIN_VEL = 9
+        A = 1.7
+        vz = MAX_VEL
+        vx = min(int(A * (vz-MIN_VEL) * np.tan(theta) * np.cos(phi)) + MIN_VEL, MAX_VEL)
+        vy = min(int(A * (vz-MIN_VEL) * np.tan(theta) * np.sin(phi)) + MIN_VEL, MAX_VEL)
 
-        left_right, for_back, up_down = vx, vy, vz
+        left_right, for_back, up_down = -vx, -vy, vz
         if self.tello.send_rc_control:
             self.send_rc_control(left_right, for_back, up_down, 0)

@@ -1,7 +1,7 @@
 import cv2
 from recognizable_object import RecognizableObject
 from drone import Drone
-from common import MAYA_PHONE_NIR, read_colors, write_colors, display_frames, BORDERS_FILENAME, COLORS_FILENAME, EFRAT_WEB, NIR_PHONE_NIR
+from common import *
 from borders import Borders
 from camera import Camera
 

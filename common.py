@@ -6,8 +6,9 @@ import os
 
 from xy_display import draw_xy_display
 
-FLOOR_HEIGHT = -45
-DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 40
+FLOOR_HEIGHT = -112
+DRONE_HEIGT = 14
+DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + DRONE_HEIGT + 40
 
 ORI_WEB = Camera(51.3, 0, False)
 ORI_PHONE = Camera(66.9, 3, False)

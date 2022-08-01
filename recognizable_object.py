@@ -90,7 +90,7 @@ class RecognizableObject:
         x = cam_dist * np.tan(angle_right) / (np.tan(angle_right) + np.tan(angle_left))
         y = x * np.tan(angle_left)
         # print("a={}, b={}, x={}, y={}, w={}, p={}".format(np.degrees(angle_left), np.degrees(angle_right), self.phys_x, self.phys_y, x_left, x_right))
-        return x, y + self.radius
+        return x, y
 
     def _calculate_z(self, cam: Camera, y_cm, z_pix):
         # Will return the height in cm. Requires y in cm.
