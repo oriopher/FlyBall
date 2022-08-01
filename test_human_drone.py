@@ -84,7 +84,6 @@ def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, l
 
     while continue_loop:
         state = drone.state
-        print(state)
         # Capture the video frame by frame
         if not left.capture():
             continue
@@ -104,6 +103,7 @@ def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, l
         if transition:
             state.cleanup(transition, **state_kwargs)
             state = drone.state = state.next(transition)
+            print(state)
             state.setup(**state_kwargs)
 
         continue_loop = interactive_loop(borders, left, balloon, drone)
