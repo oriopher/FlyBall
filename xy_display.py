@@ -37,7 +37,7 @@ def draw_xy_display(borders, recognizable_objects, x_pred_phys=None, y_pred_phys
     for i in range(grid_length_y, NUM_PIXELS_Y, grid_length_y):
         xy_display = draw_grid_y(xy_display, i)       
 
-    borders_color = (0, 240, 0)  # green
+    borders_color = (240, 0, 0)  # green
 
     if borders.set_borders:
         # calc coordinates in pixels
@@ -45,7 +45,7 @@ def draw_xy_display(borders, recognizable_objects, x_pred_phys=None, y_pred_phys
             xy_display = add_2d_object(borders, recognizable_object.x, recognizable_object.y, recognizable_object.text_colors,
                                        recognizable_object.name, xy_display)
             if borders.in_borders(recognizable_object):
-                borders_color = (240, 0, 0)                          
+                borders_color = (0, 0, 240)                          
         xy_display = add_2d_object(borders, x_pred_phys, y_pred_phys, (186, 85, 211), None, xy_display)
 
     

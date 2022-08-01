@@ -47,7 +47,8 @@ def image_with_circle(cam: Camera, show_img, coords_phys, rad_phys, color=(240, 
     x_phys, y_phys, z_phys = coords_phys
     radius = phys_to_left_pix_img(x_phys + rad_phys, y_phys, z_phys, show_img, cam)[0] - phys_to_left_pix_img(x_phys, y_phys, z_phys, show_img, cam)[0]
     coordinates = phys_to_left_pix_img(x_phys, y_phys, z_phys, show_img, cam)
-    show_img = cv2.circle(show_img, coordinates, radius, color, thickness=thickness)
+    if radius > 0:
+        show_img = cv2.circle(show_img, coordinates, radius, color, thickness=thickness)
 
     return show_img
 

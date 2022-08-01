@@ -199,6 +199,8 @@ class SEARCHING(State):
         y_rel = balloon.y - drone.y
         z_rel = balloon.z - drone.z
 
+        if z_rel < UPPER_LIMIT and balloon.vz <= 0:
+            return 1
         if abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT and LOWER_LIMIT < z_rel < UPPER_LIMIT \
                 and abs(drone.vx) < VEL_LIMIT and abs(drone.vy) < VEL_LIMIT \
                 and balloon.vz <= 0:
@@ -212,7 +214,11 @@ class SEARCHING(State):
     def run(self, *args, **kwargs):
         drone = kwargs['drone']
         balloon = kwargs['balloon']
-        x_dest, y_dest, z_dest = balloon.x, balloon.y, drone.z
+
+        pred = NumericBallPredictor(balloon)
+        x_dest, y_dest, z_dest = pred.get_prediction(reachability(distance=0, offset=0))
+        # x_dest, y_dest, z_dest = balloon.x, balloon.y, drone.z
+        z_dest = drone.z
         drone.track_3d(x_dest, y_dest, z_dest)
 
 
