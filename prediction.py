@@ -5,15 +5,15 @@ from recognizable_object import RecognizableObject
 
 
 class NumericBallPredictor:
-    r = (0.68+0.74)/4/np.pi  # in meters
+    r = 0.113  # in meters
     g = 9.807  # Gravitational constant
-    rho = 1.83  # Air density kg/m^3
+    rho = 1.183  # Air density kg/m^3
     V = 4 / 3 * np.pi * r ** 3  # Balloon Volume
     disp_air_mass = V * rho
     C_d = 0.78  # Dimensionless drag constant
     A = np.pi * r ** 2  # Balloon cross section in m^2
     B = 0.5*rho*A*C_d  # Buoyancy
-    balloon_weight = 2.7 * 10 ** -3
+    balloon_weight = 1.7 * 10 ** -3
     m = disp_air_mass + balloon_weight  # Balloon mass.
 
     def __init__(self, balloon: RecognizableObject):

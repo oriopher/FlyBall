@@ -133,6 +133,8 @@ class SEARCHING_PREDICTION(State):
         if np.sqrt(balloon.vx ** 2 + balloon.vy ** 2) <= self.XY_VEL_BOUND \
                 and balloon.z >= drone.z:
             return 1
+        if balloon.vz <= 0 and balloon.z >= drone.z:
+            return 1
         if balloon.vz <= 0 and balloon.z <= drone.z:
             return 2
         if not (borders.in_borders(balloon) and borders.in_borders(drone)):
