@@ -33,9 +33,9 @@ class Drone(RecognizableObject):
 
     def takeoff(self, battery=True):
         self.tello.connect()
+        self.battery_status(battery)
         self.tello.takeoff()
         self.tookoff = True
-        self.battery_status(battery)
 
     def land(self, battery=True):
         self.tello.land()

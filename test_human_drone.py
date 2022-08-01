@@ -1,7 +1,7 @@
 import cv2
 from recognizable_object import RecognizableObject
 from drone import Drone
-from common import read_colors, write_colors, display_frames, BORDERS_FILENAME, COLORS_FILENAME, EFRAT_WEB, NIR_PHONE_NIR
+from common import MAYA_PHONE_NIR, read_colors, write_colors, display_frames, BORDERS_FILENAME, COLORS_FILENAME, EFRAT_WEB, NIR_PHONE_NIR
 from borders import Borders
 from camera import Camera
 
@@ -119,10 +119,10 @@ def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, l
 
 
 def main():
-    left_cam = NIR_PHONE_NIR
-    right_cam = EFRAT_WEB
+    left_cam = MAYA_PHONE_NIR
+    right_cam = NIR_PHONE_NIR
 
-    distance = 74
+    distance = 72.7
     capture_video(Drone(1, (0, 191, 255), 7, iface_ip="192.168.10.2"), RecognizableObject((255, 54, 89), 11.3, "balloon"), distance,
                   left_cam, right_cam)
 

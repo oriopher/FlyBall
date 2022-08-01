@@ -15,7 +15,7 @@ NIR_PHONE = Camera(65, 0, False)
 MAYA_WEB = Camera(61, 0, True)
 EFRAT_WEB = Camera(61, 61, 2, False)
 EFRAT_PHONE = Camera(64, 3, False)
-MAYA_PHONE_NIR = Camera(67, 55, 0, False)
+MAYA_PHONE_NIR = Camera(67, 55, 1, False)
 
 NIR_PHONE_NIR = Camera(67, 52, 0, False)
 EFRAT_PHONE_NIR = Camera(68, 77, 2, False)

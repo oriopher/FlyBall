@@ -147,7 +147,7 @@ class SEARCHING_PREDICTION(State):
         pred_time, pred_coords = pred.get_optimal_hitting_point(z_bound=drone.z / 100,
                                                                 xy_vel_bound=self.XY_VEL_BOUND / 100)
 
-        if pred_coords != (0,0,0):
+        if np.any(pred_coords):
             x_dest, y_dest, z_dest = drone.new_pred(pred_coords)
         else:
             x_dest, y_dest, z_dest = drone.dest_coords
