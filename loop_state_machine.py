@@ -1,10 +1,11 @@
-from velocity_pot import track_3d, lin_velocity_with_two_params, seek_middle, track_2d
+from datetime import datetime
 from prediction import NumericBallPredictor
 import numpy as np
+from common import reachability, FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
 
-FLOOR_HEIGHT = -100
-DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 40
-
+MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
+X_OFFSET = 0
+Y_OFFSET = 0
 
 class State:
     def next(self, state=1):
@@ -16,68 +17,103 @@ class State:
     def run(self, *args, **kwargs):
         raise NotImplemented
 
+    def setup(self, *args, **kwargs):
+        pass
+
+    def cleanup(self, state, *args, **kwargs):
+        pass
+
 
 class ON_GROUND(State):
+    def __str__(self):
+        return "On Ground"
+
     def next(self, state=1):
         return HOVERING()
 
     def to_transition(self, *args, **kwargs):
-        return kwargs['loop_status'].tookoff
+        return kwargs['drone'].tookoff
 
     def run(self, *args, **kwargs):
         return
 
 
 class HOVERING(State):
+    def __str__(self):
+        return "Hovering"
+
     def next(self, state=1):
-        print("Stand By")
-        return STANDING_BY()
+        print("Waiting")
+        return WAITING()
 
     def to_transition(self, *args, **kwargs):
-        return kwargs['loop_status'].start
+        return kwargs['drone'].start
 
     def run(self, **kwargs):
         return
 
 
-class STANDING_BY(State):
+class WAITING(State):
+    def __str__(self):
+        return "Waiting"
+
     def next(self, state=1):
-        print("Search Prediction")
-        return SEARCHING_PREDICTION()
+        print("Stand By")
+        return STANDING_BY()
 
     def to_transition(self, *args, **kwargs):
-        loop_status = kwargs['loop_status']
-        if loop_status.test_state == 2:
-            loop_status.test_state = 0
+        drone = kwargs['drone']
+        if drone.testing:
+            drone.testing = 0
             return 1
         return 0
 
     def run(self, *args, **kwargs):
         borders = kwargs['borders']
-        loop_status = kwargs['loop_status']
+        drone = kwargs['drone']
 
         if borders.set_borders:
-            seek_middle(kwargs['image_3d'], kwargs['tello'], borders)
-            x_dest = borders.x_middle
-            y_dest = borders.y_middle
-            z_dest = DRONE_DEFAULT_HEIGHT
+            x_dest, y_dest = drone.middle
+            drone.seek_middle()
         else:
-            x_dest = loop_status.x_0
-            y_dest = loop_status.y_0
-            z_dest = DRONE_DEFAULT_HEIGHT
-            track_2d(kwargs['image_3d'], kwargs['tello'], x_dest, y_dest)
-            # image_3d = kwargs['image_3d']
-            # x_dest = 20
-            # y_dest = 160
-            # z_dest = -10
-            # track_3d(image_3d,  kwargs['tello'], x_dest, y_dest, z_dest)
+            x_dest, y_dest = drone.x_0, drone.y_0
+            drone.track_2d(x_dest, y_dest)
+        z_dest = DRONE_DEFAULT_HEIGHT
 
-        loop_status.set_dest_coords((x_dest, y_dest, z_dest))
+
+class STANDING_BY(State):
+    def __str__(self):
+        return "Standing By"
+
+    def next(self, state=1):
+        print("Search Prediction")
+        return SEARCHING_PREDICTION()
+
+    def to_transition(self, *args, **kwargs):
+        borders = kwargs['borders']
+        balloon = kwargs['balloon']
+
+        return borders.in_borders(balloon)
+
+    def run(self, *args, **kwargs):
+        borders = kwargs['borders']
+        drone = kwargs['drone']
+
+        if borders.set_borders:
+            x_dest, y_dest = drone.middle
+            drone.seek_middle()
+        else:
+            x_dest, y_dest = drone.x_0, drone.y_0
+            drone.track_2d(x_dest, y_dest)
+        z_dest = DRONE_DEFAULT_HEIGHT
 
 
 class SEARCHING_PREDICTION(State):
     Z_OFFSET = 50
     XY_VEL_BOUND = 30
+
+    def __str__(self):
+        return "Searching Prediction"
 
     def next(self, state=1):
         if state == 1:
@@ -86,38 +122,64 @@ class SEARCHING_PREDICTION(State):
             print("Stand By")
         return SEARCHING() if state == 1 else STANDING_BY()
 
+    def setup(self, *args, **kwargs):
+        drone = kwargs['drone']
+        drone.search_pred_start()
+
     def to_transition(self, *args, **kwargs):
-        image_3d = kwargs['image_3d']
+        balloon = kwargs['balloon']
+        drone = kwargs['drone']
         borders = kwargs['borders']
 
-        if np.sqrt(image_3d.velocity_x_balloon ** 2 + image_3d.velocity_y_balloon ** 2) <= self.XY_VEL_BOUND \
-                and image_3d.velocity_z_balloon <= 0 and image_3d.phys_z_balloon >= image_3d.phys_z_drone:
+        if np.sqrt(balloon.vx ** 2 + balloon.vy ** 2) <= self.XY_VEL_BOUND \
+                and balloon.z >= drone.z:
             return 1
-        if image_3d.velocity_z_balloon <= 0 and image_3d.phys_z_balloon <= image_3d.phys_z_drone:
+        if balloon.vz <= 0 and balloon.z >= drone.z:
+            return 1
+        if balloon.vz <= 0 and balloon.z <= drone.z:
             return 2
-        if not (borders.balloon_in_borders(image_3d) and borders.drone_in_borders(image_3d)):
+        if not (borders.in_borders(balloon) and borders.in_borders(drone)):
             return 2
         return 0
 
     def run(self, *args, **kwargs):
-        Z_HIT = DRONE_DEFAULT_HEIGHT + self.Z_OFFSET
-        image_3d = kwargs['image_3d']
-        pred = NumericBallPredictor(image_3d)
-        pred_time, pred_coords = pred.get_optimal_hitting_point(z_bound=image_3d.phys_z_drone/100, xy_vel_bound=self.XY_VEL_BOUND/100)
-        x_dest, y_dest, z_dest = pred_coords
-        # pred_time, (x_dest, y_dest, z_dest) = pred.get_prediction_height(Z_HIT)
-        loop_status = kwargs['loop_status']
-        if (x_dest, y_dest, z_dest) == (0, 0, 0):
-            x_dest, y_dest, z_dest = loop_status.dest_coords
-        # x_dest = image_3d.get_phys_balloon(0)
-        # y_dest = image_3d.get_phys_balloon(1)
+        drone = kwargs['drone']
+        balloon = kwargs['balloon']
+
+        pred = NumericBallPredictor(balloon)
+        pred_time, pred_coords = pred.get_optimal_hitting_point(z_bound=drone.z / 100,
+                                                                xy_vel_bound=self.XY_VEL_BOUND / 100)
+
+        if np.any(pred_coords):
+            x_dest, y_dest, z_dest = drone.new_pred(pred_coords)
+            x_dest += X_OFFSET
+            y_dest += Y_OFFSET
+        else:
+            x_dest, y_dest, z_dest = drone.dest_coords
+        # x_dest = recognizable_object.get_phys_balloon(0)
+        # y_dest = recognizable_object.get_phys_balloon(1)
         # z_dest = Z_HIT
-        loop_status.set_dest_coords((x_dest, y_dest, z_dest))
-        track_3d(image_3d, kwargs['tello'], x_dest, y_dest, DRONE_DEFAULT_HEIGHT)
+
+        x_to_target = abs(x_dest - drone.drone_search_pred_coords[0])
+        y_to_target = abs(y_dest - drone.drone_search_pred_coords[1])
+        time_to_hit_from_start = max(reachability(x_to_target), reachability(y_to_target))
+        time_until_hit = time_to_hit_from_start + (drone.drone_search_pred_time - datetime.now()).total_seconds()
+        pred_time, pred_coords = pred.get_optimal_hitting_point(z_bound=drone.z / 100,
+                                                                xy_vel_bound=self.XY_VEL_BOUND / 100,
+                                                                start_time=time_until_hit)
+        if not np.any(pred_coords):  # if pred_coords != (0,0,0)
+            z_dest = pred_coords[2] - self.Z_OFFSET
+            if z_dest < MIN_SAFE_HEIGHT:
+                z_dest = MIN_SAFE_HEIGHT
+
+        drone.track_3d(x_dest, y_dest, z_dest)
 
 
 class SEARCHING(State):
     Z_OFFSET = 50
+
+    def __str__(self):
+        return "Searching"
 
     def next(self, state=1):
         if state == 1:
@@ -132,84 +194,91 @@ class SEARCHING(State):
         XY_LIMIT = 30
         VEL_LIMIT = 30
 
-        image_3d = kwargs['image_3d']
+        drone = kwargs['drone']
+        balloon = kwargs['balloon']
         borders = kwargs['borders']
-        x_rel = int(image_3d.get_phys_balloon(0) - image_3d.get_phys_drone(0))
-        y_rel = int(image_3d.get_phys_balloon(1) - image_3d.get_phys_drone(1))
-        z_rel = int(image_3d.get_phys_balloon(2) - image_3d.get_phys_drone(2))
 
-        if abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT and LOWER_LIMIT < z_rel < UPPER_LIMIT \
-               and abs(image_3d.velocity_x_drone) < VEL_LIMIT and abs(image_3d.velocity_y_drone) < VEL_LIMIT \
-               and image_3d.velocity_z_balloon <= 0:
+        x_rel = balloon.x - drone.x + X_OFFSET
+        y_rel = balloon.y - drone.y + Y_OFFSET
+        z_rel = balloon.z - drone.z
+
+        if z_rel < UPPER_LIMIT and balloon.vz <= 0:
             return 1
-        if image_3d.velocity_z_balloon <= 0 and image_3d.phys_z_balloon <= image_3d.phys_z_drone:
+        if abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT and LOWER_LIMIT < z_rel < UPPER_LIMIT \
+                and abs(drone.vx) < VEL_LIMIT and abs(drone.vy) < VEL_LIMIT \
+                and balloon.vz <= 0:
+            return 1
+        if balloon.vz <= 0 and balloon.z <= drone.z:
             return 2
-        if not (borders.balloon_in_borders(image_3d) and borders.drone_in_borders(image_3d)):
+        if not (borders.in_borders(balloon) and borders.in_borders(drone)):
             return 2
         return 0
 
     def run(self, *args, **kwargs):
-        image_3d = kwargs['image_3d']
-        loop_status = kwargs['loop_status']
-        x_dest = image_3d.get_phys_balloon(0)
-        y_dest = image_3d.get_phys_balloon(1)
-        z_dest = image_3d.get_phys_drone(2)
-        loop_status.set_dest_coords((x_dest, y_dest, z_dest))
-        track_3d(image_3d, kwargs['tello'], x_dest, y_dest, z_dest)
+        drone = kwargs['drone']
+        balloon = kwargs['balloon']
+
+        pred = NumericBallPredictor(balloon)
+        x_dest, y_dest, z_dest = pred.get_prediction(reachability(distance=0, offset=0))
+        # x_dest, y_dest, z_dest = balloon.x, balloon.y, drone.z
+        x_dest += X_OFFSET
+        y_dest += Y_OFFSET
+        z_dest = drone.z
+        drone.track_3d(x_dest, y_dest, z_dest)
 
 
 class HITTING(State):
+    def __str__(self):
+        return "Hitting"
+
     def next(self, state=1):
         return DESCENDING()
 
+    def setup(self, *args, **kwargs):
+        drone = kwargs['drone']
+        drone.start_hit()
+
     def to_transition(self, *args, **kwargs):
         Z_LIMIT = 15
-        XY_LIMIT = 40
+        # XY_LIMIT = 40 
 
-        image_3d = kwargs['image_3d']
-        loop_status = kwargs['loop_status']
-        x_rel = int(image_3d.get_phys_balloon(0) - image_3d.get_phys_drone(0))
-        y_rel = int(image_3d.get_phys_balloon(1) - image_3d.get_phys_drone(1))
-        z_rel = int(image_3d.get_phys_balloon(2) - image_3d.get_phys_drone(2))
+        drone = kwargs['drone']
+        balloon = kwargs['balloon']
+        x_rel = balloon.x - drone.x
+        y_rel = balloon.y - drone.y
+        z_rel = balloon.z - drone.z
 
-        transition = not (abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT) or (z_rel < Z_LIMIT)
-        if transition:
-            loop_status.hit_mode_off()
+        # transition = not (abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT) or (z_rel < Z_LIMIT)
+        transition = z_rel < Z_LIMIT
         return transition
 
     def run(self, *args, **kwargs):
-        image_3d = kwargs['image_3d']
-        tello = kwargs['tello']
-        x_rel = int(image_3d.get_phys_balloon(0) - image_3d.get_phys_drone(0))
-        y_rel = int(image_3d.get_phys_balloon(1) - image_3d.get_phys_drone(1))
+        drone = kwargs['drone']
+        balloon = kwargs['balloon']
 
-        loop_status = kwargs['loop_status']
-        x_dest = image_3d.get_phys_balloon(0)
-        y_dest = image_3d.get_phys_balloon(1)
-        z_dest = image_3d.get_phys_balloon(2)
-        loop_status.set_dest_coords((x_dest, y_dest, z_dest))
+        time_since_hitting = (datetime.now() - drone.start_hit_timer).total_seconds()
+        pred = NumericBallPredictor(balloon)
+        x_dest, y_dest, z_dest = pred.get_prediction(reachability(0, 0) - time_since_hitting)
 
-        left_right = lin_velocity_with_two_params(x_rel, image_3d.velocity_x_balloon, 'x')
-        for_back = lin_velocity_with_two_params(y_rel, image_3d.velocity_y_balloon, 'y')
-        up_down = 100
-        while not tello.send_rc_control:
-            continue
-        tello.send_rc_control(left_right, for_back, up_down, 0)
+        drone.track_hitting(x_dest, y_dest, z_dest)
 
 
 class DESCENDING(State):
+    def __str__(self):
+        return "Descending"
+
     def next(self, state=1):
-        return STANDING_BY()
+        return WAITING()
 
     def to_transition(self, *args, **kwargs):
         Z_OFFSET = 15
-        image_3d = kwargs['image_3d']
-        return image_3d.phys_z_drone < DRONE_DEFAULT_HEIGHT + Z_OFFSET
+        drone = kwargs['drone']
+        return drone.z < DRONE_DEFAULT_HEIGHT + Z_OFFSET
 
     def run(self, *args, **kwargs):
-        tello = kwargs['tello']
-        left_right, for_back = 0, 0
-        up_down = -100
-        while not tello.send_rc_control:
-            continue
-        tello.send_rc_control(left_right, for_back, up_down, 0)
+        drone = kwargs['drone']
+        # left_right, for_back = 0, 0
+        # up_down = -100
+        # drone.wait_rc_control()
+        # drone.send_rc_control(left_right, for_back, up_down, 0)
+        drone.track_descending()

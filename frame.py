@@ -1,40 +1,42 @@
+from cv2 import threshold
+from matplotlib import image
 import numpy as np
 import cv2
-from camera import Camera
 
 
 class Frame:
     THRESHOLD_SIZE = 8  # pixels
-    H_RANGE = 30
-    S_RANGE = 50
+    H_RANGE = 20
+    S_RANGE = 30
     V_RANGE = 170
 
     SEARCH_RANGE = 50  # pixels
 
-    def __init__(self, image):
-        self.image = image
-        self.x_drone = 0
-        self.y_drone = 0
-        self.x_balloon = 0
-        self.y_balloon = 0
-        self.THRESHOLD_SIZE = self.image.shape[1]/80
-        self.SEARCH_RANGE = self.image.shape[1]/20
+    NO_LOWER_BOUNDS = (0, 0, 0)
+    NO_UPPER_BOUNDS = (255, 255, 255)
 
-    def detect_coordinates(self, bounds, x_old, y_old, search_range):
+    def __init__(self):
+        self.image = None
+        self.x = 0
+        self.y = 0
+        self.lower = Frame.NO_LOWER_BOUNDS
+        self.upper = Frame.NO_UPPER_BOUNDS
+
+    def detect_pixel_coordinates(self, search_range):
         search_range = max(1, search_range)
         x_min, x_max, y_min, y_max = 0, self.image.shape[1], 0, self.image.shape[0]
-        if x_old != 0 and y_old != 0 and search_range!=0:
-            x_min = max(int(x_old - search_range), x_min)
-            x_max = min(int(x_old + search_range) + 1, x_max)
-            y_min = max(int(y_old - search_range), y_min)
-            y_max = min(int(y_old + search_range) + 1, y_max)
+        if self.x != 0 and self.y != 0 and search_range != 0:
+            x_min = max(int(self.x - search_range), x_min)
+            x_max = min(int(self.x + search_range) + 1, x_max)
+            y_min = max(int(self.y - search_range), y_min)
+            y_max = min(int(self.y + search_range) + 1, y_max)
 
         detection_image = self.image[y_min:y_max, x_min:x_max]
         # convert to hsv
         hsv = cv2.cvtColor(detection_image, cv2.COLOR_BGR2HSV)
-        mask = cv2.inRange(hsv, bounds.lower, bounds.upper)
+        mask = cv2.inRange(hsv, self.lower, self.upper)
         # define kernel size
-        kernel = np.ones((Frame.THRESHOLD_SIZE, Frame.THRESHOLD_SIZE), np.uint8)
+        kernel = np.ones((self.THRESHOLD_SIZE, self.THRESHOLD_SIZE), np.uint8)
         # Remove unnecessary noise from mask
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
         mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
@@ -45,27 +47,14 @@ class Frame:
 
         balloon_pixels = np.argwhere(mask)
         if len(balloon_pixels) == 0:
-            return 0, 0
-        x_coor = np.mean(balloon_pixels[:, 1]) 
+            self.x, self.y =  0, 0
+            return
+        x_coor = np.mean(balloon_pixels[:, 1])
         y_coor = np.mean(balloon_pixels[:, 0])
 
-        return x_coor + x_min, y_coor + y_min
+        self.x = x_coor + x_min
+        self.y = y_coor + y_min
 
-    def detect_balloon(self, bounds, search_range, x_old=0, y_old=0):
-        x_coor, y_coor = self.detect_coordinates(bounds, x_old, y_old, search_range)
-        self.x_balloon = x_coor
-        self.y_balloon = y_coor
-        # if x_old!=0 and y_old!=0:
-        #     self.x_balloon = 0.5 * self.x_balloon + 0.5 * x_old
-        #     self.y_balloon = 0.5 * self.y_balloon + 0.5 * y_old
-
-    def detect_drone(self, bounds, search_range, x_old=0, y_old=0):
-        x_coor, y_coor = self.detect_coordinates(bounds, x_old, y_old, search_range)
-        self.x_drone = x_coor
-        self.y_drone = y_coor
-        # if x_old!=0 and y_old!=0:
-        #     self.x_balloon = 0.5 * self.x_balloon + 0.5 * x_old
-        #     self.y_balloon = 0.5 * self.y_balloon + 0.5 * y_old
 
     def detect_color(self):
         y_shape = self.image.shape[0]
@@ -76,27 +65,27 @@ class Frame:
         s = hsv[:, :, 1]
         v = hsv[:, :, 2]
         ball_color = (int(np.median(h)), int(np.median(s)), int(np.median(v)))
-        min_color = (max(0, ball_color[0] - Frame.H_RANGE), max(0, ball_color[1] - Frame.S_RANGE),
-                     max(20, ball_color[2] - Frame.V_RANGE))
-        max_color = (min(255, ball_color[0] + Frame.H_RANGE), min(255, ball_color[1] + Frame.S_RANGE),
-                     min(255, ball_color[2] + Frame.V_RANGE))
-        return [min_color, max_color]
+        self.lower = (max(0, ball_color[0] - Frame.H_RANGE), max(0, ball_color[1] - Frame.S_RANGE),
+                      max(20, ball_color[2] - Frame.V_RANGE))
+        self.upper = (min(255, ball_color[0] + Frame.H_RANGE), min(255, ball_color[1] + Frame.S_RANGE),
+                      min(255, ball_color[2] + Frame.V_RANGE))
 
-    def image_to_show(self, detection_sign=True, text_balloon=None, text_drone=None, text_color=(250, 250, 250)):
-        show_img = self.image
-        if detection_sign and self.x_balloon != 0 and self.y_balloon != 0:
-            show_img = cv2.circle(show_img, (int(self.x_balloon), int(self.y_balloon)), 15, (0, 0, 0), 3)
-            if text_balloon:
-                show_img = cv2.putText(show_img, text_balloon, (int(self.x_balloon), int(self.y_balloon)),
-                                       cv2.FONT_HERSHEY_DUPLEX, 1, text_color, 2, cv2.LINE_AA)
-        if detection_sign and self.x_drone != 0 and self.y_drone != 0:
-            if text_drone:
-                show_img = cv2.putText(show_img, text_drone, (int(self.x_drone), int(self.y_drone)),
-                                       cv2.FONT_HERSHEY_DUPLEX, 1, text_color, 2, cv2.LINE_AA)
-            show_img = cv2.circle(show_img, (int(self.x_drone), int(self.y_drone)), 15, (0, 0, 0), 3)
 
-        return show_img
+    @property
+    def color_str(self):
+        return "%.0f,%.0f,%.0f\n%.0f,%.0f,%.0f\n" % \
+               (self.lower[0], self.lower[1], self.lower[2], self.upper[0], self.upper[1], self.upper[2])
 
-    def show_image(self, window_name, detection_sign=True, text_balloon=None, text_drone=None, text_color=(250, 250, 250)):
-        show_img = self.image_to_show(detection_sign, text_balloon, text_drone, text_color)
-        cv2.imshow(window_name, show_img)
+    @staticmethod
+    def str_to_color_bound(bound):
+        bound = bound.split(',')
+        return int(bound[0]), int(bound[1]), int(bound[2])
+
+    def save_bounds(self, lower, upper):
+        self.lower = self.str_to_color_bound(lower)
+        self.upper = self.str_to_color_bound(upper)
+
+    def set_image(self, image):
+        self.image = image
+        self.THRESHOLD_SIZE = image.shape[1] // 120
+        self.SEARCH_RANGE = image.shape[1] // 20
