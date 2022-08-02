@@ -124,3 +124,9 @@ def display_frames(balloon, drone, left_cam, right_cam, borders):
                               texts_vel, (240, 150, 240))
     cv2.imshow("right_cam", right_img)
     draw_xy_display(borders, recognizable_objects, drone.dest_coords[0], drone.dest_coords[1])
+
+
+def calc_linear_eq(coor1, coor2):
+    m = (coor2[1] - coor1[1]) / (coor2[0] - coor1[0])
+    b = coor2[1] - m * coor2[0]
+    return m, b

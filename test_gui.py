@@ -108,12 +108,12 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, w
         window['-SetBorders-'].update('Set Borders('+ str(borders.index) + ')')
         print("saved the %.0f coordinate: (%.0f,%.0f,%.0f)" % (borders.index, image_3d.phys_x_balloon, image_3d.phys_y_balloon, image_3d.phys_z_balloon))
         if borders.index == 4:
-            borders.write_borders('borders.txt')
+            borders.save_borders('borders.txt')
             window['-SetBorders-'].update(button_color = ('white','blue'))    
 
     # the 'r' button is set as the read text_colors from file
     elif event == 'Load Borders' or key == ord('r'):
-        borders.read_borders('borders.txt')
+        borders.load_borders('borders.txt')
         print("middle is ({0:.3f},{1:.3f})".format(borders.x_middle, borders.y_middle))
         window['Load Borders'].update(button_color = ('white','blue'))
         window['-MIDDLE-'].update("Middle = ({0:.3f},{1:.3f})".format(borders.x_middle, borders.y_middle))

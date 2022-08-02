@@ -90,7 +90,7 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, l
         print("saved the %.0f coordinate: (%.0f,%.0f,%.0f)" % (
         borders.index, image_3d.get_phys_balloon(0), image_3d.get_phys_balloon(1), image_3d.get_phys_balloon(2)))
         if borders.index == 4:
-            borders.write_borders(BORDERS_FILENAME)
+            borders.save_borders(BORDERS_FILENAME)
 
     # the 'b' button is set as the save borders to file
     #  elif key == ord('b'):
@@ -98,7 +98,7 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, l
 
     # the 'r' button is set as the read text_colors from file
     elif key == ord('r'):
-        borders.read_borders(BORDERS_FILENAME)
+        borders.load_borders(BORDERS_FILENAME)
         print("middle is ({0:.3f},{1:.3f})".format(borders.x_middle_1, borders.y_middle_1))
 
     # the 'a' button is set to abort hitting state back to seek middle

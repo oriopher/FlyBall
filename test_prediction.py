@@ -54,11 +54,11 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders : Borders, 
         borders.set_image(image_3d, left_cam)
         print("saved the %.0f coordinate: (%.0f,%.0f,%.0f)" % (borders.index, image_3d.phys_x_balloon, image_3d.phys_y_balloon, image_3d.phys_z_balloon))
         if borders.index == 4:
-            borders.write_borders(BORDERS_FILENAME)
+            borders.save_borders(BORDERS_FILENAME)
 
     # the 'r' button is set as the read text_colors from file
     elif key == ord('r'):
-        borders.read_borders(BORDERS_FILENAME)
+        borders.load_borders(BORDERS_FILENAME)
         print("middle is ({0:.3f},{1:.3f})".format(borders.x_middle, borders.y_middle))
 
     return True
