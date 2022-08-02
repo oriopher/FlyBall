@@ -17,7 +17,7 @@ class Camera:
 
     def capture(self):
         if not self.vid:
-            self.vid = cv2.VideoCapture(self.index)
+            self.vid = cv2.VideoCapture(self.index, cv2.CAP_DSHOW)
         ret, image = self.vid.read()
         if not ret:
             return False

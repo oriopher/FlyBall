@@ -7,11 +7,10 @@ MARGINS = 20
 GRID_DIFF = 10
 
 
-def add_2d_object(borders, x, y, color, name, xy_display, radius=15, circle_thickness=3,
+def add_2d_object(borders, x, y, color, name, xy_display, limits, radius=15, circle_thickness=3,
                   text_shift=17, font_scale=0.5,
                   text_thickness=2):
-    x_lower_limit, x_upper_limit = np.min(borders.coordinates[:, 0]), np.max(borders.coordinates[:, 0])
-    y_lower_limit, y_upper_limit = np.min(borders.coordinates[:, 1]), np.max(borders.coordinates[:, 1])
+    x_lower_limit, x_upper_limit, y_lower_limit, y_upper_limit  = limits
     x_pix, y_pix = x_coor_to_pix(x, x_lower_limit, x_upper_limit), y_coor_to_pix(y, y_lower_limit, y_upper_limit)
     xy_display = cv2.circle(xy_display, (x_pix, y_pix), radius, color, circle_thickness)
     if name:
@@ -24,7 +23,7 @@ def draw_xy_display(borders, recognizable_objects, x_pred_phys=None, y_pred_phys
     xy_display = np.zeros((NUM_PIXELS_X, NUM_PIXELS_Y, 3), np.uint8)
     x_lower_limit, x_upper_limit = np.min(borders.coordinates[:, 0]) - MARGINS, np.max(borders.coordinates[:, 0]) + MARGINS
     y_lower_limit, y_upper_limit = np.min(borders.coordinates[:, 1]) - MARGINS, np.max(borders.coordinates[:, 1]) + MARGINS
-
+    limits = (x_lower_limit, x_upper_limit, y_lower_limit, y_upper_limit)
     pix_in_cm_x = NUM_PIXELS_X / (x_upper_limit - x_lower_limit)
     pix_in_cm_y = NUM_PIXELS_Y / (y_upper_limit - y_lower_limit)
     grid_length_x = int(GRID_DIFF * pix_in_cm_x)
@@ -43,12 +42,10 @@ def draw_xy_display(borders, recognizable_objects, x_pred_phys=None, y_pred_phys
         # calc coordinates in pixels
         for recognizable_object in recognizable_objects:
             xy_display = add_2d_object(borders, recognizable_object.x, recognizable_object.y, recognizable_object.text_colors,
-                                       recognizable_object.name, xy_display)
-            if borders.in_borders(recognizable_object):
-                borders_color = (0, 0, 240)                          
-        xy_display = add_2d_object(borders, x_pred_phys, y_pred_phys, (186, 85, 211), None, xy_display)
-
-    
+                                       recognizable_object.name, xy_display, limits)
+            if not borders.in_borders(recognizable_object):
+                borders_color = (240, 0, 0)                          
+        xy_display = add_2d_object(borders, x_pred_phys, y_pred_phys, (186, 85, 211), None, xy_display, limits)
 
         corners = [0, 1, 3, 2]
         for i, cor in enumerate(corners):

@@ -235,7 +235,7 @@ class HITTING(State):
 
     def to_transition(self, *args, **kwargs):
         Z_LIMIT = 15
-        XY_LIMIT = 40
+        XY_LIMIT = 40 # remove this xy limit
 
         drone = kwargs['drone']
         balloon = kwargs['balloon']

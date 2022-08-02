@@ -6,7 +6,7 @@ import os
 
 from xy_display import draw_xy_display
 
-FLOOR_HEIGHT = -112
+FLOOR_HEIGHT = -114
 DRONE_HEIGT = 14
 DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + DRONE_HEIGT + 40
 
@@ -20,6 +20,8 @@ MAYA_PHONE_NIR = Camera(67, 55, 2, False)
 
 NIR_PHONE_NIR = Camera(67, 52, 0, False)
 EFRAT_PHONE_NIR = Camera(68, 77, 2, False)
+C920_NIR_1 = Camera(52, 45, 4, False)
+C920_NIR_2 = Camera(52, 45, 3, False)
 
 COLORS_FILENAME = "color_bounds.txt"
 BORDERS_FILENAME = "borders.txt"
