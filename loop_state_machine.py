@@ -4,7 +4,8 @@ import numpy as np
 from common import reachability, FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
 
 MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
-
+X_OFFSET = 0
+Y_OFFSET = 0
 
 class State:
     def next(self, state=1):
@@ -151,6 +152,8 @@ class SEARCHING_PREDICTION(State):
 
         if np.any(pred_coords):
             x_dest, y_dest, z_dest = drone.new_pred(pred_coords)
+            x_dest += X_OFFSET
+            y_dest += Y_OFFSET
         else:
             x_dest, y_dest, z_dest = drone.dest_coords
         # x_dest = recognizable_object.get_phys_balloon(0)
@@ -195,8 +198,8 @@ class SEARCHING(State):
         balloon = kwargs['balloon']
         borders = kwargs['borders']
 
-        x_rel = balloon.x - drone.x
-        y_rel = balloon.y - drone.y
+        x_rel = balloon.x - drone.x + X_OFFSET
+        y_rel = balloon.y - drone.y + Y_OFFSET
         z_rel = balloon.z - drone.z
 
         if z_rel < UPPER_LIMIT and balloon.vz <= 0:
@@ -218,6 +221,8 @@ class SEARCHING(State):
         pred = NumericBallPredictor(balloon)
         x_dest, y_dest, z_dest = pred.get_prediction(reachability(distance=0, offset=0))
         # x_dest, y_dest, z_dest = balloon.x, balloon.y, drone.z
+        x_dest += X_OFFSET
+        y_dest += Y_OFFSET
         z_dest = drone.z
         drone.track_3d(x_dest, y_dest, z_dest)
 
@@ -272,7 +277,8 @@ class DESCENDING(State):
 
     def run(self, *args, **kwargs):
         drone = kwargs['drone']
-        left_right, for_back = 0, 0
-        up_down = -100
-        drone.wait_rc_control()
-        drone.send_rc_control(left_right, for_back, up_down, 0)
+        # left_right, for_back = 0, 0
+        # up_down = -100
+        # drone.wait_rc_control()
+        # drone.send_rc_control(left_right, for_back, up_down, 0)
+        drone.track_descending()

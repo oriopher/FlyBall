@@ -195,3 +195,16 @@ class Drone(RecognizableObject):
         left_right, for_back, up_down = -vx, -vy, vz
         if self.tello.send_rc_control:
             self.send_rc_control(left_right, for_back, up_down, 0)
+
+    
+    def track_descending(self):
+        dest_x, dest_y, dest_z = self.middle[0], self.middle[1], DRONE_DEFAULT_HEIGHT
+
+        x_cm_rel = dest_x - self.x
+        y_cm_rel = dest_y - self.y
+
+        left_right = self.velocity_control_function(x_cm_rel, self.vx, 'x')
+        for_back = self.velocity_control_function(y_cm_rel, self.vy, 'y')
+        up_down = -100
+        if self.tello.send_rc_control:
+            self.send_rc_control(left_right, for_back, up_down, 0)
