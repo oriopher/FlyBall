@@ -6,7 +6,7 @@ from consts import *
 from xy_display import draw_xy_display
 
 
-def phys_to_left_pix_img(x_cm, y_cm, z_cm, image,cam):  # image is a direct image from the camera and not image3d
+def phys_to_left_pix_img(x_cm, y_cm, z_cm, image, cam):  # image is a direct image from the camera and not image3d
     x_n_pix = image.shape[1]
     z_n_pix = image.shape[0]
 
@@ -106,3 +106,9 @@ def display_frames(balloon, drone, left_cam, right_cam, borders):
                               texts_vel, (240, 150, 240))
     cv2.imshow("right_cam", right_img)
     draw_xy_display(borders, recognizable_objects, drone.dest_coords[0], drone.dest_coords[1])
+
+
+def calc_linear_eq(coor1, coor2):
+    m = (coor2[1] - coor1[1]) / (coor2[0] - coor1[0])
+    b = coor2[1] - m * coor2[0]
+    return m, b
