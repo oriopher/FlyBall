@@ -1,6 +1,8 @@
 import numpy as np
 import cv2
 
+from frame import Frame
+
 
 class Camera:
 
@@ -15,11 +17,12 @@ class Camera:
 
     def capture(self):
         if not self.vid:
-            self.vid = cv2.VideoCapture(self.index)
+            self.vid = cv2.VideoCapture(self.index, cv2.CAP_DSHOW)
         ret, image = self.vid.read()
         if not ret:
             return False
-        self.last_capture = image
+        self.last_capture = Frame(image)
+
         return True
 
     def release(self):

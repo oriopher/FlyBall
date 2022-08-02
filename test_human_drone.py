@@ -1,7 +1,6 @@
-import cv2
 from recognizable_object import RecognizableObject
 from drone import Drone
-from common import read_colors, write_colors, display_frames, BORDERS_FILENAME, COLORS_FILENAME, EFRAT_WEB, NIR_PHONE_NIR
+from common import *
 from borders import Borders
 from camera import Camera
 
@@ -10,24 +9,25 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
     key = cv2.waitKey(1) & 0xFF
     str_colors_changed = "Color bounds changed"
 
+    recognizable_objects = [balloon, drone.recognizable_object]
     # the 'v' button is set as the detect color of recognizable_object in the left_cam cam
     if key == ord('v'):
-        balloon.frame_left.detect_color()
+        balloon.detect_color(True)
         print(str_colors_changed)
 
     # the 'n' button is set as the detect color of recognizable_object in the right_cam cam
     elif key == ord('n'):
-        balloon.frame_right.detect_color()
+        balloon.detect_color(False)
         print(str_colors_changed)
 
     # the 's' button is set as the detect color of drone in the left_cam cam
     elif key == ord('s'):
-        drone.frame_left.detect_color()
+        drone.detect_color(True)
         print(str_colors_changed)
 
     # the 'f' button is set as the detect color of drone in the right_cam cam
     elif key == ord('f'):
-        drone.frame_right.detect_color()
+        drone.detect_color(False)
         print(str_colors_changed)
 
     elif key == ord('t'):
@@ -42,11 +42,11 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
 
     # the 'p' button is set as the save text_colors to file
     elif key == ord('p'):
-        write_colors(COLORS_FILENAME, [balloon, drone])
+        write_colors(COLORS_FILENAME, recognizable_objects)
 
     # the 'k' button is set as the read text_colors from file
     elif key == ord('k'):
-        read_colors(COLORS_FILENAME, [balloon, drone])
+        read_colors(COLORS_FILENAME, recognizable_objects)
 
     # the 'j' button is set as the saving the borders. can save 4 coordinates
     elif key == ord('j'):
@@ -61,10 +61,6 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
         borders.load_borders(BORDERS_FILENAME)
         drone.set_middle((borders.x_middle, borders.y_middle))
 
-    # the 'a' button is set to abort hitting state back to seek middle
-    elif key == ord('a'):
-        drone.stop_hit()
-
     elif key == ord('z'):
         drone.testing = 1
 
@@ -76,7 +72,7 @@ def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, l
     continue_loop = True
 
     borders = Borders()
-    recognizable_objects = [balloon, drone]
+    recognizable_objects = [balloon, drone.recognizable_object]
     read_colors(COLORS_FILENAME, recognizable_objects)
     borders.load_borders(BORDERS_FILENAME)
     if borders.set_borders:
@@ -84,7 +80,6 @@ def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, l
 
     while continue_loop:
         state = drone.state
-        print(state)
         # Capture the video frame by frame
         if not left.capture():
             continue
@@ -98,13 +93,13 @@ def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, l
         display_frames(balloon, drone, left, right, borders)
 
         # State Machine
-        state_kwargs = {'drone': drone, 'balloon': balloon, 'borders': borders}
-        state.run(**state_kwargs)
-        transition = state.to_transition(**state_kwargs)
+        state.run(drone, balloon, borders)
+        transition = state.to_transition(drone, balloon, borders)
         if transition:
-            state.cleanup(transition, **state_kwargs)
+            state.cleanup(transition, drone, balloon, borders)
             state = drone.state = state.next(transition)
-            state.setup(**state_kwargs)
+            print(state)
+            state.setup(drone, balloon, borders)
 
         continue_loop = interactive_loop(borders, left, balloon, drone)
     
@@ -119,10 +114,10 @@ def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, l
 
 
 def main():
-    left_cam = NIR_PHONE_NIR
-    right_cam = EFRAT_WEB
+    left_cam = C920_NIR_2
+    right_cam = C920_NIR_1
 
-    distance = 74
+    distance = 111.9
     capture_video(Drone(1, (0, 191, 255), 7, iface_ip="192.168.10.2"), RecognizableObject((255, 54, 89), 11.3, "balloon"), distance,
                   left_cam, right_cam)
 
