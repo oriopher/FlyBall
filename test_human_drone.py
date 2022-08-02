@@ -10,7 +10,7 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
     key = cv2.waitKey(1) & 0xFF
     str_colors_changed = "Color bounds changed"
 
-    recognizabe_objects = [balloon, drone.recognizable_object]
+    recognizable_objects = [balloon, drone.recognizable_object]
     # the 'v' button is set as the detect color of recognizable_object in the left_cam cam
     if key == ord('v'):
         balloon.detect_color(True)
@@ -43,11 +43,11 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
 
     # the 'p' button is set as the save text_colors to file
     elif key == ord('p'):
-        write_colors(COLORS_FILENAME, recognizabe_objects)
+        write_colors(COLORS_FILENAME, recognizable_objects)
 
     # the 'k' button is set as the read text_colors from file
     elif key == ord('k'):
-        read_colors(COLORS_FILENAME, recognizabe_objects)
+        read_colors(COLORS_FILENAME, recognizable_objects)
 
     # the 'j' button is set as the saving the borders. can save 4 coordinates
     elif key == ord('j'):
@@ -61,10 +61,6 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
     elif key == ord('r'):
         borders.read_borders(BORDERS_FILENAME)
         drone.set_middle((borders.x_middle, borders.y_middle))
-
-    # the 'a' button is set to abort hitting state back to seek middle
-    elif key == ord('a'):
-        drone.stop_hit()
 
     elif key == ord('z'):
         drone.testing = 1
