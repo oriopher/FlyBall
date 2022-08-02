@@ -235,7 +235,7 @@ class HITTING(State):
 
     def to_transition(self, *args, **kwargs):
         Z_LIMIT = 15
-        XY_LIMIT = 40 # remove this xy limit
+        # XY_LIMIT = 40 
 
         drone = kwargs['drone']
         balloon = kwargs['balloon']
@@ -243,7 +243,8 @@ class HITTING(State):
         y_rel = balloon.y - drone.y
         z_rel = balloon.z - drone.z
 
-        transition = not (abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT) or (z_rel < Z_LIMIT)
+        # transition = not (abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT) or (z_rel < Z_LIMIT)
+        transition = z_rel < Z_LIMIT
         return transition
 
     def run(self, *args, **kwargs):

@@ -20,8 +20,8 @@ MAYA_PHONE_NIR = Camera(67, 55, 2, False)
 
 NIR_PHONE_NIR = Camera(67, 52, 0, False)
 EFRAT_PHONE_NIR = Camera(68, 77, 2, False)
-C920_NIR_1 = Camera(52, 45, 4, False)
-C920_NIR_2 = Camera(52, 45, 3, False)
+C920_NIR_1 = Camera(56, 39, 4, False)
+C920_NIR_2 = Camera(56, 39, 3, False)
 
 COLORS_FILENAME = "color_bounds.txt"
 BORDERS_FILENAME = "borders.txt"
