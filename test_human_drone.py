@@ -1,4 +1,3 @@
-import cv2
 from recognizable_object import RecognizableObject
 from drone import Drone
 from common import *

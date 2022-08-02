@@ -1,6 +1,7 @@
 import numpy as np
-import datetime
 import cv2
+
+from frame import Frame
 
 
 class Camera:
@@ -13,7 +14,6 @@ class Camera:
         self.is_flipped = is_flipped
         self.vid = None
         self.last_capture = None
-        self.last_capture_time = 0
 
     def capture(self):
         if not self.vid:
@@ -21,8 +21,8 @@ class Camera:
         ret, image = self.vid.read()
         if not ret:
             return False
-        self.last_capture = image
-        self.last_capture_time = datetime.datetime.now()
+        self.last_capture = Frame(image)
+
         return True
 
     def release(self):
