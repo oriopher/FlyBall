@@ -4,8 +4,6 @@ import numpy as np
 from common import reachability, FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
 
 MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
-X_OFFSET = 0
-Y_OFFSET = 0
 
 class State:
     def next(self, state=1):
@@ -152,14 +150,12 @@ class SEARCHING_PREDICTION(State):
 
         if np.any(pred_coords):
             x_dest, y_dest, z_dest = drone.new_pred(pred_coords)
-            x_dest += X_OFFSET
-            y_dest += Y_OFFSET
         else:
             x_dest, y_dest, z_dest = drone.dest_coords
         # x_dest = recognizable_object.get_phys_balloon(0)
         # y_dest = recognizable_object.get_phys_balloon(1)
         # z_dest = Z_HIT
-
+        
         x_to_target = abs(x_dest - drone.drone_search_pred_coords[0])
         y_to_target = abs(y_dest - drone.drone_search_pred_coords[1])
         time_to_hit_from_start = max(reachability(x_to_target), reachability(y_to_target))
@@ -198,8 +194,8 @@ class SEARCHING(State):
         balloon = kwargs['balloon']
         borders = kwargs['borders']
 
-        x_rel = balloon.x - drone.x + X_OFFSET
-        y_rel = balloon.y - drone.y + Y_OFFSET
+        x_rel = balloon.x - drone.x
+        y_rel = balloon.y - drone.y
         z_rel = balloon.z - drone.z
 
         if z_rel < UPPER_LIMIT and balloon.vz <= 0:
@@ -219,11 +215,9 @@ class SEARCHING(State):
         balloon = kwargs['balloon']
 
         pred = NumericBallPredictor(balloon)
-        x_dest, y_dest, z_dest = pred.get_prediction(reachability(distance=0, offset=0))
-        # x_dest, y_dest, z_dest = balloon.x, balloon.y, drone.z
-        x_dest += X_OFFSET
-        y_dest += Y_OFFSET
+        x_dest, y_dest, _ = pred.get_prediction(reachability(distance=0, offset=0))
         z_dest = drone.z
+
         drone.track_3d(x_dest, y_dest, z_dest)
 
 
