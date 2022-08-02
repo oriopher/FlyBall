@@ -97,3 +97,9 @@ class RecognizableObject:
         n_pixels = self.frame_right.image.shape[0]  # Number of pixels in z axis.
         p = (n_pixels / 2) / np.tan(cam.fov_vert / 2)
         return y_cm * (n_pixels / 2 - z_pix) / p
+
+    def detect_color(self, is_left):
+        if is_left:
+            self.frame_left.detect_color()
+        else:
+            self.frame_right.detect_color()
