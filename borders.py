@@ -2,12 +2,14 @@ import os
 from camera import Camera
 from common import phys_to_left_pix, calc_linear_eq, FLOOR_HEIGHT
 from recognizable_object import RecognizableObject
+from quadrangle import QUADRANGLE
 import cv2
 import numpy as np
 
 
 class Borders:
     def __init__(self):
+        self.quad = QUADRANGLE()
         self.index = 0              # (x_4, y_4) ################################ (x_3, y_3)
         self.m_left = 0                            ############################
         self.b_left = 0                              #######################
@@ -72,17 +74,23 @@ class Borders:
                                                                                         self.z_n_pix, self.fov_horz,
                                                                                         self.fov_vert)
 
+    def calc_middle(self):
+        # calculate the middle coordinates
+        self.x_middle = (self.coordinates[0][0] + self.coordinates[1][0]) / 2
+        self.y_middle = (self.coordinates[0][1] + self.coordinates[1][1] + self.coordinates[2][1] +
+                           self.coordinates[3][1]) / 4    
+
 
     def coordinate_in_borders(self, x, y):
-        # coordinate is too far from camera
+        # coordinate is outside upper edge
         if (y - self.m_upper * x - self.b_upper > 0):
             return False
 
-        # coordinate is too close to camera
+        # coordinate is outside low edge
         if y - self.m_low * x - self.b_low < 0:
             return False
 
-        # coordinate is out of left_cam border
+        # coordinate is outside left edge
         if self.m_left >= 0:
             if y - self.m_left * x - self.b_left > 0:
                 return False
@@ -90,7 +98,7 @@ class Borders:
         elif y - self.m_left * x - self.b_left < 0:
             return False
 
-        # coordinate is out of right_cam border
+        # coordinate is outside right edge
         if self.m_right >= 0:
             if y - self.m_right * x - self.b_right < 0:
                 return False
@@ -98,9 +106,8 @@ class Borders:
         elif y - self.m_right * x - self.b_right > 0:
             return False
 
-        # coordinate is in play area
-        return True
-
+        # coordinate is in quadrangle
+        return True   
 
     # checks if recognizable_object is in borders
     def in_borders(self, recognizable_object: RecognizableObject):
