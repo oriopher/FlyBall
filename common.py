@@ -6,7 +6,7 @@ from consts import *
 from xy_display import draw_xy_display
 
 
-def phys_to_left_pix_img(x_cm, y_cm, z_cm, image,cam):  # image is a direct image from the camera and not image3d
+def phys_to_left_pix_img(x_cm, y_cm, z_cm, image, cam):  # image is a direct image from the camera and not image3d
     x_n_pix = image.shape[1]
     z_n_pix = image.shape[0]
 
