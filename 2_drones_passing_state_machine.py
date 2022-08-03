@@ -1,8 +1,9 @@
 from datetime import datetime
 from prediction import NumericBallPredictor
 import numpy as np
-from common import reachability,DRONE_DEFAULT_HEIGHT, MIN_SAFE_HEIGHT
+from common import reachability,DRONE_DEFAULT_HEIGHT, FLOOR_HEIGHT
 
+MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
 
 class State:
     def next(self, state=1):
