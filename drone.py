@@ -13,7 +13,8 @@ class Drone(RecognizableObject):
     def __init__(self, ident: int, text_colors: tuple[int, int, int], radius: int ,middle: tuple[int, int] = (0, 0),
                  iface_ip: str = '192.168.10.2'):
         super().__init__(text_colors, radius, "drone" + str(ident))
-        self.tello = Tello(iface_ip=iface_ip)
+        #self.tello = Tello(iface_ip=iface_ip)
+        self.tello = None
         self.middle = middle
         self.id = ident
         self.tookoff = self.start = self.first_seek = False

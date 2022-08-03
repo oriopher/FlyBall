@@ -3,7 +3,6 @@ from camera import Camera
 import numpy as np
 import cv2
 import os
-
 from xy_display import draw_xy_display
 
 FLOOR_HEIGHT = -45
@@ -104,7 +103,7 @@ def image_to_show(show_img, frames, detection_sign=True, texts=None, text_color=
     return show_img
 
 
-def display_frames(balloon, drone, left_cam, right_cam, borders):
+def display_frames(balloon, drone, left_cam, right_cam, borders, obstacle):
     recognizable_objects = [balloon, drone]
     texts_coor = ["c({:.0f},{:.0f},{:.0f})".format(recognizable_object.x, recognizable_object.y, recognizable_object.z)
                   for recognizable_object in recognizable_objects]
@@ -116,14 +115,19 @@ def display_frames(balloon, drone, left_cam, right_cam, borders):
                              [recognizable_object.frame_left for recognizable_object in recognizable_objects],
                              True, texts_coor, (150, 250, 200))
     left_img = borders.draw_borders(left_img, balloon, color_in=(0, 240, 0), color_out=(0, 0, 240))
-    if drone.dest_coords != (0, 0, 0):
+    if np.any(drone.dest_coords):
         left_img = image_with_circle(left_cam, left_img, drone.dest_coords, rad_phys=7, thickness=2)
+    
+    for recognizable_object in recognizable_objects:     
+        left_img = obstacle.draw_obstacle(left_img, recognizable_object)
+
     cv2.imshow("left_cam", left_img)
+
     right_img = image_to_show(right_cam.last_capture,
                               [recognizable_object.frame_right for recognizable_object in recognizable_objects], True,
-                              texts_vel, (240, 150, 240))
+                              texts_vel, (240, 150, 240))                     
     cv2.imshow("right_cam", right_img)
-    draw_xy_display(borders, recognizable_objects, drone.dest_coords[0], drone.dest_coords[1])
+    draw_xy_display(borders, obstacle, recognizable_objects, drone.dest_coords[0], drone.dest_coords[1])
 
 
 def calc_linear_eq(coor1, coor2):
