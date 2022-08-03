@@ -31,7 +31,7 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, w
     str_colors_changed = "color bounds changed"
 
     # the 'q' button is set as the quitting button or if user closes window
-    if event == sg.WIN_CLOSED or event == 'Quit' or key == ord('q'):
+    if event == sg.WIN_CLOSED or event == 'Quit' or event == 'q':
         loop_status.stop_loop()
         return False
 
@@ -41,65 +41,65 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, w
         window['Ok'].update(button_color = ('white','blue'))  
 
     # the 'v' button is set as the detect color of balloon in the left cam
-    elif event == 'Balloon color (L)' or key == ord('v'):
+    elif event == 'Balloon color (L)' or event == 'v':
         lower, upper = image_3d.frame_left.detect_color()
         colors.ball_left.change(lower, upper)
         print(str_colors_changed)
         window['Balloon color (L)'].update(button_color = ('white','blue'))
 
     # the 'n' button is set as the detect color of balloon in the right cam
-    elif event == 'Balloon color (R)' or key == ord('n'):
+    elif event == 'Balloon color (R)' or event == 'n':
         lower, upper = image_3d.frame_right.detect_color()
         colors.ball_right.change(lower, upper)
         print(str_colors_changed)
         window['Balloon color (R)'].update(button_color = ('white','blue')) 
 
     # the 's' button is set as the detect color of drone in the left cam
-    elif event == 'Drone color (L)' or key == ord('s'):
+    elif event == 'Drone color (L)' or event == 's':
         lower, upper = image_3d.frame_left.detect_color()
         colors.drone_left.change(lower, upper)
         print(str_colors_changed)
         window['Drone color (L)'].update(button_color = ('white','blue'))
 
     # the 'f' button is set as the detect color of drone in the right cam
-    elif event == 'Drone color (R)' or key == ord('f'):
+    elif event == 'Drone color (R)' or event == 'f':
         lower, upper = image_3d.frame_right.detect_color()
         colors.drone_right.change(lower, upper)
         print(str_colors_changed)
         window['Drone color (R)'].update(button_color = ('white','blue'))
 
     # the 'y' button is set as start tracking balloon
-    elif event == 'Start Track' or key == ord('y'):
+    elif event == 'Start Track' or event == 'y':
         loop_status.start_track()
         print('start track')
         window['Start Track'].update(button_color = ('white','blue'))
 
     # the 'l' button is set as the landing button
-    elif event == 'Land' or key == ord('l'):
+    elif event == 'Land' or event == 'l':
         loop_status.stop_loop()
         print('Land')
         window['Land'].update(button_color = ('white','blue'))
 
     # the 'h' button is set as the hitting balloon method
-    elif event == 'Hit' or key == ord('h'):
+    elif event == 'Hit' or event == 'h':
         coords = (image_3d.phys_x_balloon, image_3d.phys_y_balloon, image_3d.phys_z_balloon)
         print('Hit')
         loop_status.hit_mode_on(coords)
 
     # the 'p' button is set as the save colors to file
-    elif event == 'Save Colors' or key == ord('p'):
+    elif event == 'Save Colors' or event == 'p':
         colors.write_colors(COLORS_FILENAME)
         print("Colors Saved")
         window['Save Colors'].update(button_color = ('white','blue'))
 
     # the 'k' button is set as the read colors from file
-    elif event == 'Load Colors' or key == ord('k'):
+    elif event == 'Load Colors' or event == 'k':
         colors.read_colors(COLORS_FILENAME)
         print("Colors Loaded")
         window['Load Colors'].update(button_color = ('white','blue'))
 
     # the 'j' button is set as the saving the borders. can save 4 coordinates
-    elif event == '-SetBorders-' or key == ord('j'):
+    elif event == '-SetBorders-' or event == 'j':
         borders.set_image(image_3d, left_cam)
         window['-SetBorders-'].update('Set Borders('+ str(borders.index) + ')')
         print("saved the %.0f coordinate: (%.0f,%.0f,%.0f)" % (borders.index, image_3d.phys_x_balloon, image_3d.phys_y_balloon, image_3d.phys_z_balloon))
@@ -108,7 +108,7 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, w
             window['-SetBorders-'].update(button_color = ('white','blue'))    
 
     # the 'r' button is set as the read colors from file
-    elif event == 'Load Borders' or key == ord('r'):
+    elif event == 'Load Borders' or event == 'r':
         borders.read_borders('borders.txt')
         print("middle is ({0:.3f},{1:.3f})".format(borders.x_middle, borders.y_middle))
         window['Load Borders'].update(button_color = ('white','blue'))
@@ -203,15 +203,11 @@ def capture_video(cameras_distance, left: Camera, right: Camera, colors: ColorBo
     return continue_test, colors
 
 
-def do_some(event):
-    print("pressed q")
-
 if __name__ == "__main__":
 
     colors = ColorBounds()
     borders = Borders()
-    window = sg.Window('FlyBall', Gui.layout, finalize=True, margins=(0,0))
-    window.bind("<q>", do_some)
+    window = sg.Window('FlyBall', Gui.layout, finalize=True, margins=(0,0), return_keyboard_events=True)
     continue_test = True
 
     left = NIR_PHONE
