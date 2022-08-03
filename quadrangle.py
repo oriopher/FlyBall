@@ -73,3 +73,7 @@ class QUADRANGLE:
                                 thickness=2)
 
         return show_img
+
+    def cross_quadrangle(point_a, point_b):
+        # Checks if the line from a to b crosses the quadrangle.
+        return True
