@@ -3,7 +3,7 @@ import cv2
 
 NUM_PIXELS_X = 512
 NUM_PIXELS_Y = 512
-MARGINS = 20
+MARGINS = 30
 GRID_DIFF = 10
 
 
@@ -12,10 +12,11 @@ def add_2d_object(borders, x, y, color, name, xy_display, limits, radius=15, cir
                   text_thickness=2):
     x_lower_limit, x_upper_limit, y_lower_limit, y_upper_limit  = limits
     x_pix, y_pix = x_coor_to_pix(x, x_lower_limit, x_upper_limit), y_coor_to_pix(y, y_lower_limit, y_upper_limit)
-    xy_display = cv2.circle(xy_display, (x_pix, y_pix), radius, color, circle_thickness)
-    if name:
-        xy_display = cv2.putText(xy_display, name, (x_pix + text_shift, y_pix),
-                                 cv2.FONT_HERSHEY_DUPLEX, font_scale, color, text_thickness, cv2.LINE_AA)
+    if x_pix >= 0 and y_pix >= 0:
+        xy_display = cv2.circle(xy_display, (x_pix, y_pix), radius, color, circle_thickness)
+        if name:
+            xy_display = cv2.putText(xy_display, name, (x_pix + text_shift, y_pix),
+                                        cv2.FONT_HERSHEY_DUPLEX, font_scale, color, text_thickness, cv2.LINE_AA)
     return xy_display
 
 
@@ -36,7 +37,7 @@ def draw_xy_display(borders, recognizable_objects, x_pred_phys=None, y_pred_phys
     for i in range(grid_length_y, NUM_PIXELS_Y, grid_length_y):
         xy_display = draw_grid_y(xy_display, i)       
 
-    borders_color = (240, 0, 0)  # green
+    borders_color = (0, 240, 0)  # green
 
     if borders.set_borders:
         # calc coordinates in pixels
@@ -44,7 +45,7 @@ def draw_xy_display(borders, recognizable_objects, x_pred_phys=None, y_pred_phys
             xy_display = add_2d_object(borders, recognizable_object.x, recognizable_object.y, recognizable_object.text_colors,
                                        recognizable_object.name, xy_display, limits)
             if not borders.in_borders(recognizable_object):
-                borders_color = (240, 0, 0)                          
+                borders_color = (0, 0, 240)                          
         xy_display = add_2d_object(borders, x_pred_phys, y_pred_phys, (186, 85, 211), None, xy_display, limits)
 
         corners = [0, 1, 3, 2]

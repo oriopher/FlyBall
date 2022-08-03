@@ -201,13 +201,14 @@ class HITTING(State):
 
     def to_transition(self, drone, balloon, borders):
         Z_LIMIT = 15
-        XY_LIMIT = 40  # remove this xy limit
+        # XY_LIMIT = 40
 
         x_rel = balloon.x - drone.x
         y_rel = balloon.y - drone.y
         z_rel = balloon.z - drone.z
 
-        transition = not (abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT) or (z_rel < Z_LIMIT)
+        # transition = not (abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT) or (z_rel < Z_LIMIT)
+        transition = z_rel < Z_LIMIT
         return transition
 
     def run(self, drone, balloon, borders):
@@ -230,7 +231,4 @@ class DESCENDING(State):
         return drone.z < DRONE_DEFAULT_HEIGHT + Z_OFFSET
 
     def run(self, drone, balloon, borders):
-        left_right, for_back = 0, 0
-        up_down = -100
-        drone.wait_rc_control()
-        drone.send_rc_control(left_right, for_back, up_down, 0)
+        drone.track_descending()
