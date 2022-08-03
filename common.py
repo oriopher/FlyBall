@@ -2,14 +2,12 @@ import numpy as np
 import cv2
 import os
 from consts import *
+
 from xy_display import draw_xy_display
 
 
 def phys_to_left_pix_img(x_cm, y_cm, z_cm, image, cam):  # image is a direct image from the camera and not image3d
-    x_n_pix = image.shape[1]
-    z_n_pix = image.shape[0]
-
-    return phys_to_left_pix(x_cm, y_cm, z_cm, x_n_pix, z_n_pix, cam.fov_horz, cam.fov_vert)
+    return phys_to_left_pix(x_cm, y_cm, z_cm, cam.last_capture.x_n_pix, cam.last_capture.z_n_pix, cam.fov_horz, cam.fov_vert)
 
 
 def phys_to_left_pix(x_cm, y_cm, z_cm, x_n_pix, z_n_pix, cam_fov_horz, cam_fov_vert):
@@ -85,7 +83,7 @@ def image_to_show(show_img, frames, detection_sign=True, texts=None, text_color=
     return show_img
 
 
-def display_frames(balloon, drone_1, drone_2, left_cam, right_cam, borders):
+def display_frames(balloon, drone_1, drone_2, left_cam, right_cam, borders, obstacle):
     recognizable_objects = [balloon, drone_1.recognizable_object, drone_2.recognizable_object]
     texts_coor = ["c({:.0f},{:.0f},{:.0f})".format(recognizable_object.x, recognizable_object.y, recognizable_object.z)
                   for recognizable_object in recognizable_objects]

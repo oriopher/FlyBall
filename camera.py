@@ -6,7 +6,7 @@ from frame import Frame
 
 class Camera:
 
-    def __init__(self, fov_horz: float, fov_vert: float, index: int, is_flipped=False) -> None:
+    def __init__(self, fov_horz, fov_vert, index, is_flipped=False):
         self.fov_horz = np.radians(fov_horz)
         self.fov_vert = np.radians(fov_vert) 
         self.index = index
@@ -14,6 +14,9 @@ class Camera:
         self.is_flipped = is_flipped
         self.vid = None
         self.last_capture = None
+
+    def __str__(self):
+        return "%.3f,%.3f,%.0f,%.0f\n" % (self.fov_horz, self.fov_vert, self.last_capture.x_n_pix, self.last_capture.z_n_pix)
 
     def capture(self):
         if not self.vid:
