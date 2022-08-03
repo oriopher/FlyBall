@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 import numpy as np
-from PIL import Image, ImageTk
 import cv2
 import PySimpleGUI as sg
 from borders import Borders
@@ -8,12 +7,10 @@ from gui import Gui
 from color_bounds import ColorBounds
 from image_3d import Image3D
 from loop_status import Status
-from djitellopy import Tello
 from camera import Camera
-from velocity_pot import lin_velocity_with_two_params, track_balloon, seek_middle
 
 ORI_WEB = Camera(51.3, 0, False)
-ORI_PHONE = Camera(66.9, 3, False)
+ORI_PHONE = Camera(66.9, 0, False)
 NIR_PHONE = Camera(67, 2, False)
 MAYA_WEB = Camera(61, 0, True)
 EFRAT_WEB = Camera(61, 2, False)
@@ -26,7 +23,6 @@ COLORS_FILENAME = "color_bounds.txt"
 
 FLOOR_HEIGHT = -80
 DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
-
 
 
 def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, window, loop_status: Status, left_cam: Camera) -> bool:
@@ -165,17 +161,18 @@ def capture_video(cameras_distance, left: Camera, right: Camera, colors: ColorBo
         if not borders.balloon_in_borders(image_now):
             color = (0, 0, 240)
         left_img = borders.draw_borders(left_img, color)
-        cv2.imshow("left", left_img)
+        #cv2.imshow("left", left_img)
+
         left_img = cv2.resize(left_img, (350, 350))
         image_right = cv2.resize(image_right, (350, 350))
         # displayin in gui
-       #imgbytes_left = cv2.imencode('.png', left_img)[1].tobytes()  # ditto
-        #window.finalize()
-        #window['image_left'].update(data=imgbytes_left)
-        #imgbytes_right = cv2.imencode('.png', image_right)[1].tobytes()  # ditto
-        #window['image_right'].update(data=imgbytes_right)
+        imgbytes_left = cv2.imencode('.png', left_img)[1].tobytes()  # ditto
+        window.finalize()
+        window['image_left'].update(data=imgbytes_left)
+        imgbytes_right = cv2.imencode('.png', image_right)[1].tobytes()  # ditto
+        window['image_right'].update(data=imgbytes_right)
 
-        image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
+        #image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
         # balloon is out of borders. drone is seeking the middle until the balloon is back
         if borders.set_borders and loop_status.first_seek and (not borders.balloon_in_borders(image_now) or not loop_status.start):
             print("seek middle")
@@ -206,11 +203,15 @@ def capture_video(cameras_distance, left: Camera, right: Camera, colors: ColorBo
     return continue_test, colors
 
 
+def do_some(event):
+    print("pressed q")
+
 if __name__ == "__main__":
 
     colors = ColorBounds()
     borders = Borders()
     window = sg.Window('FlyBall', Gui.layout, finalize=True, margins=(0,0))
+    window.bind("<q>", do_some)
     continue_test = True
 
     left = NIR_PHONE
