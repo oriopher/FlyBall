@@ -79,6 +79,9 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
     elif key == ord('z'):
         drone_1.testing = 1
 
+    elif key == ord('x'):
+        drone_1.testing = 0
+
     return True
 
 
