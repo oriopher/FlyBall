@@ -223,10 +223,8 @@ class DESCENDING(State):
     def __str__(self):
         return "Descending"
 
-    def setup(self, *args, **kwargs):
-        drone, other_drone = kwargs['drone'], kwargs['other_drone']
+    def setup(self, drone, balloon, borders):
         drone.active = False
-        other_drone.active = True
 
     def next(self, state=1):
         return WAITING()
