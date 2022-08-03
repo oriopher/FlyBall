@@ -10,7 +10,6 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
     key = cv2.waitKey(1) & 0xFF
     str_colors_changed = "Color bounds changed"
 
-    recognizable_objects = [balloon, drone_1.recognizable_object]
     # the 'v' button is set as the detect color of recognizable_object in the left_cam cam
     if key == ord('v'):
         balloon.detect_color(True)

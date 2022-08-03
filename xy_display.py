@@ -20,7 +20,7 @@ def add_2d_object(x, y, color, name, xy_display, limits, radius=15, circle_thick
     return xy_display
 
 
-def draw_xy_display(borders, recognizable_objects, x_pred_phys=0, y_pred_phys=0):
+def draw_xy_display(borders, recognizable_objects):
     xy_display = np.zeros((NUM_PIXELS_X, NUM_PIXELS_Y, 3), np.uint8)
     x_lower_limit, x_upper_limit = np.min(borders.coordinates[:, 0]) - MARGINS, np.max(borders.coordinates[:, 0]) + MARGINS
     y_lower_limit, y_upper_limit = np.min(borders.coordinates[:, 1]) - MARGINS, np.max(borders.coordinates[:, 1]) + MARGINS
@@ -58,13 +58,12 @@ def draw_xy_display(borders, recognizable_objects, x_pred_phys=0, y_pred_phys=0)
             if borders.in_borders(recognizable_object):
                 borders_color = (240, 0, 0)
 
-            # drawing predictions
+            # drawing destinations
             if i > 0 and np.any(recognizable_object.dest_coords):
                 xy_display = add_2d_object(recognizable_object.dest_coords[0], recognizable_object.dest_coords[1], (186, 85, 211), 
-                                        recognizable_object.name, xy_display, limits)
+                                        "dest"+str(i), xy_display, limits)
             if not borders.in_borders(recognizable_object):
-                borders_color = (0, 0, 240)                          
-        xy_display = add_2d_object(x_pred_phys, y_pred_phys, (186, 85, 211), None, xy_display, limits)
+                borders_color = (0, 0, 240)      
 
         # drawing borders
         corners = [0, 1, 3, 2]

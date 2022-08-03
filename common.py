@@ -85,8 +85,8 @@ def image_to_show(show_img, frames, detection_sign=True, texts=None, text_color=
     return show_img
 
 
-def display_frames(balloon, drone, left_cam, right_cam, borders):
-    recognizable_objects = [balloon, drone.recognizable_object]
+def display_frames(balloon, drone_1, drone_2, left_cam, right_cam, borders):
+    recognizable_objects = [balloon, drone_1.recognizable_object, drone_2.recognizable_object]
     texts_coor = ["c({:.0f},{:.0f},{:.0f})".format(recognizable_object.x, recognizable_object.y, recognizable_object.z)
                   for recognizable_object in recognizable_objects]
     texts_vel = [
@@ -109,7 +109,7 @@ def display_frames(balloon, drone, left_cam, right_cam, borders):
                               [recognizable_object.frame_right for recognizable_object in recognizable_objects], True,
                               texts_vel, (240, 150, 240))
     cv2.imshow("right_cam", right_img)
-    draw_xy_display(borders, recognizable_objects, drone.dest_coords[0], drone.dest_coords[1])
+    draw_xy_display(borders, recognizable_objects)
 
 
 def calc_linear_eq(coor1, coor2):

@@ -3,7 +3,8 @@ import numpy as np
 
 from common import DRONE_DEFAULT_HEIGHT
 from recognizable_object import RecognizableObject
-from loop_state_machine import ON_GROUND
+# from loop_state_machine import ON_GROUND
+from loop_state_machine_passive_test import ON_GROUND
 from tello_drone_control import TelloDroneControl
 
 
@@ -26,6 +27,7 @@ class Drone:
         self.drone_search_pred_coords = (0, 0, 0)
         self.drone_search_pred_time = 0
         self.testing = 0
+        self.active = False
 
     @property
     def x(self):
