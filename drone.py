@@ -16,7 +16,7 @@ class Drone:
         self.drone_control = TelloDroneControl(iface_ip)
         self.middle = (0, 0)
         self.ident = ident
-        self.tookoff = self.start = self.first_seek = False
+        self.tookoff = self.start = self.first_seek = self.active = False
         self.state = ON_GROUND()
         self.x_0 = 0
         self.y_0 = 0
@@ -98,27 +98,27 @@ class Drone:
         self.old_dest_coords = np.vstack([self.old_dest_coords, coords])
         return np.mean(self.old_dest_coords, axis=0)
 
-    def track_3d(self, dest_x, dest_y, dest_z):
-        self.dest_coords = (dest_x, dest_y, dest_z)
-        self.drone_control.track_3d(dest_x, dest_y, dest_z, self.recognizable_object)
+    def track_3d(self, dest_x, dest_y, dest_z, obstacle=None):
+        self.dest_coords = self.drone_control.track_3d(dest_x, dest_y, dest_z, self.recognizable_object, self.active, obstacle)
 
-    def track_balloon(self, balloon):
-        self.track_2d(balloon.x, balloon.y)
+    def track_balloon(self, balloon, obstacle=None):
+        self.track_2d(balloon.x, balloon.y, obstacle)
 
-    def track_2d(self, dest_x, dest_y):
-        self.track_3d(dest_x, dest_y, DRONE_DEFAULT_HEIGHT)
+    def track_2d(self, dest_x, dest_y, obstacle=None):
+        self.track_3d(dest_x, dest_y, DRONE_DEFAULT_HEIGHT, obstacle)
+
+    def seek_middle(self, obstacle=None):
+        self.track_2d(*self.middle, obstacle)
 
     def track_hitting(self, dest_x, dest_y, dest_z):
         self.dest_coords = (dest_x, dest_y, dest_z)
         self.drone_control.track_hitting(dest_x, dest_y, dest_z, self.recognizable_object)
 
-    def seek_middle(self):
-        self.track_2d(*self.middle)
+    def track_descending(self, obstacle=None):
+        dest_x, dest_y = self.middle
+        dest_x, dest_y = (self.drone_control.track_descending(dest_x, dest_y,
+                                                              self.recognizable_object, self.active, obstacle))
+        self.dest_coords = (dest_x, dest_y, DRONE_DEFAULT_HEIGHT)
 
     def stop(self):
         self.drone_control.stop()
-
-    def track_descending(self):
-        dest_x, dest_y = self.middle
-        self.dest_coords = (dest_x, dest_y, DRONE_DEFAULT_HEIGHT)
-        self.drone_control.track_descending(dest_x, dest_y, self.recognizable_object)
