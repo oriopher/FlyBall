@@ -84,4 +84,4 @@ class TelloDroneControl(DroneControl):
         elif direction == 'y':
             return velocity
         elif direction == 'z':
-            return velocity
+            return -velocity

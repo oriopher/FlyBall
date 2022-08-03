@@ -3,8 +3,8 @@ import cv2
 
 
 class ObjectInFrame:
-    H_RANGE = 30
-    S_RANGE = 50
+    H_RANGE = 20
+    S_RANGE = 30
     V_RANGE = 170
 
     NO_LOWER_BOUNDS = (0, 0, 0)

@@ -19,7 +19,7 @@ class State:
     def setup(self, drone, balloon, borders):
         pass
 
-    def cleanup(self, drone, balloon, borders):
+    def cleanup(self, transition, drone, balloon, borders):
         pass
 
 
@@ -48,7 +48,7 @@ class HOVERING(State):
     def to_transition(self, drone, balloon, borders):
         return drone.start
 
-    def run(self, **kwargs):
+    def run(self, drone, balloon, borders):
         return
 
 

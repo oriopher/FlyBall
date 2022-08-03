@@ -56,7 +56,7 @@ class Drone:
         return "battery = {:d}%".format(self.drone_control.get_battery())
 
     def detect_color(self, is_left):
-        self.recognizable_object.detect_color()
+        self.recognizable_object.detect_color(is_left)
 
     def takeoff(self):
         self.drone_control.connect()
