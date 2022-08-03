@@ -7,6 +7,7 @@ from xy_display import draw_xy_display
 
 FLOOR_HEIGHT = -45
 DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 40
+MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
 
 ORI_WEB = Camera(51.3, 0, False)
 ORI_PHONE = Camera(66.9, 52, 3, False)
