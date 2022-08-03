@@ -5,7 +5,7 @@ from common import calc_linear_eq, phys_to_left_pix, FLOOR_HEIGHT
 
 class QUADRANGLE:
     def __init__(self, coordinates, left_cam):
-        self.coordinates = coordinates
+        self.coordinates = np.array(coordinates)
         self.m_left, self.b_left = calc_linear_eq(self.coordinates[3], self.coordinates[1])
         self.m_right, self.b_right = calc_linear_eq(self.coordinates[2], self.coordinates[0])
         self.m_upper, self.b_upper = calc_linear_eq(self.coordinates[3], self.coordinates[2])
