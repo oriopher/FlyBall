@@ -24,6 +24,11 @@ class Obstacle:
         self.update_edges((drone.x, drone.y), (drone.dest_coords[0], drone.dest_coords[1]))
 
 
+    @property
+    def coordinates(self):
+        return self.quad.coordinates
+
+
     """   def update_obstacle(self, other_drone: Drone):
         self.start = (other_drone.x, other_drone.y)
         self.end = (other_drone.dest_coords[0], other_drone.dest_coords[1])
@@ -142,7 +147,7 @@ class Obstacle:
         self.quad.coordinates[2] = [d_x, d_y]
         self.quad.coordinates[3] = [a_x, a_y]
         print(self.quad.coordinates)
-        self.quad.calc_edges()
+        self.quad._calc_edges_pix()
 
 
     def delete_obsticle(self):
