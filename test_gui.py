@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 import numpy as np
-from PIL import Image, ImageTk
 import cv2
 import PySimpleGUI as sg
 from borders import Borders
@@ -8,12 +7,10 @@ from gui import Gui
 from color_bounds import ColorBounds
 from image_3d import Image3D
 from loop_status import Status
-from djitellopy import Tello
 from camera import Camera
-from velocity_pot import lin_velocity_with_two_params, track_balloon, seek_middle
 
 ORI_WEB = Camera(51.3, 0, False)
-ORI_PHONE = Camera(66.9, 3, False)
+ORI_PHONE = Camera(66.9, 0, False)
 NIR_PHONE = Camera(67, 2, False)
 MAYA_WEB = Camera(61, 0, True)
 EFRAT_WEB = Camera(61, 2, False)
@@ -28,14 +25,13 @@ FLOOR_HEIGHT = -80
 DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
 
 
-
 def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, window, loop_status: Status, left_cam: Camera) -> bool:
     event, values = window.read(timeout=1)
     key = cv2.waitKey(1) & 0xFF
     str_colors_changed = "color bounds changed"
 
     # the 'q' button is set as the quitting button or if user closes window
-    if event == sg.WIN_CLOSED or event == 'Quit' or key == ord('q'):
+    if event == sg.WIN_CLOSED or event == 'Quit' or event == 'q':
         loop_status.stop_loop()
         return False
 
@@ -44,66 +40,66 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, w
         #distance = int(values[4])
         window['Ok'].update(button_color = ('white','blue'))  
 
-    # the 'v' button is set as the detect color of recognizable_object in the left_cam cam
-    elif event == 'Balloon color (L)' or key == ord('v'):
+    # the 'v' button is set as the detect color of balloon in the left cam
+    elif event == 'Balloon color (L)' or event == 'v':
         lower, upper = image_3d.frame_left.detect_color()
         colors.ball_left.change(lower, upper)
         print(str_colors_changed)
         window['Balloon color (L)'].update(button_color = ('white','blue'))
 
-    # the 'n' button is set as the detect color of recognizable_object in the right_cam cam
-    elif event == 'Balloon color (R)' or key == ord('n'):
+    # the 'n' button is set as the detect color of balloon in the right cam
+    elif event == 'Balloon color (R)' or event == 'n':
         lower, upper = image_3d.frame_right.detect_color()
         colors.ball_right.change(lower, upper)
         print(str_colors_changed)
         window['Balloon color (R)'].update(button_color = ('white','blue')) 
 
-    # the 's' button is set as the detect color of drone in the left_cam cam
-    elif event == 'Drone color (L)' or key == ord('s'):
+    # the 's' button is set as the detect color of drone in the left cam
+    elif event == 'Drone color (L)' or event == 's':
         lower, upper = image_3d.frame_left.detect_color()
         colors.drone_left.change(lower, upper)
         print(str_colors_changed)
         window['Drone color (L)'].update(button_color = ('white','blue'))
 
-    # the 'f' button is set as the detect color of drone in the right_cam cam
-    elif event == 'Drone color (R)' or key == ord('f'):
+    # the 'f' button is set as the detect color of drone in the right cam
+    elif event == 'Drone color (R)' or event == 'f':
         lower, upper = image_3d.frame_right.detect_color()
         colors.drone_right.change(lower, upper)
         print(str_colors_changed)
         window['Drone color (R)'].update(button_color = ('white','blue'))
 
-    # the 'y' button is set as start tracking recognizable_object
-    elif event == 'Start Track' or key == ord('y'):
+    # the 'y' button is set as start tracking balloon
+    elif event == 'Start Track' or event == 'y':
         loop_status.start_track()
         print('start track')
         window['Start Track'].update(button_color = ('white','blue'))
 
     # the 'l' button is set as the landing button
-    elif event == 'Land' or key == ord('l'):
+    elif event == 'Land' or event == 'l':
         loop_status.stop_loop()
         print('Land')
         window['Land'].update(button_color = ('white','blue'))
 
-    # the 'h' button is set as the hitting recognizable_object method
-    elif event == 'Hit' or key == ord('h'):
+    # the 'h' button is set as the hitting balloon method
+    elif event == 'Hit' or event == 'h':
         coords = (image_3d.phys_x_balloon, image_3d.phys_y_balloon, image_3d.phys_z_balloon)
         print('Hit')
         loop_status.hit_mode_on(coords)
 
-    # the 'p' button is set as the save text_colors to file
-    elif event == 'Save Colors' or key == ord('p'):
+    # the 'p' button is set as the save colors to file
+    elif event == 'Save Colors' or event == 'p':
         colors.write_colors(COLORS_FILENAME)
         print("Colors Saved")
         window['Save Colors'].update(button_color = ('white','blue'))
 
-    # the 'k' button is set as the read text_colors from file
-    elif event == 'Load Colors' or key == ord('k'):
+    # the 'k' button is set as the read colors from file
+    elif event == 'Load Colors' or event == 'k':
         colors.read_colors(COLORS_FILENAME)
         print("Colors Loaded")
         window['Load Colors'].update(button_color = ('white','blue'))
 
     # the 'j' button is set as the saving the borders. can save 4 coordinates
-    elif event == '-SetBorders-' or key == ord('j'):
+    elif event == '-SetBorders-' or event == 'j':
         borders.set_image(image_3d, left_cam)
         window['-SetBorders-'].update('Set Borders('+ str(borders.index) + ')')
         print("saved the %.0f coordinate: (%.0f,%.0f,%.0f)" % (borders.index, image_3d.phys_x_balloon, image_3d.phys_y_balloon, image_3d.phys_z_balloon))
@@ -111,8 +107,8 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, w
             borders.write_borders('borders.txt')
             window['-SetBorders-'].update(button_color = ('white','blue'))    
 
-    # the 'r' button is set as the read text_colors from file
-    elif event == 'Load Borders' or key == ord('r'):
+    # the 'r' button is set as the read colors from file
+    elif event == 'Load Borders' or event == 'r':
         borders.read_borders('borders.txt')
         print("middle is ({0:.3f},{1:.3f})".format(borders.x_middle, borders.y_middle))
         window['Load Borders'].update(button_color = ('white','blue'))
@@ -160,29 +156,30 @@ def capture_video(cameras_distance, left: Camera, right: Camera, colors: ColorBo
         text_drone_vel = "v(%.0f,%.0f)" % (image_now.velocity_x_drone, image_now.velocity_y_drone)
 
         # Display the resulting frame
-        left_img = image_now.frame_left.image_to_show("left_cam", text_balloon=text_balloon_coor, text_drone=text_drone_coor, text_color=(150,250,200))
+        left_img = image_now.frame_left.image_to_show("left", text_balloon=text_balloon_coor, text_drone=text_drone_coor, text_color=(150,250,200))
         color = (0, 240, 0)
-        if not borders.in_borders(image_now):
+        if not borders.balloon_in_borders(image_now):
             color = (0, 0, 240)
         left_img = borders.draw_borders(left_img, color)
-        cv2.imshow("left_cam", left_img)
+        #cv2.imshow("left", left_img)
+
         left_img = cv2.resize(left_img, (350, 350))
         image_right = cv2.resize(image_right, (350, 350))
         # displayin in gui
-       #imgbytes_left = cv2.imencode('.png', left_img)[1].tobytes()  # ditto
-        #window.finalize()
-        #window['image_left'].update(data=imgbytes_left)
-        #imgbytes_right = cv2.imencode('.png', image_right)[1].tobytes()  # ditto
-        #window['image_right'].update(data=imgbytes_right)
+        imgbytes_left = cv2.imencode('.png', left_img)[1].tobytes()  # ditto
+        window.finalize()
+        window['image_left'].update(data=imgbytes_left)
+        imgbytes_right = cv2.imencode('.png', image_right)[1].tobytes()  # ditto
+        window['image_right'].update(data=imgbytes_right)
 
-        image_now.frame_right.show_image("right_cam", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
-        # recognizable_object is out of borders. drone is seeking the middle until the recognizable_object is back
-        if borders.set_borders and loop_status.first_seek and (not borders.in_borders(image_now) or not loop_status.start):
+        #image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
+        # balloon is out of borders. drone is seeking the middle until the balloon is back
+        if borders.set_borders and loop_status.first_seek and (not borders.balloon_in_borders(image_now) or not loop_status.start):
             print("seek middle")
             loop_status.stop_track()
             #seek_middle(image_now, tello, borders)
 
-        # recognizable_object returned to the play area, we can continue to play
+        # balloon returned to the play area, we can continue to play
         #if borders.in_borders(image_now) and not loop_status.start_track:
         #   loop_status.out_of_borders = False
         #   loop_status.start_track = True
@@ -210,7 +207,7 @@ if __name__ == "__main__":
 
     colors = ColorBounds()
     borders = Borders()
-    window = sg.Window('FlyBall', Gui.layout, finalize=True, margins=(0,0))
+    window = sg.Window('FlyBall', Gui.layout, finalize=True, margins=(0,0), return_keyboard_events=True)
     continue_test = True
 
     left = NIR_PHONE
