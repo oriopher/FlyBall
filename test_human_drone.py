@@ -1,43 +1,33 @@
 import cv2, numpy as np
 from recognizable_object import RecognizableObject
 from drone import Drone
-from common import MAYA_PHONE_NIR, read_colors, write_colors, display_frames, BORDERS_FILENAME, COLORS_FILENAME, EFRAT_WEB, NIR_PHONE_NIR
+from common import *
 from borders import Borders
 from camera import Camera
 
 
-def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableObject, drone_1: Drone, drone_2: Drone) -> bool:
+def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableObject, drone_1: Drone) -> bool:
     key = cv2.waitKey(1) & 0xFF
     str_colors_changed = "Color bounds changed"
 
     # the 'v' button is set as the detect color of recognizable_object in the left_cam cam
     if key == ord('v'):
-        balloon.frame_left.detect_color()
+        balloon.detect_color(True)
         print(str_colors_changed)
 
     # the 'n' button is set as the detect color of recognizable_object in the right_cam cam
     elif key == ord('n'):
-        balloon.frame_right.detect_color()
+        balloon.detect_color(False)
         print(str_colors_changed)
 
     # the 's' button is set as the detect color of drone_1 in the left_cam cam
     elif key == ord('s'):
-        drone_1.frame_left.detect_color()
+        drone_1.detect_color(True)
         print(str_colors_changed)
 
     # the 'f' button is set as the detect color of drone_1 in the right_cam cam
     elif key == ord('f'):
-        drone_1.frame_right.detect_color()
-        print(str_colors_changed)
-
-    # the 'w' button is set as the detect color of drone_2 in the right_cam cam
-    elif key == ord('w'):
-        drone_2.frame_left.detect_color()
-        print(str_colors_changed)
-
-    # the 'e' button is set as the detect color of drone_2 in the right_cam cam
-    elif key == ord('e'):
-        drone_2.frame_right.detect_color()
+        drone_1.detect_color(False)
         print(str_colors_changed)
 
     elif key == ord('t'):
@@ -71,33 +61,28 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
         borders.read_borders(BORDERS_FILENAME)
         drone_1.set_middle((borders.x_middle, borders.y_middle))
 
-    # the 'a' button is set to abort hitting state back to seek middle
-    elif key == ord('a'):
-        drone_1.stop_hit()
-
     elif key == ord('z'):
         drone_1.testing = 1
 
     return True
 
 
-def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, cameras_distance, left: Camera, right: Camera):
+def capture_video(drone_1: Drone, balloon: RecognizableObject, cameras_distance, left: Camera, right: Camera):
 
     continue_loop = True
 
     borders = Borders()
-    drones = [drone_1, drone_2]
-    recognizable_objects = [balloon] + drones
+    recognizable_objects = [balloon, drone_1.recognizable_object]
     read_colors(COLORS_FILENAME, recognizable_objects)
     borders.read_borders(BORDERS_FILENAME)
 
     if borders.set_borders:
         drone_1.set_middle((borders.x_middle_1, borders.y_middle))
-        drone_2.set_middle((borders.x_middle_2, borders.y_middle))
 
     drone_1.active = True
     
     while continue_loop:
+        state = drone_1.state
         # Capture the video frame by frame
         if not left.capture():
             continue
@@ -110,23 +95,19 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
             
         display_frames(recognizable_objects, left, right, borders)
 
-        for i, drone in enumerate(drones):
-            # State Machine
-            state_kwargs = {'drone': drones[i], 'other drone': drones[i-1], 'balloon': balloon, 'borders': borders}
-            drone.state.run(**state_kwargs)
-            transition = drone.state.to_transition(**state_kwargs)
-            if transition:
-                drone.state.cleanup(transition, **state_kwargs)
-                drone.state = drone.state.next(transition)
-                drone.state.setup(**state_kwargs)
+        # State Machine
+        state.run(drone_1, balloon, borders)
+        transition = state.to_transition(drone_1, balloon, borders)
+        if transition:
+            state.cleanup(transition, drone_1, balloon, borders)
+            state = drone_1.state = state.next(transition)
+            print(state)
+            state.setup(drone_1, balloon, borders)
 
-        continue_loop = interactive_loop(borders, left, balloon, drone_1, drone_2)
+        continue_loop = interactive_loop(borders, left, balloon, drone_1)
     
     if drone_1.tookoff:
         drone_1.land()
-
-    if drone_2.tookoff:
-        drone_2.land()
 
     # After the loop release the cap object
     left.release()
@@ -136,12 +117,14 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
 
 
 def main():
-    left_cam = MAYA_PHONE_NIR
-    right_cam = NIR_PHONE_NIR
+    left_cam = C920_NIR_2
+    right_cam = C920_NIR_1
 
-    distance = 72.7
-    capture_video(Drone(1, (0, 191, 255), 7, iface_ip="192.168.10.2"), Drone(2, (38, 38, 200), 7, iface_ip="192.168.10.1"), RecognizableObject((255, 54, 89), 11.3, "balloon"), distance,
-                  left_cam, right_cam)
+    drone_1 = Drone(1, (0, 191, 255), 7, iface_ip="192.168.10.2")
+    balloon = RecognizableObject((255, 54, 89), 11.3, "balloon")
+
+    distance = 111.9
+    capture_video(drone_1, balloon, distance, left_cam, right_cam)
 
 
 if __name__ == "__main__":

@@ -1,31 +1,11 @@
-# from borders import Borders
-from camera import Camera
 import numpy as np
 import cv2
 import os
+from consts import *
 from xy_display import draw_xy_display
 
-FLOOR_HEIGHT = -45
-DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 40
-MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
 
-ORI_WEB = Camera(51.3, 0, False)
-ORI_PHONE = Camera(66.9, 52, 3, False)
-NIR_PHONE = Camera(65, 0, False)
-MAYA_WEB = Camera(61, 0, True)
-EFRAT_WEB = Camera(61, 61, 2, False)
-EFRAT_PHONE = Camera(64, 3, False)
-MAYA_PHONE_NIR = Camera(67, 55, 2, False)
-
-NIR_PHONE_NIR = Camera(67, 52, 0, False)
-EFRAT_PHONE_NIR = Camera(68, 77, 2, False)
-
-COLORS_FILENAME = "color_bounds.txt"
-BORDERS_FILENAME = "borders.txt"
-
-
-def phys_to_left_pix_img(x_cm, y_cm, z_cm, image,
-                         cam: Camera):  # image is a direct image from the camera and not image3d
+def phys_to_left_pix_img(x_cm, y_cm, z_cm, image, cam):  # image is a direct image from the camera and not image3d
     x_n_pix = image.shape[1]
     z_n_pix = image.shape[0]
 
@@ -40,21 +20,22 @@ def phys_to_left_pix(x_cm, y_cm, z_cm, x_n_pix, z_n_pix, cam_fov_horz, cam_fov_v
     return x_pix, z_pix
 
 
-def image_with_circle(cam: Camera, show_img, coords_phys, rad_phys, color=(240, 240, 240), thickness=3):
+def image_with_circle(cam, show_img, coords_phys, rad_phys, color=(240, 240, 240), thickness=3):
     if not np.any(coords_phys):
         return show_img
     x_phys, y_phys, z_phys = coords_phys
     radius = phys_to_left_pix_img(x_phys + rad_phys, y_phys, z_phys, show_img, cam)[0] - phys_to_left_pix_img(x_phys, y_phys, z_phys, show_img, cam)[0]
     coordinates = phys_to_left_pix_img(x_phys, y_phys, z_phys, show_img, cam)
-    show_img = cv2.circle(show_img, coordinates, radius, color, thickness=thickness)
+    if radius > 0:
+        show_img = cv2.circle(show_img, coordinates, radius, color, thickness=thickness)
 
     return show_img
 
 
-def reachability(distance, offset=0.4):
+def reachability(distance, offset=0.6):
     # distance in cm, only one axis
     plot = np.array([[0, 0.95],
-                     [10, 1.35],
+                     [2, 2],
                      [30, 2.76],
                      [50, 2.76],
                      [70, 2.93],
@@ -104,14 +85,15 @@ def image_to_show(show_img, frames, detection_sign=True, texts=None, text_color=
     return show_img
 
 
-def display_frames(recognizable_objects, left_cam, right_cam, borders):
+def display_frames(balloon, drone_1, drone_2, left_cam, right_cam, borders):
+    recognizable_objects = [balloon, drone_1.recognizable_object, drone_2.recognizable_object]
     texts_coor = ["c({:.0f},{:.0f},{:.0f})".format(recognizable_object.x, recognizable_object.y, recognizable_object.z)
                   for recognizable_object in recognizable_objects]
     texts_vel = [
         "v({:.0f},{:.0f},{:.0f})".format(recognizable_object.vx, recognizable_object.vy, recognizable_object.vz)
         for recognizable_object in recognizable_objects]
 
-    left_img = image_to_show(left_cam.last_capture,
+    left_img = image_to_show(left_cam.last_capture.image,
                              [recognizable_object.frame_left for recognizable_object in recognizable_objects],
                              True, texts_coor, (150, 250, 200))
 
@@ -123,7 +105,14 @@ def display_frames(recognizable_objects, left_cam, right_cam, borders):
     draw_xy_display(borders, recognizable_objects)
 
     cv2.imshow("left_cam", left_img)
-    right_img = image_to_show(right_cam.last_capture,
+    right_img = image_to_show(right_cam.last_capture.image,
                               [recognizable_object.frame_right for recognizable_object in recognizable_objects], True,
                               texts_vel, (240, 150, 240))
     cv2.imshow("right_cam", right_img)
+    draw_xy_display(borders, recognizable_objects)
+
+
+def calc_linear_eq(coor1, coor2):
+    m = (coor2[1] - coor1[1]) / (coor2[0] - coor1[0])
+    b = coor2[1] - m * coor2[0]
+    return m, b
