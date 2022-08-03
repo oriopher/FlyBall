@@ -77,3 +77,10 @@ class QUADRANGLE:
                                                                                         FLOOR_HEIGHT - 10, self.x_n_pix,
                                                                                         self.z_n_pix, self.fov_horz,
                                                                                         self.fov_vert)
+
+    
+    def cross_quadrangle(point_a, point_b):
+        # Checks if the line from a to b crosses the quadrangle.
+        return True
+
+
