@@ -13,7 +13,7 @@ Segment_2 = Ker.Segment_2
 Aos2 = CGALPY.Aos2
 Arrangement_2 = Aos2.Arrangement_2
 TPoint = Aos2.Traits.Point_2
-Curve_2 = Aos2.Traits.Curve_2
+Curve_2 = Aos2.Traits.X_monotone_curve_2
 
 Vertex = Arrangement_2.Vertex
 Halfedge = Arrangement_2.Halfedge
@@ -72,8 +72,8 @@ class Quadrangle:
     def cross_quadrangle(self, point_a, point_b):
         res = []
         points = [self._point_to_cgal(point) for point in [point_a, point_b]]
-        segment = Segment_2(*points)
-        Aos2.zone(self._arrangement, Curve_2(segment), res, self._point_location)
+        curve = Curve_2(*points)
+        Aos2.zone(self._arrangement, curve, res, self._point_location)
 
         f = Face()
 
@@ -83,8 +83,7 @@ class Quadrangle:
             elif type(obj) is Halfedge:
                 return True
             elif type(obj) is Face:
-                obj.get_face(f)
-                if f.is_unbounded():
+                if obj.is_unbounded():
                     continue
                 else:
                     return True
@@ -114,13 +113,12 @@ class Quadrangle:
 
     def _generate_arrangement(self):
         points = [self._point_to_cgal(point) for point in self.coordinates]
-        segments = []
+        curves = []
         for i, cor in enumerate(self.CORNERS):
             cor_next = self.CORNERS[(i + 1) % len(self.CORNERS)]
-            segments.append(Segment_2(points[cor], points[cor_next]))
-        print(len(segments))
+            curves.append(Curve_2(points[cor], points[cor_next]))
         arr = Arrangement_2()
-        Aos2.insert(arr, [Curve_2(segment) for segment in segments])
+        Aos2.insert(arr, curves)
         return arr
 
     @staticmethod
