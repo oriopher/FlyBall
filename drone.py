@@ -28,6 +28,7 @@ class Drone:
         self.drone_search_pred_time = 0
         self.testing = 0
         self.active = False
+        self.default_height = DRONE_DEFAULT_HEIGHT
 
     @property
     def x(self):
@@ -101,13 +102,16 @@ class Drone:
         return np.mean(self.old_dest_coords, axis=0)
 
     def track_3d(self, dest_x, dest_y, dest_z, obstacle=None):
-        self.dest_coords = self.drone_control.track_3d(dest_x, dest_y, dest_z, self.recognizable_object, self.active, obstacle)
+        if not self.active:
+            dest_x, dest_y = obstacle.bypass_obstacle_coordinates(dest_x, dest_y)
+        self.drone_control.track_3d(dest_x, dest_y, dest_z, self.recognizable_object)
+        self.dest_coords = (dest_x, dest_y, dest_z)
 
     def track_balloon(self, balloon, obstacle=None):
         self.track_2d(balloon.x, balloon.y, obstacle)
 
     def track_2d(self, dest_x, dest_y, obstacle=None):
-        self.track_3d(dest_x, dest_y, DRONE_DEFAULT_HEIGHT, obstacle)
+        self.track_3d(dest_x, dest_y, self.default_height, obstacle)
 
     def seek_middle(self, obstacle=None):
         self.track_2d(*self.middle, obstacle)
@@ -118,9 +122,10 @@ class Drone:
 
     def track_descending(self, obstacle=None):
         dest_x, dest_y = self.middle
-        dest_x, dest_y = (self.drone_control.track_descending(dest_x, dest_y,
-                                                              self.recognizable_object, self.active, obstacle))
-        self.dest_coords = (dest_x, dest_y, DRONE_DEFAULT_HEIGHT)
+        if not self.active:
+            dest_x, dest_y = obstacle.bypass_obstacle_coordinates(dest_x, dest_y)
+        self.drone_control.track_descending(dest_x, dest_y, self.recognizable_object)
+        self.dest_coords = (dest_x, dest_y, self.default_height)
 
     def stop(self):
         self.drone_control.stop()
