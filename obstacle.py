@@ -7,7 +7,7 @@ from scipy.spatial import distance_matrix
 
 from common import calc_linear_eq
 from drone import Drone
-from quadrangle import QUADRANGLE
+from quadrangle import Quadrangle
 import numpy as np
 import cv2
 
@@ -15,10 +15,10 @@ MARGINS = 25
 
 
 class Obstacle:
-    def __init__(self, drone, left_cam):
+    def __init__(self, drone, left_cam, calc_pix=True):
         self.start = (0, 0)
         self.end = (0, 0)
-        self.quad = QUADRANGLE(self.calc_corners(drone.x, drone.y, drone.dest_coords[0], drone.dest_coords[1]), left_cam)
+        self.quad = Quadrangle(self.calc_corners(drone.x, drone.y, drone.dest_coords[0], drone.dest_coords[1]), left_cam, calc_pix)
         self.m_track = 0
         self.b_track = 0
         self.update_edges()
@@ -131,10 +131,10 @@ class Obstacle:
         if self.passive == recognizable_object:
             if self.inside_obstacle():
                 color = color_in
-            show_img = cv2.line(show_img, self.quad.pixels_coordinates[0], self.quad.pixels_coordinates[1], color, 3)
-            show_img = cv2.line(show_img, self.quad.pixels_coordinates[3], self.quad.pixels_coordinates[2], color, 3)
-            show_img = cv2.line(show_img, self.quad.pixels_coordinates[3], self.quad.pixels_coordinates[1], color, 3)
-            show_img = cv2.line(show_img, self.quad.pixels_coordinates[0], self.quad.pixels_coordinates[2], color, 3)
+            show_img = cv2.line(show_img, self.quad._pixels_coordinates[0], self.quad._pixels_coordinates[1], color, 3)
+            show_img = cv2.line(show_img, self.quad._pixels_coordinates[3], self.quad._pixels_coordinates[2], color, 3)
+            show_img = cv2.line(show_img, self.quad._pixels_coordinates[3], self.quad._pixels_coordinates[1], color, 3)
+            show_img = cv2.line(show_img, self.quad._pixels_coordinates[0], self.quad._pixels_coordinates[2], color, 3)
 
         return show_img
 

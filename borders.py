@@ -1,7 +1,7 @@
 import os
 from camera import Camera
 from recognizable_object import RecognizableObject
-from quadrangle import QUADRANGLE
+from quadrangle import Quadrangle
 import numpy as np
 
 
@@ -52,7 +52,7 @@ class Borders:
 
     def calc_borders(self, left_cam):
         # self.sort_coordinates()
-        self.quad = QUADRANGLE(self.coordinates, left_cam)
+        self.quad = Quadrangle(self.coordinates, left_cam)
         self._calc_middle()
 
     # calculate the middle coordinates
