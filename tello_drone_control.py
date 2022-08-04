@@ -26,10 +26,7 @@ class TelloDroneControl(DroneControl):
     def land(self):
         self.tello.land()
 
-    def track_3d(self, dest_x: float, dest_y: float, dest_z: float, recognizable_object, is_active, obstacle):
-        if not is_active:
-            dest_x, dest_y = obstacle.bypass_to_destination((recognizable_object.x, recognizable_object.y),
-                                                            (dest_x, dest_y))
+    def track_3d(self, dest_x: float, dest_y: float, dest_z: float, recognizable_object):
         x_cm_rel = dest_x - recognizable_object.x
         y_cm_rel = dest_y - recognizable_object.y
         z_cm_rel = dest_z - recognizable_object.z
@@ -37,7 +34,6 @@ class TelloDroneControl(DroneControl):
         for_back = self.velocity_control_function(y_cm_rel, recognizable_object.vy, 'y')
         up_down = self.velocity_control_function(z_cm_rel, recognizable_object.vz, 'z')
         self.tello.send_rc_control(left_right, for_back, up_down, 0)
-        return dest_x, dest_y, dest_z
 
     def track_hitting(self, dest_x, dest_y, dest_z, recognizable_object):
         rx = dest_x - recognizable_object.x
@@ -56,18 +52,13 @@ class TelloDroneControl(DroneControl):
         left_right, for_back, up_down = -vx, -vy, vz
         self.tello.send_rc_control(left_right, for_back, up_down, 0)
 
-    def track_descending(self, dest_x, dest_y, recognizable_object, is_active, obstacle):
-        if not is_active:
-            dest_x, dest_y = obstacle.bypass_to_destination((recognizable_object.x, recognizable_object.y),
-                                                            (dest_x, dest_y))
-
+    def track_descending(self, dest_x, dest_y, recognizable_object):
         x_cm_rel = dest_x - recognizable_object.x
         y_cm_rel = dest_y - recognizable_object.y
         left_right = self.velocity_control_function(x_cm_rel, recognizable_object.vx, 'x')
         for_back = self.velocity_control_function(y_cm_rel, recognizable_object.vy, 'y')
 
         self.tello.send_rc_control(left_right, for_back, -100, 0)
-        return dest_x, dest_y
 
     def stop(self):
         self.tello.send_rc_control(0, 0, 0, 0)
