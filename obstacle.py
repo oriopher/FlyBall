@@ -15,10 +15,10 @@ MARGINS = 25
 
 
 class Obstacle:
-    def __init__(self, drone, left_cam, calc_pix=True):
+    def __init__(self, drone, left_cam):
         self.start = (0, 0)
         self.end = (0, 0)
-        self.quad = Quadrangle(self.calc_corners(drone.x, drone.y, drone.dest_coords[0], drone.dest_coords[1]), left_cam, calc_pix)
+        self.quad = Quadrangle(self.calc_corners(drone.x, drone.y, drone.dest_coords[0], drone.dest_coords[1]), left_cam)
         self.m_track = 0
         self.b_track = 0
         self.update_edges()

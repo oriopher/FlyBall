@@ -37,12 +37,12 @@ class Quadrangle:
 
     CORNERS = [0, 1, 3, 2]
 
-    def __init__(self, coordinates, left_cam, calc_pix=True):
+    def __init__(self, coordinates, left_cam):
         self.coordinates = np.array(coordinates)
         self._arrangement = self._generate_arrangement()
         self._point_location = Arr_point_location(self._arrangement)
         self._pixels_coordinates = np.zeros((4, 2), dtype=int)
-        if calc_pix:
+        if left_cam:
             self._calc_edges_pix(left_cam)
 
     def __str__(self):
