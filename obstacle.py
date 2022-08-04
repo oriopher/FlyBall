@@ -140,7 +140,7 @@ class Obstacle:
 
     def bypass_obstacle_coordinates(self, source, target):
 
-        obstacle_distances = self._get_corners_rechable_distances()
+        obstacle_distances = self._get_corners_reachable_distances()
         target_vertices = self._get_reachable_distances(source, np.vstack([self.coordinates, target]))
         reachable_from_source_distances = np.append(0, target_vertices)
         reachable_to_target_distances = np.append(
@@ -157,16 +157,14 @@ class Obstacle:
 
     def _get_reachable_distances(self, point, vertices):
         distances = np.linalg.norm(vertices - point)
-        reachable = 1 - np.apply_along_axis(lambda point2: self.cross_quadrangle(point, point2), vertices, 1)
+        reachable = 1 - np.apply_along_axis(lambda point2: self.quad.cross_quadrangle(point, point2), vertices, 1)
         return reachable * distances
 
-    def _get_corners_rechable_distances(self):
+    def _get_corners_reachable_distances(self):
         obstacle_distances = distance_matrix(self.coordinates, self.coordinates)
-        for i in range(len(obstacle_distances)):
-            for j in range(i + 1, len(obstacle_distances) - i):
-                if self.cross_quadrangle(obstacle_distances[i][j], obstacle_distances[j][i]):
-                    obstacle_distances[i][j] = 0
-                    obstacle_distances[j][i] = 0
+        for i,j in [(1,3), (2,4)]:
+            obstacle_distances[i][j] = 0
+            obstacle_distances[j][i] = 0
         return obstacle_distances
 
     @staticmethod
