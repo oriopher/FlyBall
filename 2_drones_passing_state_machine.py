@@ -1,24 +1,25 @@
 from datetime import datetime
 from prediction import NumericBallPredictor
 import numpy as np
-from common import reachability,DRONE_DEFAULT_HEIGHT, FLOOR_HEIGHT
+from common import reachability, FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
 
 MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
+
 
 class State:
     def next(self, state=1):
         raise NotImplemented
 
-    def to_transition(self, *args, **kwargs):
+    def to_transition(self, drone, other_drone, balloon, borders):
         raise NotImplemented
 
-    def run(self, *args, **kwargs):
+    def run(self, drone, other_drone, balloon, borders):
         raise NotImplemented
 
-    def setup(self, *args, **kwargs):
+    def setup(self, drone, other_drone, balloon, borders):
         pass
 
-    def cleanup(self, state, *args, **kwargs):
+    def cleanup(self, transition, drone, other_drone, balloon, borders):
         pass
 
 
@@ -29,10 +30,10 @@ class ON_GROUND(State):
     def next(self, state=1):
         return HOVERING()
 
-    def to_transition(self, *args, **kwargs):
-        return kwargs['drone'].tookoff
+    def to_transition(self, drone, other_drone, balloon, borders):
+        return drone.tookoff
 
-    def run(self, *args, **kwargs):
+    def run(self, drone, other_drone, balloon, borders):
         return
 
 
@@ -44,10 +45,10 @@ class HOVERING(State):
         print("Waiting")
         return WAITING()
 
-    def to_transition(self, *args, **kwargs):
-        return kwargs['drone'].start
+    def to_transition(self, drone, other_drone, balloon, borders):
+        return drone.start
 
-    def run(self, **kwargs):
+    def run(self, drone, other_drone, balloon, borders):
         return
 
 
@@ -59,24 +60,18 @@ class WAITING(State):
         print("Stand By")
         return STANDING_BY()
 
-    def to_transition(self, *args, **kwargs):
-        drone = kwargs['drone']
+    def to_transition(self, drone, other_drone, balloon, borders):
         if drone.testing:
             drone.testing = 0
             return 1
         return 0
 
-    def run(self, *args, **kwargs):
-        borders = kwargs['borders']
-        drone = kwargs['drone']
-
+    def run(self, drone, other_drone, balloon, borders):
         if borders.set_borders:
-            x_dest, y_dest = drone.middle
             drone.seek_middle()
         else:
             x_dest, y_dest = drone.x_0, drone.y_0
             drone.track_2d(x_dest, y_dest)
-        z_dest = DRONE_DEFAULT_HEIGHT
 
 
 class STANDING_BY(State):
@@ -88,24 +83,16 @@ class STANDING_BY(State):
             print("Search Prediction")
         else:
             print("Prepare and Avoid")
-        return SEARCHING_PREDICTION() if state == 1 else PREPARE_AND_AVOID()
+        return SEARCHING_PREDICTION() if state == 1 else PREPARE_AND_AVOID
 
-    def to_transition(self, *args, **kwargs):
-        borders = kwargs['borders']
-        balloon = kwargs['balloon']
-        drone = kwargs['drone']
-
+    def to_transition(self, drone, other_drone, balloon, borders):
         if borders.in_borders(balloon):
             return 1 if drone.active else 2
         else:
             return 0
 
-    def run(self, *args, **kwargs):
-        borders = kwargs['borders']
-        drone = kwargs['drone']
-
+    def run(self, drone, other_drone, balloon, borders):
         if borders.set_borders:
-            x_dest, y_dest = drone.middle
             drone.seek_middle()
         else:
             x_dest, y_dest = drone.x_0, drone.y_0
@@ -126,17 +113,14 @@ class SEARCHING_PREDICTION(State):
             print("Stand By")
         return SEARCHING() if state == 1 else STANDING_BY()
 
-    def setup(self, *args, **kwargs):
-        drone = kwargs['drone']
+    def setup(self, drone, other_drone, balloon, borders):
         drone.search_pred_start()
 
-    def to_transition(self, *args, **kwargs):
-        balloon = kwargs['balloon']
-        drone = kwargs['drone']
-        borders = kwargs['borders']
-
+    def to_transition(self, drone, other_drone, balloon, borders):
         if np.sqrt(balloon.vx ** 2 + balloon.vy ** 2) <= self.XY_VEL_BOUND \
                 and balloon.z >= drone.z:
+            return 1
+        if balloon.vz <= 0 and balloon.z >= drone.z:
             return 1
         if balloon.vz <= 0 and balloon.z <= drone.z:
             return 2
@@ -144,10 +128,7 @@ class SEARCHING_PREDICTION(State):
             return 2
         return 0
 
-    def run(self, *args, **kwargs):
-        drone = kwargs['drone']
-        balloon = kwargs['balloon']
-
+    def run(self, drone, other_drone, balloon, borders):
         pred = NumericBallPredictor(balloon)
         pred_time, pred_coords = pred.get_optimal_hitting_point(z_bound=drone.z / 100,
                                                                 xy_vel_bound=self.XY_VEL_BOUND / 100)
@@ -156,9 +137,6 @@ class SEARCHING_PREDICTION(State):
             x_dest, y_dest, z_dest = drone.new_pred(pred_coords)
         else:
             x_dest, y_dest, z_dest = drone.dest_coords
-        # x_dest = recognizable_object.get_phys_balloon(0)
-        # y_dest = recognizable_object.get_phys_balloon(1)
-        # z_dest = Z_HIT
 
         x_to_target = abs(x_dest - drone.drone_search_pred_coords[0])
         y_to_target = abs(y_dest - drone.drone_search_pred_coords[1])
@@ -188,20 +166,18 @@ class SEARCHING(State):
             print("Stand By")
         return HITTING() if state == 1 else STANDING_BY()
 
-    def to_transition(self, *args, **kwargs):
+    def to_transition(self, drone, other_drone, balloon, borders):
         UPPER_LIMIT = 110
         LOWER_LIMIT = 20
         XY_LIMIT = 30
         VEL_LIMIT = 30
 
-        drone = kwargs['drone']
-        balloon = kwargs['balloon']
-        borders = kwargs['borders']
-
         x_rel = balloon.x - drone.x
         y_rel = balloon.y - drone.y
         z_rel = balloon.z - drone.z
 
+        if z_rel < UPPER_LIMIT and balloon.vz <= 0:
+            return 1
         if abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT and LOWER_LIMIT < z_rel < UPPER_LIMIT \
                 and abs(drone.vx) < VEL_LIMIT and abs(drone.vy) < VEL_LIMIT \
                 and balloon.vz <= 0:
@@ -212,10 +188,10 @@ class SEARCHING(State):
             return 2
         return 0
 
-    def run(self, *args, **kwargs):
-        drone = kwargs['drone']
-        balloon = kwargs['balloon']
-        x_dest, y_dest, z_dest = balloon.x, balloon.y, balloon.z
+    def run(self, drone, other_drone, balloon, borders):
+        pred = NumericBallPredictor(balloon)
+        x_dest, y_dest, z_dest = pred.get_prediction(reachability(distance=0, offset=0))
+        z_dest = drone.z
         drone.track_3d(x_dest, y_dest, z_dest)
 
 
@@ -226,27 +202,26 @@ class HITTING(State):
     def next(self, state=1):
         return DESCENDING()
 
-    def setup(self, *args, **kwargs):
-        drone = kwargs['drone']
+    def setup(self, drone, other_drone, balloon, borders):
         drone.start_hit()
+    
+    def cleanup(self, transition, drone, other_drone, balloon, borders):
+        drone.active = False
+        other_drone.active = True
 
-    def to_transition(self, *args, **kwargs):
+    def to_transition(self, drone, other_drone, balloon, borders):
         Z_LIMIT = 15
-        XY_LIMIT = 40
+        # XY_LIMIT = 40
 
-        drone = kwargs['drone']
-        balloon = kwargs['balloon']
         x_rel = balloon.x - drone.x
         y_rel = balloon.y - drone.y
         z_rel = balloon.z - drone.z
 
-        transition = not (abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT) or (z_rel < Z_LIMIT)
+        # transition = not (abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT) or (z_rel < Z_LIMIT)
+        transition = z_rel < Z_LIMIT
         return transition
 
-    def run(self, *args, **kwargs):
-        drone = kwargs['drone']
-        balloon = kwargs['balloon']
-
+    def run(self, drone, other_drone, balloon, borders):
         time_since_hitting = (datetime.now() - drone.start_hit_timer).total_seconds()
         pred = NumericBallPredictor(balloon)
         x_dest, y_dest, z_dest = pred.get_prediction(reachability(0, 0) - time_since_hitting)
@@ -258,37 +233,30 @@ class DESCENDING(State):
     def __str__(self):
         return "Descending"
 
-    def setup(self, *args, **kwargs):
-        drone, other_drone = kwargs['drone'], kwargs['other_drone']
-        drone.active = False
-        other_drone.active = True
-
     def next(self, state=1):
-        return PREPARE_AND_AVOID()
+        return WAITING()
 
-    def to_transition(self, *args, **kwargs):
+    def to_transition(self, drone, other_drone, balloon, borders):
         Z_OFFSET = 15
-        drone = kwargs['drone']
         return drone.z < DRONE_DEFAULT_HEIGHT + Z_OFFSET
 
-    def run(self, *args, **kwargs):
-        drone = kwargs['drone']
-        left_right, for_back = 0, 0
-        up_down = -100
-        drone.wait_rc_control()
-        drone.send_rc_control(left_right, for_back, up_down, 0)
+    def run(self, drone, other_drone, balloon, borders):
+        drone.track_descending()
+
 
 class PREPARE_AND_AVOID(State):
     def __str__(self):
-        return "Hovering"
+        return "Descending"
+
+    def setup(self, drone, other_drone, balloon, borders):
+        drone.active = False
 
     def next(self, state=1):
-        print("Waiting")
         return WAITING()
 
-    def to_transition(self, *args, **kwargs):
-        return kwargs['drone'].start
+    def to_transition(self, drone, other_drone, balloon, borders):
+        Z_OFFSET = 15
+        return drone.z < DRONE_DEFAULT_HEIGHT + Z_OFFSET
 
-    def run(self, **kwargs):
-        return
-
+    def run(self, drone, other_drone, balloon, borders):
+        drone.track_descending()
