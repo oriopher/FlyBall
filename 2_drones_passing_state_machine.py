@@ -248,15 +248,15 @@ class PREPARE_AND_AVOID(State):
     def __str__(self):
         return "Descending"
 
-    def setup(self, drone, other_drone, balloon, borders):
-        drone.active = False
-
     def next(self, state=1):
         return WAITING()
 
     def to_transition(self, drone, other_drone, balloon, borders):
-        Z_OFFSET = 15
-        return drone.z < DRONE_DEFAULT_HEIGHT + Z_OFFSET
+        if (other_drone.state == DESCENDING()\
+            or other_drone.state == PREPARE_AND_AVOID): # and balloon got hit
+            return 1 
+
+        return 0
 
     def run(self, drone, other_drone, balloon, borders):
         drone.track_descending()
