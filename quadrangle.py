@@ -38,7 +38,7 @@ class Quadrangle:
     CORNERS = [0, 1, 3, 2]
 
     def __init__(self, coordinates, left_cam):
-        self.coordinates = np.array(coordinates)
+        self.coordinates = self._order_points(np.array(coordinates))
         self._arrangement = self._generate_arrangement()
         self._point_location = Arr_point_location(self._arrangement)
         self._pixels_coordinates = np.zeros((4, 2), dtype=int)
@@ -53,7 +53,7 @@ class Quadrangle:
         return "%.2f,%.2f\n" % (coordinate[0], coordinate[1])
 
     def coordinate_in_quadrangle(self, x, y):
-        point = Point2(FT(x), FT(y))
+        point = self._point_to_cgal((x, y))
         query = TPoint(point.x(), point.y())
         obj = self._point_location.locate(query)
         v = Vertex()
@@ -71,7 +71,7 @@ class Quadrangle:
 
     def cross_quadrangle(self, point_a, point_b):
         res = []
-        points = [Point2(FT(point[0]), FT(point[1])) for  point in [point_a, point_b]]
+        points = [self._point_to_cgal(point) for point in [point_a, point_b]]
         segment = Segment_2(*points)
         Aos2.zone(self._arrangement, Curve_2(segment), res, self._point_location)
 
@@ -90,6 +90,16 @@ class Quadrangle:
                     return True
         return False
 
+    # draws quadrangle on frame
+    def draw_quadrangle(self, show_img, color=(240, 0, 240)):
+        for i, cor in enumerate(self.CORNERS):
+            cor_next = self.CORNERS[(i + 1) % len(self.CORNERS)]
+            show_img = cv2.line(show_img, (self._pixels_coordinates[cor][0], self._pixels_coordinates[cor][1]),
+                                (self._pixels_coordinates[cor_next][0], self._pixels_coordinates[cor_next][1]), color,
+                                thickness=2)
+
+        return show_img
+
     def _calc_edges_pix(self, left_cam):
         # calculate the coordinates pixels location on frame
         for i in range(len(self._pixels_coordinates)):
@@ -102,28 +112,23 @@ class Quadrangle:
                                                                                                   left_cam.fov_horz,
                                                                                                   left_cam.fov_vert)
 
-    # draws quadrangle on frame
-    def draw_quadrangle(self, show_img, color=(240, 0, 240)):
-        for i, cor in enumerate(self.CORNERS):
-            cor_next = self.CORNERS[(i + 1) % len(self.CORNERS)]
-            show_img = cv2.line(show_img, (self._pixels_coordinates[cor][0], self._pixels_coordinates[cor][1]),
-                                (self._pixels_coordinates[cor_next][0], self._pixels_coordinates[cor_next][1]), color,
-                                thickness=2)
-
-        return show_img
-
     def _generate_arrangement(self):
-        points = [Point2(FT(coord[0]), FT(coord[2])) for coord in self.coordinates]
+        points = [self._point_to_cgal(point) for point in self.coordinates]
         segments = []
         for i, cor in enumerate(self.CORNERS):
             cor_next = self.CORNERS[(i + 1) % len(self.CORNERS)]
             segments.append(Segment_2(points[cor], points[cor_next]))
+        print(len(segments))
         arr = Arrangement_2()
         Aos2.insert(arr, [Curve_2(segment) for segment in segments])
         return arr
 
     @staticmethod
-    def order_points(coordinates):
+    def _point_to_cgal(point):
+        return Point2(*[FT(float(coord)) for coord in point])
+
+    @staticmethod
+    def _order_points(coordinates):
         """
         order the inputted coordinate in the shape presented at the classes docstring
         code copied from: https://pyimagesearch.com/2016/03/21/ordering-coordinates-clockwise-with-python-and-opencv/
@@ -140,14 +145,14 @@ class Quadrangle:
         # y-coordinates so we can grab the top-left and bottom-left
         # points, respectively
         leftMost = leftMost[np.argsort(leftMost[:, 1]), :]
-        (tl, bl) = leftMost
+        bl, tl = leftMost
         # now that we have the top-left coordinate, use it as an
         # anchor to calculate the Euclidean distance between the
         # top-left and right-most points; by the Pythagorean
         # theorem, the point with the largest distance will be
         # our bottom-right point
         D = dist.cdist(tl[np.newaxis], rightMost, "euclidean")[0]
-        (br, tr) = rightMost[np.argsort(D)[::-1], :]
+        br, tr = rightMost[np.argsort(D)[::-1], :]
         # return the coordinates in top-left, top-right,
         # bottom-right, and bottom-left order
         return np.array([br, bl, tr, tl])

@@ -162,7 +162,7 @@ class Obstacle:
 
     def _get_corners_reachable_distances(self):
         obstacle_distances = distance_matrix(self.coordinates, self.coordinates)
-        for i,j in [(1,3), (2,4)]:
+        for i, j in [(1, 3), (2, 4)]:
             obstacle_distances[i][j] = 0
             obstacle_distances[j][i] = 0
         return obstacle_distances
