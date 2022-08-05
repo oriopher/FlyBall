@@ -14,8 +14,8 @@ EXIT_DIST = 10
 
 class Obstacle:
     def __init__(self, drone, left_cam):
-        self.start = (0, 0)
-        self.end = (0, 0)
+        self.start = (drone.x, drone.y)
+        self.end = (drone.dest_coords[0], drone.dest_coords[1])
         self.quad = Quadrangle(self.calc_corners(), left_cam)
 
     @property
@@ -48,7 +48,6 @@ class Obstacle:
             x_middle_upper, y_middle_upper = self._calc_coor_above(m_track, b_track, x_middle, y_middle, MARGINS)
 
         return x_middle_low, y_middle_low, x_middle_upper, y_middle_upper
-
 
     # finds the vertexes of the rectangle
     def calc_corners(self):
@@ -105,7 +104,7 @@ class Obstacle:
             c_y = y_middle_low + dy
 
         # saves rectangle's coordinates
-        self.coordinates = [(c_x, c_y), (b_x, b_y), (d_x, d_y), (a_x, a_y)]
+        return [(c_x, c_y), (b_x, b_y), (d_x, d_y), (a_x, a_y)]
 
     # checks if the drone is inside the obstacle
     def inside_obstacle(self, drone):
@@ -126,6 +125,13 @@ class Obstacle:
         return show_img
 
     def bypass_obstacle_coordinates(self, source, target):
+
+        if self.coord_in_obsatcle(source[0], source[1]):
+            return self._get_exit_dest(source[0], source[1], 100)
+
+        if self.coord_in_obsatcle(target[0], target[1]):
+            new_target = self._get_exit_dest(target[0], target[1])
+            return self.bypass_obstacle_coordinates(source, new_target)             
 
         obstacle_distances = self._get_corners_reachable_distances()
         target_vertices = self._get_reachable_distances(source, np.vstack([self.coordinates, target]))
@@ -172,7 +178,7 @@ class Obstacle:
         return x_dest, y_dest
 
     # returns the nearest exit point from obsatacle
-    def _get_exit_dest(self, x, y):
+    def _get_exit_dest(self, x, y, exit_dist=MARGINS):
         corners = [0, 1, 3, 2]
         curves = np.zeros((4, 2))
 
@@ -182,13 +188,11 @@ class Obstacle:
                 cor_next = corners[(i + 1) % len(corners)]
                 curves[i] = calc_linear_eq(self.coordinates[cor], self.coordinates[cor_next])
 
-            # calculates distance to every curve
-            for curve in curves:
-                    distances = [self._calc_distance_to_curve(curve, x, y)]
+            distances = self._calc_distances_to_curves(curves, x, y)
 
             # index of closest curve     
             idx = np.argmin(distances)
-            return self._calc_coor(curves[idx][0], curves[idx][1], x, y, EXIT_DIST)
+            return self._calc_coor(curves[idx][0], curves[idx][1], x, y, exit_dist)
 
         return 0,0    
 
@@ -201,14 +205,11 @@ class Obstacle:
             return self._calc_coor_above(self, m, b, x, y, distance)
 
         # x,y is above the closest curve
-        if sgn > 0:
-            return self._calc_coor_below(self, m, b, x, y, distance)
-
-        return 0,0   
+        return self._calc_coor_below(self, m, b, x, y, distance) 
 
     # returns the coor above given line in a given distance
     def _calc_coor_above(self, m, b, x, y, distance):
-        c = y - ( -1/m) * x
+        c = y - (-1/m) * x
         x_coor = (c - b - distance * np.sqrt(m**2 + 1)) / (m + 1/m)
         y_coor = (-1/m) * x_coor + c
 
@@ -216,14 +217,21 @@ class Obstacle:
 
     # return the coor below the given line in a given distance
     def _calc_coor_below(self, m, b, x, y, distance):
-        c = y - ( -1/m) * x
+        c = y - (-1/m) * x
         x_coor = (c - b + distance * np.sqrt(m**2 + 1)) / (m + 1/m)
         y_coor = (-1/m) * x_coor + c 
 
         return x_coor, y_coor
         
-    def _calc_distance_to_curve(self, curve, x, y):
-        return abs(curve[0] * x - y + curve[1]) / np.sqrt(curve[0] ** 2 + 1)
+    def _calc_distances_to_curves(self, curves, x, y):
+        distances = np.array([])
+        for i, curve in enumerate(curves):
+            if curve == [0, 0]:
+                np.append(distances, abs(x - self.coordinates[i][0]))
+            else:
+                np.append(distances, abs(curve[0] * x - y + curve[1]) / np.sqrt(curve[0] ** 2 + 1))
+
+        return distances
 
     @staticmethod
     def _get_shortest_path(reachable_distances):
