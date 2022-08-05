@@ -1,6 +1,3 @@
-from re import M
-from turtle import update
-
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph._shortest_path import dijkstra
 from scipy.spatial import distance_matrix
@@ -12,59 +9,50 @@ import numpy as np
 import cv2
 
 MARGINS = 25
+EXIT_DIST = 10
 
 
 class Obstacle:
     def __init__(self, drone, left_cam):
         self.start = (0, 0)
         self.end = (0, 0)
-        self.quad = Quadrangle(self.calc_corners(drone.x, drone.y, drone.dest_coords[0], drone.dest_coords[1]), left_cam)
-        self.m_track = 0
-        self.b_track = 0
-        self.update_edges()
+        self.quad = Quadrangle(self.calc_corners(), left_cam)
 
     @property
     def coordinates(self):
         return self.quad.coordinates
 
-    def update_start(self, x, y):
-        self.start = (x, y)
-        self.update_edges()
+    def _calc_middles(self):
+        x_middle = (self.start[0] + self.end[0]) / 2
+        y_middle = (self.start[1] + self.end[1]) / 2
 
-    def update_edges(self):
         # rectangle parallel to y axis
-        if self.end[0] == self.start[0]: # maybe smaller than epsilon?
-            x_middle_low = self.end[0] - MARGINS
-            x_middle_upper = self.start[0] + MARGINS
+        if self.end[0] == self.start[0]:
+            x_middle_low = x_middle- MARGINS
+            x_middle_upper = x_middle + MARGINS
             y_middle_low = y_middle
             y_middle_upper = y_middle
 
+        # rectangle parallel to x axis
+        elif self.end[1] == self.start[1]:
+            x_middle_low = x_middle
+            x_middle_upper = x_middle
+            y_middle_low = y_middle - MARGINS
+            y_middle_upper = y_middle + MARGINS
+
         else:
-            self.m_track = (self.start[1] - self.end[1]) / (self.start[0] - self.end[0])
-            self.b_low = self.b_track - MARGINS * np.sqrt(self.m_track ** 2 + 1)
-            self.b_upper = self.b_track + MARGINS * np.sqrt(self.m_track ** 2 + 1)
+            m_track = (self.start[1] - self.end[1]) / (self.start[0] - self.end[0])
+            b_track = y_middle - m_track * x_middle
 
-            x_middle = (self.start[0] + self.end[0]) / 2
-            y_middle = (self.start[1] + self.end[1]) / 2
+            x_middle_low, y_middle_low = self._calc_coor_below(m_track, b_track, x_middle, y_middle, MARGINS)
+            x_middle_upper, y_middle_upper = self._calc_coor_above(m_track, b_track, x_middle, y_middle, MARGINS)
 
-            if self.m_track != 0:
-                m_tmp = - 1 / self.m_track
-                x_middle_low = (self.b_low - self.b_track) / (self.m_track - m_tmp)
-                y_middle_low = self.m_track * x_middle_low + self.b_low
-                x_middle_upper = (self.b_upper - self.b_track) / (self.m_track - m_tmp)
-                y_middle_upper = self.m_track * x_middle_upper + self.b_upper
+        return x_middle_low, y_middle_low, x_middle_upper, y_middle_upper
 
-            # drone track is parallal to x axis
-            else:
-                x_middle_low = x_middle
-                x_middle_upper = x_middle
-                y_middle_low = y_middle - MARGINS
-                y_middle_upper = y_middle + MARGINS
-
-        self.calc_corners(x_middle_low, y_middle_low, x_middle_upper, y_middle_upper)
 
     # finds the vertexes of the rectangle
-    def calc_corners(self, x_middle_low, y_middle_low, x_middle_upper, y_middle_upper):
+    def calc_corners(self):
+        x_middle_low, y_middle_low, x_middle_upper, y_middle_upper = self._calc_middles()
         length = np.sqrt((self.start[0] - self.end[0]) ** 2 + (self.start[1] - self.end[1]) ** 2) + 2 * MARGINS
                 
         # Horizontal rectangle
@@ -117,24 +105,23 @@ class Obstacle:
             c_y = y_middle_low + dy
 
         # saves rectangle's coordinates
-        return [(c_x, c_y), (b_x, b_y), (d_x, d_y), (a_x, a_y)]
+        self.coordinates = [(c_x, c_y), (b_x, b_y), (d_x, d_y), (a_x, a_y)]
 
     # checks if the drone is inside the obstacle
     def inside_obstacle(self, drone):
-        # if rectangle is parallel to y axis
-        return self.quad.coordinate_in_quadrangle(drone.x, drone.y)
+        return self.coord_in_obsatcle(drone.x, drone.y)
+
+    # checks if the given coordinate is inside the obstacle
+    def coord_in_obsatcle(self, x, y):
+        return self.quad.coordinate_in_quadrangle(x, y)
 
     # draws the obstacle on left frame
     def draw_obstacle(self, show_img, recognizable_object, color_in=(240, 0, 0), color_out=(0, 240, 0)):
         color = color_out
 
-        if self.passive == recognizable_object:
-            if self.inside_obstacle():
-                color = color_in
-            show_img = cv2.line(show_img, self.quad._pixels_coordinates[0], self.quad._pixels_coordinates[1], color, 3)
-            show_img = cv2.line(show_img, self.quad._pixels_coordinates[3], self.quad._pixels_coordinates[2], color, 3)
-            show_img = cv2.line(show_img, self.quad._pixels_coordinates[3], self.quad._pixels_coordinates[1], color, 3)
-            show_img = cv2.line(show_img, self.quad._pixels_coordinates[0], self.quad._pixels_coordinates[2], color, 3)
+        if self.inside_obstacle(self, recognizable_object):
+            color = color_in
+        show_img = self.quad.draw_quadrangle(show_img, color)
 
         return show_img
 
@@ -166,6 +153,77 @@ class Obstacle:
             obstacle_distances[i][j] = 0
             obstacle_distances[j][i] = 0
         return obstacle_distances
+
+    def _get_preperation_dest(self):
+        distances = np.array([])
+        # calculates squared distance to every point of te rectangle
+        for coordinate in self.coordinates:
+            res = (self.end[0] - coordinate[0]) ** 2  + (self.end[1] - coordinate[1]) ** 2 
+            np.append(distances, res)
+
+        # finds 2 nearest points
+        first_point = self.coordinates[np.argmin(distances)]
+        distances[np.argmin(distances)] = distances[np.max(distances)] + 1
+        second_point = self.coordinates[np.argmin(distances)]
+
+        x_dest = first_point[0] + second_point[0] / 2
+        y_dest = first_point[1] + second_point[1] / 2
+
+        return x_dest, y_dest
+
+    # returns the nearest exit point from obsatacle
+    def _get_exit_dest(self, x, y):
+        corners = [0, 1, 3, 2]
+        curves = np.zeros((4, 2))
+
+        if self.coord_in_obsatcle(x, y):
+            # finds rectangle curves
+            for i, cor in enumerate(corners):
+                cor_next = corners[(i + 1) % len(corners)]
+                curves[i] = calc_linear_eq(self.coordinates[cor], self.coordinates[cor_next])
+
+            # calculates distance to every curve
+            for curve in curves:
+                    distances = [self._calc_distance_to_curve(curve, x, y)]
+
+            # index of closest curve     
+            idx = np.argmin(distances)
+            return self._calc_coor(curves[idx][0], curves[idx][1], x, y, EXIT_DIST)
+
+        return 0,0    
+
+    # calculates coordinates in EXIT_DISTANCE from given curve 
+    def _calc_coor(self, m, b, x, y, distance):
+        sgn = np.sign(y - m *x - b)
+
+        # x,y is below the closest curve
+        if sgn < 0:
+            return self._calc_coor_above(self, m, b, x, y, distance)
+
+        # x,y is above the closest curve
+        if sgn > 0:
+            return self._calc_coor_below(self, m, b, x, y, distance)
+
+        return 0,0   
+
+    # returns the coor above given line in a given distance
+    def _calc_coor_above(self, m, b, x, y, distance):
+        c = y - ( -1/m) * x
+        x_coor = (c - b - distance * np.sqrt(m**2 + 1)) / (m + 1/m)
+        y_coor = (-1/m) * x_coor + c
+
+        return x_coor, y_coor
+
+    # return the coor below the given line in a given distance
+    def _calc_coor_below(self, m, b, x, y, distance):
+        c = y - ( -1/m) * x
+        x_coor = (c - b + distance * np.sqrt(m**2 + 1)) / (m + 1/m)
+        y_coor = (-1/m) * x_coor + c 
+
+        return x_coor, y_coor
+        
+    def _calc_distance_to_curve(self, curve, x, y):
+        return abs(curve[0] * x - y + curve[1]) / np.sqrt(curve[0] ** 2 + 1)
 
     @staticmethod
     def _get_shortest_path(reachable_distances):
