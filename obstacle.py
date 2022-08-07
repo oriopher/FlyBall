@@ -28,11 +28,11 @@ class Obstacle:
     def __init__(self, drone, left_cam):
         self.start = (drone.x, drone.y)
         self.end = (drone.dest_coords[0], drone.dest_coords[1])
-        self.quad = Quadrangle(self.calc_corners(), left_cam)
+        self._quad = Quadrangle(self.calc_corners(), left_cam)
 
     @property
     def coordinates(self):
-        return self.quad.coordinates
+        return self._quad.coordinates
 
     def _calc_middles(self):
         x_middle = (self.start[0] + self.end[0]) / 2
@@ -122,7 +122,7 @@ class Obstacle:
                 b_x = x_middle_low
 
                 c_y = y_middle_low + length_start
-                c_x = x_middle_low    
+                c_x = x_middle_low
 
         # Slanted rectangle
         else:
@@ -170,7 +170,7 @@ class Obstacle:
 
     # checks if the given coordinate is inside the obstacle
     def coord_in_obstacle(self, x, y):
-        return self.quad.coordinate_in_quadrangle(x, y)
+        return self._quad.coordinate_in_quadrangle(x, y)
 
     # draws the obstacle on left frame
     def draw_obstacle(self, show_img, recognizable_object, color_in=(240, 0, 0), color_out=(0, 240, 0)):
@@ -178,7 +178,7 @@ class Obstacle:
 
         if self.inside_obstacle(recognizable_object):
             color = color_in
-        show_img = self.quad.draw_quadrangle(show_img, color)
+        show_img = self._quad.draw_quadrangle(show_img, color)
 
         return show_img
 
@@ -207,7 +207,7 @@ class Obstacle:
 
     def _get_reachable_distances(self, point, vertices):
         distances = np.linalg.norm(vertices - point, axis=1)
-        reachable = 1 - np.apply_along_axis(lambda point2: self.quad.cross_quadrangle(point, point2), 1, vertices)
+        reachable = 1 - np.apply_along_axis(lambda point2: self._quad.cross_quadrangle(point, point2), 1, vertices)
         return reachable * distances
 
     def _get_corners_reachable_distances(self):
@@ -227,7 +227,7 @@ class Obstacle:
 
         # finds 2 nearest points to end point
         first_point = self.coordinates[np.argmin(distances)]
-        distances[np.argmin(distances)] = distances[np.max(distances)] + 1
+        distances[np.argmin(distances)] = np.max(distances) + 1
         second_point = self.coordinates[np.argmin(distances)]
 
         x_dest = first_point[0] + second_point[0] / 2
@@ -241,8 +241,8 @@ class Obstacle:
 
         if self.coord_in_obstacle(x, y):
             # finds rectangle curves
-            for i, cor in enumerate(self.quad.CORNERS):
-                cor_next = self.quad.CORNERS[(i + 1) % len(self.quad.CORNERS)]
+            for i, cor in enumerate(self._quad.CORNERS):
+                cor_next = self._quad.CORNERS[(i + 1) % len(self._quad.CORNERS)]
                 curves[i] = calc_linear_eq(self.coordinates[cor], self.coordinates[cor_next])
 
             distances = self._calc_distances_to_curves(curves, x, y)
