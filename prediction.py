@@ -110,6 +110,8 @@ class NumericBallPredictor:
         if times[0] == start_time:
             return start_time, self._solution_to_coords(preds)[:, 0]
         time = times[0]
+        # make another cycle of searching for optimal hitting point with the precision magnified by 10
+        # (only at the interval that is before the previous cycles optimal hitting point)
         new_jump = jump / 10
         times = np.arange(time - jump, time + new_jump / 2, new_jump)
         times, preds = self._get_legal_hitting_points_for_times(times, xy_vel_bound, z_bound)
