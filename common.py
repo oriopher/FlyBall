@@ -109,8 +109,15 @@ def display_frames(balloon, drone_1, drone_2, left_cam, right_cam, borders):
                               [recognizable_object.frame_right for recognizable_object in recognizable_objects], True,
                               texts_vel, (240, 150, 240))
     cv2.imshow("right_cam", right_img)
+
+    if not drone_1.active:
+        obstacle = drone_1.obstacle
+    elif not drone_2.active:
+        obstacle = drone_2.obstacle
+    else:
+        obstacle = None
     
-    xy_display = get_xy_display(borders, recognizable_objects)
+    xy_display = get_xy_display(borders, recognizable_objects, obstacle)
     cv2.imshow('XY Display', xy_display)
 
 
