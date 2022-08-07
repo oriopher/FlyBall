@@ -60,9 +60,9 @@ class Quadrangle:
         he = Halfedge()
         f = Face()
         if obj.get_vertex(v):
-            return True
+            return False
         elif obj.get_halfedge(he):
-            return True
+            return False
         elif obj.get_face(f):
             if f.is_unbounded():
                 return False
@@ -75,13 +75,11 @@ class Quadrangle:
         curve = Curve_2(*points)
         Aos2.zone(self._arrangement, curve, res, self._point_location)
 
-        f = Face()
-
         for obj in res:
             if type(obj) is Vertex:
-                return True
+                continue
             elif type(obj) is Halfedge:
-                return True
+                continue
             elif type(obj) is Face:
                 if obj.is_unbounded():
                     continue

@@ -169,10 +169,10 @@ class Obstacle:
 
     # checks if the drone is inside the obstacle
     def inside_obstacle(self, drone):
-        return self.coord_in_obsatcle(drone.x, drone.y)
+        return self.coord_in_obstacle(drone.x, drone.y)
 
     # checks if the given coordinate is inside the obstacle
-    def coord_in_obsatcle(self, x, y):
+    def coord_in_obstacle(self, x, y):
         return self.quad.coordinate_in_quadrangle(x, y)
 
     # draws the obstacle on left frame
@@ -187,41 +187,40 @@ class Obstacle:
 
     def bypass_obstacle_coordinates(self, source, target):
 
-        if self.coord_in_obsatcle(source[0], source[1]):
+        if self.coord_in_obstacle(source[0], source[1]):
             return self._get_exit_dest(source[0], source[1], 100)
 
-        if self.coord_in_obsatcle(target[0], target[1]):
+        if self.coord_in_obstacle(target[0], target[1]):
             new_target = self._get_exit_dest(target[0], target[1])
             return self.bypass_obstacle_coordinates(source, new_target)             
 
         obstacle_distances = self._get_corners_reachable_distances()
-        target_vertices = self._get_reachable_distances(source, np.vstack([self.coordinates, target]))
-        reachable_from_source_distances = np.append(0, target_vertices)
-        reachable_to_target_distances = np.append(
-            self._get_reachable_distances(target, np.vstack([source, self.coordinates])), 0)
-        reachable_distances = np.vstack(
-            [reachable_from_source_distances, np.hstack([(0, 0), obstacle_distances, (0, 0)]),
-             reachable_to_target_distances])
+        target_vertices = np.vstack([self.coordinates, target])
+        target_vertices_distance = np.insert(self._get_reachable_distances(source, target_vertices), 0, 0)
+        reachable_to_target_distances = self._get_reachable_distances(target, self.coordinates)
+        corners = np.hstack([np.zeros((4, 1)), obstacle_distances, np.reshape(reachable_to_target_distances, (-1, 1))])
+        reachable_distances = np.vstack([target_vertices_distance, corners, np.zeros((1, 6))])
         path = self._get_shortest_path(reachable_distances)
         if not path:
             return source
         next_vertex = path[0]
         next_point = target_vertices[next_vertex - 1]
-        return self._continue_line_to_distance(*source, *target, np.linalg.norm(source - next_point))
+        print(next_point)
+        return self._continue_line_to_distance(*source, *next_point, np.linalg.norm(np.array(source) - np.array(target)))
 
     def _get_reachable_distances(self, point, vertices):
-        distances = np.linalg.norm(vertices - point)
-        reachable = 1 - np.apply_along_axis(lambda point2: self.quad.cross_quadrangle(point, point2), vertices, 1)
+        distances = np.linalg.norm(vertices - point, axis=1)
+        reachable = 1 - np.apply_along_axis(lambda point2: self.quad.cross_quadrangle(point, point2), 1, vertices)
         return reachable * distances
 
     def _get_corners_reachable_distances(self):
         obstacle_distances = distance_matrix(self.coordinates, self.coordinates)
-        for i, j in [(1, 3), (2, 4)]:
+        for i, j in [(0, 3), (1, 2)]:
             obstacle_distances[i][j] = 0
             obstacle_distances[j][i] = 0
         return obstacle_distances
 
-    def _get_preperation_dest(self):
+    def _get_preparation_dest(self):
         distances = np.array([])
         # calculates squared distance to every point of te rectangle
         for coordinate in self.coordinates:
@@ -243,7 +242,7 @@ class Obstacle:
         corners = [0, 1, 3, 2]
         curves = np.zeros((4, 2))
 
-        if self.coord_in_obsatcle(x, y):
+        if self.coord_in_obstacle(x, y):
             # finds rectangle curves
             for i, cor in enumerate(corners):
                 cor_next = corners[(i + 1) % len(corners)]
@@ -297,19 +296,22 @@ class Obstacle:
     @staticmethod
     def _get_shortest_path(reachable_distances):
         reachable_distances_graph = csr_matrix(reachable_distances)
-        dist_matrix, predecessors, sources = dijkstra(csgraph=reachable_distances_graph, directed=True, indices=0,
+        dist_matrix, predecessors = dijkstra(csgraph=reachable_distances_graph, directed=True, indices=0,
                                                       return_predecessors=True)
         target = len(predecessors) - 1
         vertex = target
         path = []
         while vertex != 0:
-            path.insert(vertex, 0)
+            path.insert(0, vertex)
             vertex = predecessors[vertex]
             if 0 > vertex or vertex > target:
                 return []
         return path
 
     def _continue_line_to_distance(self, x1, y1, x2, y2, r):
+        if x1 == x2:
+            s = 0 if y2 > y1 else 1
+            return x1, y1 + r * (-1)**s
         a = (y1 - y2) / (x1 - x2)
         b = y1 - a*x1
         s = 0 if x2 > x2 else 1
