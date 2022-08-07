@@ -129,19 +129,10 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
 
         continue_loop = interactive_loop(borders, left, balloon, drone_1, drone_2)
 
-    for _ in range(3):
-        for drone in drones:
-            drone.stop()
 
     if drone_1.tookoff:
         try:
             drone_1.land()
-        except:
-            pass
-
-    if drone_2.tookoff:
-        try:
-            drone_2.land()
         except:
             pass
 

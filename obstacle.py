@@ -64,7 +64,6 @@ class Obstacle:
     # finds the vertexes of the rectangle
     def calc_corners(self):
         x_middle_low, y_middle_low, x_middle_upper, y_middle_upper = self._calc_middles()
-        length = np.sqrt((self.start[0] - self.end[0]) ** 2 + (self.start[1] - self.end[1]) ** 2) + MARGINS_END + MARGINS_START
         length_end = 0.5 * np.sqrt((self.start[0] - self.end[0]) ** 2 + (self.start[1] - self.end[1]) ** 2) + MARGINS_END
         length_start = 0.5 * np.sqrt((self.start[0] - self.end[0]) ** 2 + (self.start[1] - self.end[1]) ** 2) + MARGINS_START
                 
@@ -223,10 +222,11 @@ class Obstacle:
         distances = np.array([])
         # calculates squared distance to every point of te rectangle
         for coordinate in self.coordinates:
-            res = (self.end[0] - coordinate[0]) ** 2  + (self.end[1] - coordinate[1]) ** 2 
-            np.append(distances, res)
+            dist_start = (self.start[0] - coordinate[0]) ** 2  + (self.start[1] - coordinate[1]) ** 2 
+            dist_end = (self.end[0] - coordinate[0]) ** 2  + (self.end[1] - coordinate[1]) ** 2 
+            np.append(distances, dist_end - dist_start)
 
-        # finds 2 nearest points
+        # finds 2 nearest points to end point
         first_point = self.coordinates[np.argmin(distances)]
         distances[np.argmin(distances)] = distances[np.max(distances)] + 1
         second_point = self.coordinates[np.argmin(distances)]
