@@ -286,8 +286,8 @@ class Obstacle:
             return x1, y1 + r * (-1)**s
         a = (y1 - y2) / (x1 - x2)
         b = y1 - a*x1
-        s = 0 if x2 > x2 else 1
-        x = self._solve_quadratic(a**2 + 1, 2*(a*b - x1 - a*y1), x1**2+b**2-2*b*y1-r**2, s)
+        s = 0 if x2 > x1 else 1
+        x = self._solve_quadratic(a**2 + 1, 2*(a*b - x1 - a*y1), y1**2+x1**2+b**2-2*b*y1-r**2, s)
         y = a*x + b
         return x, y
 
