@@ -3,6 +3,9 @@ import cv2
 
 
 class ObjectInFrame:
+    """
+    A class representing the location of a specific object in a frame (the frame is updated each cycle).
+    """
     H_RANGE = 20
     S_RANGE = 30
     V_RANGE = 170
@@ -11,6 +14,9 @@ class ObjectInFrame:
     NO_UPPER_BOUNDS = (255, 255, 255)
 
     def __init__(self):
+        """
+        Initialize the object in the frame.
+        """
         self.frame = None
         self.x = 0
         self.y = 0
@@ -21,14 +27,24 @@ class ObjectInFrame:
 
     @property
     def image(self):
+        """
+        :return: the image of the current frame, the object is in.
+        """
         return self.frame.image
 
     @property
     def color_str(self):
-        return "%.0f,%.0f,%.0f\n%.0f,%.0f,%.0f\n" % \
-               (self.lower[0], self.lower[1], self.lower[2], self.upper[0], self.upper[1], self.upper[2])
+        """
+        :return: a string of the color bounds of the object in the frame.
+        """
+        return "{:.0f},{:.0f},{:.0f}\n{:.0f},{:.0f},{:.0f}\n".format(self.lower[0], self.lower[1], self.lower[2],
+                                                                     self.upper[0], self.upper[1], self.upper[2])
 
     def detect_pixel_coordinates(self, distance):
+        """
+        Detects the pixel coordinates of the object in the frame.
+        :param distance: the distance of the object from the camera in the previous frame.
+        """
         search_range = max(1, self.frame.search_range_scale(distance))
         x_min, x_max, y_min, y_max = 0, self.image.shape[1], 0, self.image.shape[0]
         if self.x != 0 and self.y != 0 and search_range != 0:
@@ -58,6 +74,9 @@ class ObjectInFrame:
         self.y = y_coor + y_min
 
     def detect_color(self):
+        """
+        Detects the color of the object.
+        """
         y_shape = self.image.shape[0]
         x_shape = self.image.shape[1]
         crop_img = self.image[int(y_shape / 3): int(2 * y_shape / 3), int(x_shape / 3): int(2 * x_shape / 3)]
@@ -72,13 +91,27 @@ class ObjectInFrame:
                       min(255, ball_color[2] + ObjectInFrame.V_RANGE))
 
     def save_bounds(self, lower, upper):
+        """
+        Saves the objects color bounds of the object to the instance of the class.
+        :param lower: the lower bound of the color of the object in the frame.
+        :param upper: the upper bound of the color of the object in the frame.
+        """
         self.lower = self.str_to_color_bound(lower)
         self.upper = self.str_to_color_bound(upper)
 
     def set_image(self, frame):
+        """
+        Sets the frame.
+        :param frame: the frame to set.
+        """
         self.frame = frame
 
     @staticmethod
     def str_to_color_bound(bound):
+        """
+        Transforms a string of color bounds to a tuple of color bound values.
+        :param bound:
+        :return:
+        """
         bound = bound.split(',')
         return int(bound[0]), int(bound[1]), int(bound[2])
