@@ -217,7 +217,7 @@ class Obstacle:
             obstacle_distances[j][i] = 0
         return obstacle_distances
 
-    def _get_preparation_dest(self):
+    def get_preparation_dest(self):
         distances = np.array([])
         # calculates squared distance to every point of te rectangle
         for coordinate in self.coordinates:
@@ -230,8 +230,8 @@ class Obstacle:
         distances[np.argmin(distances)] = np.max(distances) + 1
         second_point = self.coordinates[np.argmin(distances)]
 
-        x_dest = first_point[0] + second_point[0] / 2
-        y_dest = first_point[1] + second_point[1] / 2
+        x_dest = (first_point[0] + second_point[0]) / 2
+        y_dest = (first_point[1] + second_point[1]) / 2
 
         return x_dest, y_dest
 

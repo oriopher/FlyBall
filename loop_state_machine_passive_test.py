@@ -80,7 +80,7 @@ class STANDING_BY(State):
         return 1 - drone.testing
 
     def run(self, drone, other_drone, balloon, borders):
-        x_dest, y_dest = X_DEST, Y_DEST
         obstacle = other_drone.obstacle
+        x_dest, y_dest = obstacle.get_preparation_dest()
         drone.track_2d(x_dest, y_dest, obstacle)
 
