@@ -21,9 +21,9 @@ import numpy as np
 class Obstacle:
     EXIT_MARGIN = 100
     MARGINS = 25
-    MARGINS_END = 25
-    MARGINS_START = 5
-    MARGINS_SIDES = 10
+    MARGINS_END = 35
+    MARGINS_START = 20
+    MARGINS_SIDES = 20
 
     def __init__(self, drone, left_cam):
         self.start = (drone.x, drone.y)
@@ -202,7 +202,7 @@ class Obstacle:
             return source
         next_vertex = path[0]
         next_point = target_vertices[next_vertex - 1]
-        print(next_point)
+        print("next point: ", next_point)
         return self._continue_line_to_distance(*source, *next_point, np.linalg.norm(np.array(source) - np.array(target)))
 
     def _get_reachable_distances(self, point, vertices):
@@ -227,7 +227,7 @@ class Obstacle:
 
         # finds 2 nearest points to end point
         first_point = self.coordinates[np.argmin(distances)]
-        distances[np.argmin(distances)] = distances[np.max(distances)] + 1
+        distances[np.argmin(distances)] = np.max(distances) + 1
         second_point = self.coordinates[np.argmin(distances)]
 
         x_dest = first_point[0] + second_point[0] / 2
@@ -236,7 +236,7 @@ class Obstacle:
         return x_dest, y_dest
 
     # returns the nearest exit point from obstacle
-    def _get_exit_dest(self, x, y, exit_dist=MARGINS):
+    def _get_exit_dest(self, x, y, exit_dist=EXIT_MARGIN):
         curves = np.zeros((4, 2))
 
         if self.coord_in_obstacle(x, y):
@@ -286,8 +286,8 @@ class Obstacle:
             return x1, y1 + r * (-1)**s
         a = (y1 - y2) / (x1 - x2)
         b = y1 - a*x1
-        s = 0 if x2 > x2 else 1
-        x = self._solve_quadratic(a**2 + 1, 2*(a*b - x1 - a*y1), x1**2+b**2-2*b*y1-r**2, s)
+        s = 0 if x2 > x1 else 1
+        x = self._solve_quadratic(a**2 + 1, 2*(a*b - x1 - a*y1), y1**2+x1**2+b**2-2*b*y1-r**2, s)
         y = a*x + b
         return x, y
 

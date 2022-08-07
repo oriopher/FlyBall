@@ -47,7 +47,7 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
 
     elif key == ord('y'):
         drone_1.start_track()
-        drone_2.start_track()
+        drone_2.start = True
 
     # the 'q' button is set as the quitting button
     elif key == ord('q'):
