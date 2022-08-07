@@ -25,6 +25,7 @@ Arr_point_location = Aos2.Arr_trapezoid_ric_point_location
 class Quadrangle:
     """
     Quadrangles corners are labeled as follows (any order of inputted coordinates will be arranged in this manner):
+    (0 and 2 are first set to be the 2 rightmost points and then their indices is set so 0 is the lower between them, and so on)
     ###############################
     #### 3-------------------2 ####
     #### |-------------------| ####
@@ -60,9 +61,9 @@ class Quadrangle:
         he = Halfedge()
         f = Face()
         if obj.get_vertex(v):
-            return True
+            return False
         elif obj.get_halfedge(he):
-            return True
+            return False
         elif obj.get_face(f):
             if f.is_unbounded():
                 return False
@@ -75,13 +76,11 @@ class Quadrangle:
         curve = Curve_2(*points)
         Aos2.zone(self._arrangement, curve, res, self._point_location)
 
-        f = Face()
-
         for obj in res:
             if type(obj) is Vertex:
-                return True
+                continue
             elif type(obj) is Halfedge:
-                return True
+                continue
             elif type(obj) is Face:
                 if obj.is_unbounded():
                     continue
