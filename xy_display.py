@@ -25,17 +25,8 @@ def get_xy_display(borders, recognizable_objects):
     x_lower_limit, x_upper_limit = np.min(borders.coordinates[:, 0]) - MARGINS, np.max(borders.coordinates[:, 0]) + MARGINS
     y_lower_limit, y_upper_limit = np.min(borders.coordinates[:, 1]) - MARGINS, np.max(borders.coordinates[:, 1]) + MARGINS
     limits = (x_lower_limit, x_upper_limit, y_lower_limit, y_upper_limit)
-    pix_in_cm_x = NUM_PIXELS_X / (x_upper_limit - x_lower_limit)
-    pix_in_cm_y = NUM_PIXELS_Y / (y_upper_limit - y_lower_limit)
-    grid_length_x = int(GRID_DIFF * pix_in_cm_x)
-    grid_length_y = int(GRID_DIFF * pix_in_cm_y)
 
-    # drawing grid on frame
-    for i in range(grid_length_x, NUM_PIXELS_X, grid_length_x):
-        xy_display = cv2.line(xy_display, (i, 0), (i, NUM_PIXELS_Y), (211, 211, 211), 1, 1) # horizontal
-
-    for i in range(grid_length_y, NUM_PIXELS_Y, grid_length_y):
-        xy_display = cv2.line(xy_display, (0, i),(NUM_PIXELS_X, i), (211, 211, 211), 1, 1) # vertical
+    xy_display = draw_grid(limits)
     
     if borders.set_borders:
         borders_color = (0, 240, 0)  # green
@@ -83,3 +74,19 @@ def coor_to_pix(x, y, x_low_limit, x_upper_limit, y_low_limit, y_upper_limit):
     y_pix = abs(NUM_PIXELS_Y - int(((y - y_low_limit) / (y_upper_limit - y_low_limit)) * NUM_PIXELS_Y))
 
     return x_pix, y_pix
+
+def draw_grid(img, limits):
+    x_lower_limit, x_upper_limit, y_lower_limit, y_upper_limit  = limits        
+    pix_in_cm_x = NUM_PIXELS_X / (x_upper_limit - x_lower_limit)
+    pix_in_cm_y = NUM_PIXELS_Y / (y_upper_limit - y_lower_limit)
+    grid_length_x = int(GRID_DIFF * pix_in_cm_x)
+    grid_length_y = int(GRID_DIFF * pix_in_cm_y)
+
+    # drawing grid on frame
+    for i in range(grid_length_x, NUM_PIXELS_X, grid_length_x):
+        img = cv2.line(img, (i, 0), (i, NUM_PIXELS_Y), (211, 211, 211), 1, 1) # horizontal
+
+    for i in range(grid_length_y, NUM_PIXELS_Y, grid_length_y):
+        img = cv2.line(img, (0, i),(NUM_PIXELS_X, i), (211, 211, 211), 1, 1) # vertical
+
+    return img
