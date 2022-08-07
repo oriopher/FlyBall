@@ -10,6 +10,20 @@ import cv2
 
 MARGINS = 25
 EXIT_DIST = 10
+MARGINS_END = 25
+MARGINS_START = 5
+MARGINS_SIDES = 10
+
+"""
+###############################
+#### a-------------------d ####
+#### |-------------------| ####
+#### |-------------------| ####
+#### |-------------------| ####
+#### |-------------------| ####
+#### b-------------------c ####
+###############################
+"""
 
 
 class Obstacle:
@@ -28,8 +42,8 @@ class Obstacle:
 
         # rectangle parallel to y axis
         if self.end[0] == self.start[0]:
-            x_middle_low = x_middle- MARGINS
-            x_middle_upper = x_middle + MARGINS
+            x_middle_low = x_middle- MARGINS_SIDES
+            x_middle_upper = x_middle + MARGINS_SIDES
             y_middle_low = y_middle
             y_middle_upper = y_middle
 
@@ -37,73 +51,120 @@ class Obstacle:
         elif self.end[1] == self.start[1]:
             x_middle_low = x_middle
             x_middle_upper = x_middle
-            y_middle_low = y_middle - MARGINS
-            y_middle_upper = y_middle + MARGINS
+            y_middle_low = y_middle - MARGINS_SIDES
+            y_middle_upper = y_middle + MARGINS_SIDES
 
         else:
             m_track = (self.start[1] - self.end[1]) / (self.start[0] - self.end[0])
             b_track = y_middle - m_track * x_middle
 
-            x_middle_low, y_middle_low = self._calc_coor_below(m_track, b_track, x_middle, y_middle, MARGINS)
-            x_middle_upper, y_middle_upper = self._calc_coor_above(m_track, b_track, x_middle, y_middle, MARGINS)
+            x_middle_low, y_middle_low = self._calc_coor_below(m_track, b_track, x_middle, y_middle, MARGINS_SIDES)
+            x_middle_upper, y_middle_upper = self._calc_coor_above(m_track, b_track, x_middle, y_middle, MARGINS_SIDES)
 
         return x_middle_low, y_middle_low, x_middle_upper, y_middle_upper
 
     # finds the vertexes of the rectangle
     def calc_corners(self):
         x_middle_low, y_middle_low, x_middle_upper, y_middle_upper = self._calc_middles()
-        length = np.sqrt((self.start[0] - self.end[0]) ** 2 + (self.start[1] - self.end[1]) ** 2) + 2 * MARGINS
+        length = np.sqrt((self.start[0] - self.end[0]) ** 2 + (self.start[1] - self.end[1]) ** 2) + MARGINS_END + MARGINS_START
+        length_end = 0.5 * np.sqrt((self.start[0] - self.end[0]) ** 2 + (self.start[1] - self.end[1]) ** 2) + MARGINS_END
+        length_start = 0.5 * np.sqrt((self.start[0] - self.end[0]) ** 2 + (self.start[1] - self.end[1]) ** 2) + MARGINS_START
                 
         # Horizontal rectangle
         if x_middle_upper == x_middle_low:
-            a_x = x_middle_upper - (length / 2)
-            a_y = y_middle_upper
-            
-            d_x = x_middle_upper + (length / 2)
-            d_y = y_middle_upper
-            
-            b_x = x_middle_low - (length / 2)
-            b_y = y_middle_low
+            if self.end[0] >= self.start[0]:
+                a_x = x_middle_upper - length_start
+                a_y = y_middle_upper
+                
+                d_x = x_middle_upper + length_end
+                d_y = y_middle_upper
+                
+                b_x = x_middle_low - length_start
+                b_y = y_middle_low
 
-            c_x = x_middle_low + (length / 2)
-            c_y = y_middle_low
+                c_x = x_middle_low + length_end
+                c_y = y_middle_low
+        
+            else:
+                a_x = x_middle_upper - length_end
+                a_y = y_middle_upper
+                
+                d_x = x_middle_upper + length_start
+                d_y = y_middle_upper
+                
+                b_x = x_middle_low - length_end
+                b_y = y_middle_low
+
+                c_x = x_middle_low + length_start
+                c_y = y_middle_low
+
             
         # Vertical rectangle
         elif y_middle_upper == y_middle_low:
-            a_y = y_middle_upper - (length / 2)
-            a_x = x_middle_upper
+            if self.end[1] >= self.start[1]:
+                a_y = y_middle_upper - length_start
+                a_x = x_middle_upper
 
-            d_y = y_middle_upper + (length / 2)
-            d_x = x_middle_upper
+                d_y = y_middle_upper + length_end
+                d_x = x_middle_upper
 
-            b_y = y_middle_low - (length / 2)
-            b_x = x_middle_low
+                b_y = y_middle_low - length_start
+                b_x = x_middle_low
 
-            c_y = y_middle_low + (length / 2)
-            c_x = x_middle_low
-        
+                c_y = y_middle_low + length_end
+                c_x = x_middle_low
+
+            else:
+                a_y = y_middle_upper - length_end
+                a_x = x_middle_upper
+
+                d_y = y_middle_upper + length_start
+                d_x = x_middle_upper
+
+                b_y = y_middle_low - length_end
+                b_x = x_middle_low
+
+                c_y = y_middle_low + length_start
+                c_x = x_middle_low    
+
         # Slanted rectangle
         else:
             # Calculate slope of the side
             m = (x_middle_upper - x_middle_low) / (y_middle_low - y_middle_upper)
             
             # Calculate displacements along axes
-            dx = (length / np.sqrt(1 + (m ** 2))) * 0.5
-            dy = m * dx
+            dx_end = (length_end / np.sqrt(1 + (m ** 2)))
+            dy_end = m * dx_end
+            dx_start = (length_start / np.sqrt(1 + (m ** 2)))
+            dy_start = m *dx_start
             
-            a_x = x_middle_upper - dx
-            a_y = y_middle_upper - dy
+            if (m < 0 and self.end[1] > self.start[1]) or (m > 0 and self.end[1] < self.start[1]):
+                a_x = x_middle_upper - dx_start
+                a_y = y_middle_upper - dy_start
 
-            d_x = x_middle_upper + dx
-            d_y = y_middle_upper + dy
+                d_x = x_middle_upper + dx_end
+                d_y = y_middle_upper + dy_end
 
-            b_x = x_middle_low - dx
-            b_y = y_middle_low - dy
+                b_x = x_middle_low - dx_start
+                b_y = y_middle_low - dy_start
 
-            c_x = x_middle_low + dx
-            c_y = y_middle_low + dy
+                c_x = x_middle_low + dx_end
+                c_y = y_middle_low + dy_end
 
-        # saves rectangle's coordinates
+            else:
+                a_x = x_middle_upper - dx_end
+                a_y = y_middle_upper - dy_end
+
+                d_x = x_middle_upper + dx_start
+                d_y = y_middle_upper + dy_start
+
+                b_x = x_middle_low - dx_end
+                b_y = y_middle_low - dy_end
+
+                c_x = x_middle_low + dx_start
+                c_y = y_middle_low + dy_start                    
+
+        # retruns rectangle's coordinates
         return [(c_x, c_y), (b_x, b_y), (d_x, d_y), (a_x, a_y)]
 
     # checks if the drone is inside the obstacle
