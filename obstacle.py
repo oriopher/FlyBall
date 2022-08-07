@@ -1,12 +1,10 @@
 from re import M
-from turtle import update
 
 from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph._shortest_path import dijkstra
 from scipy.spatial import distance_matrix
 
 from common import calc_linear_eq
-from drone import Drone
 from quadrangle import QUADRANGLE
 import numpy as np
 import cv2

@@ -2,6 +2,7 @@ import datetime
 import numpy as np
 
 from common import DRONE_DEFAULT_HEIGHT
+from obstacle import Obstacle
 from recognizable_object import RecognizableObject
 # from loop_state_machine import ON_GROUND
 from loop_state_machine_passive_test import ON_GROUND
@@ -29,6 +30,7 @@ class Drone:
         self.testing = 0
         self.active = False
         self.default_height = DRONE_DEFAULT_HEIGHT
+        self.obstacle = None
 
     @property
     def x(self):
@@ -129,3 +131,7 @@ class Drone:
 
     def stop(self):
         self.drone_control.stop()
+
+    def set_obstacle(self, left_cam):
+        self.obstacle = Obstacle(self, left_cam)
+ 

@@ -3,7 +3,6 @@ from pickle import FALSE
 from prediction import NumericBallPredictor
 import numpy as np
 from common import reachability, first_on_second_off, FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
-from obstacle import Obstacle
 
 MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
 
@@ -71,7 +70,7 @@ class WAITING(State):
 
     def run(self, drone, other_drone, balloon, borders):
         if borders.set_borders:
-            drone.seek_middle(Obstacle(other_drone, None))
+            drone.seek_middle(drone.obstacle)
         else:
             x_dest, y_dest = drone.x_0, drone.y_0
             drone.track_2d(x_dest, y_dest)
@@ -108,7 +107,7 @@ class STANDING_BY(State):
 
     def run(self, drone, other_drone, balloon, borders):
         if borders.set_borders:
-            drone.seek_middle(Obstacle(other_drone, None))
+            drone.seek_middle(drone.obstacle)
         else:
             x_dest, y_dest = drone.x_0, drone.y_0
             drone.track_2d(x_dest, y_dest)
@@ -267,11 +266,10 @@ class PREPARE_AND_AVOID(State):
     def run(self, drone, other_drone, balloon, borders):
         HEIGHT_PREPARATION_FACTOR = 0.5
         
-        obstacle = Obstacle(other_drone, None) # maybe run should get left cam, so we can use it here.
         if not drone.active: 
-            x_dest, y_dest = obstacle.get_preparation_dest()
+            x_dest, y_dest = drone.obstacle.get_preparation_dest()
             z_dest = HEIGHT_PREPARATION_FACTOR * other_drone.z
         else:   # this occurs only when the other drone finished the hitting stage
             x_dest, y_dest, z_dest = drone.dest_coords[0], drone.dest_coords[1], drone.dest_coords[2]
 
-        drone.track_3d(x_dest, y_dest, z_dest, obstacle)
+        drone.track_3d(x_dest, y_dest, z_dest, drone.obstacle)

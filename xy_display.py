@@ -20,7 +20,7 @@ def add_2d_object(x, y, color, name, xy_display, limits, radius=15, circle_thick
     return xy_display
 
 
-def draw_xy_display(borders, recognizable_objects):
+def get_xy_display(borders, recognizable_objects):
     xy_display = np.zeros((NUM_PIXELS_X, NUM_PIXELS_Y, 3), np.uint8)
     x_lower_limit, x_upper_limit = np.min(borders.coordinates[:, 0]) - MARGINS, np.max(borders.coordinates[:, 0]) + MARGINS
     y_lower_limit, y_upper_limit = np.min(borders.coordinates[:, 1]) - MARGINS, np.max(borders.coordinates[:, 1]) + MARGINS
@@ -74,8 +74,8 @@ def draw_xy_display(borders, recognizable_objects):
                                   (coor_to_pix(borders.coordinates[cor_next][0], borders.coordinates[cor_next][1], x_lower_limit, x_upper_limit, y_lower_limit, y_upper_limit)),
                                   borders_color,
                                   thickness=2)
-
-    cv2.imshow('XY Display', xy_display)
+    
+    return xy_display
 
 
 def coor_to_pix(x, y, x_low_limit, x_upper_limit, y_low_limit, y_upper_limit):

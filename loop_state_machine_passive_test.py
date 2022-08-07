@@ -1,7 +1,6 @@
-from datetime import datetime
-from prediction import NumericBallPredictor
 import numpy as np
 from common import reachability, FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
+from obstacle import Obstacle
 
 MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
 X_DEST = 70
@@ -83,5 +82,6 @@ class STANDING_BY(State):
 
     def run(self, drone, other_drone, balloon, borders):
         x_dest, y_dest = X_DEST, Y_DEST
-        drone.track_2d(x_dest, y_dest)
+        obstacle = other_drone.obstacle
+        drone.track_2d(x_dest, y_dest, obstacle)
 

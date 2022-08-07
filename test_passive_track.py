@@ -114,6 +114,10 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
 
         drone_2.dest_coords = (balloon.x, balloon.y, DRONE_DEFAULT_HEIGHT)
 
+        # Set Obstacle
+        drone_1.set_obstacle(left)
+        drone_2.set_obstacle(left)
+
         # State Machine
         state.run(drone_1, drone_2, balloon, borders)
         transition = state.to_transition(drone_1, drone_2, balloon, borders)
