@@ -3,8 +3,10 @@ from common import reachability, FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
 from obstacle import Obstacle
 
 MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
-X_DEST = 70
-Y_DEST = 300
+X_DEST = 90
+Y_DEST = 350
+X_START = 40
+Y_START = 230
 
 
 class State:
@@ -63,11 +65,8 @@ class WAITING(State):
         return drone.testing
 
     def run(self, drone, other_drone, balloon, borders):
-        if borders.set_borders:
-            drone.seek_middle()
-        else:
-            x_dest, y_dest = drone.x_0, drone.y_0
-            drone.track_2d(x_dest, y_dest)
+        x_dest, y_dest = X_START, Y_START
+        drone.track_2d(x_dest, y_dest)
 
 
 class STANDING_BY(State):

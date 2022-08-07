@@ -1,8 +1,8 @@
 import cv2, numpy as np
-from consts import C920_NIR_1, C920_NIR_2, DRONE_DEFAULT_HEIGHT
+from consts import C920_NIR_1, C920_NIR_2, DRONE_DEFAULT_HEIGHT, BORDERS_FILENAME, COLORS_FILENAME
 from recognizable_object import RecognizableObject
 from drone import Drone
-from common import MAYA_PHONE_NIR, ORI_PHONE, read_colors, write_colors, display_frames, BORDERS_FILENAME, COLORS_FILENAME, EFRAT_WEB, NIR_PHONE_NIR
+from common import load_colors, save_colors, display_frames
 from borders import Borders
 from camera import Camera
 
@@ -47,7 +47,7 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
 
     elif key == ord('y'):
         drone_1.start_track()
-        # drone_2.start_track()
+        drone_2.start_track()
 
     # the 'q' button is set as the quitting button
     elif key == ord('q'):
@@ -55,24 +55,24 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
 
     # the 'p' button is set as the save text_colors to file
     elif key == ord('p'):
-        write_colors(COLORS_FILENAME, [balloon, drone_1, drone_2])
+        save_colors(COLORS_FILENAME, [balloon, drone_1.recognizable_object, drone_2.recognizable_object])
 
     # the 'k' button is set as the read text_colors from file
     elif key == ord('k'):
-        read_colors(COLORS_FILENAME, [balloon, drone_1, drone_2])
+        load_colors(COLORS_FILENAME, [balloon, drone_1.recognizable_object, drone_2.recognizable_object])
 
     # the 'j' button is set as the saving the borders. can save 4 coordinates
     elif key == ord('j'):
         borders.set_image(balloon, left_cam)
         print("Saved the %.0f coordinate: (%.0f,%.0f)" % (borders.index, balloon.x, balloon.y))
         if borders.index == 4:
-            borders.write_borders(BORDERS_FILENAME)
+            borders.save_borders(BORDERS_FILENAME)
             drone_1.set_middle((borders.x_middle_1, borders.y_middle))
             drone_2.set_middle((borders.x_middle_2, borders.y_middle))
 
     # the 'r' button is set as the read text_colors from file
     elif key == ord('r'):
-        borders.read_borders(BORDERS_FILENAME)
+        borders.load_borders(BORDERS_FILENAME)
         drone_1.set_middle((borders.x_middle_1, borders.y_middle))
         drone_2.set_middle((borders.x_middle_2, borders.y_middle))
 
@@ -81,6 +81,14 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
 
     elif key == ord('x'):
         drone_1.testing = 0
+
+    elif key == ord('m'):
+        drone_1.recognizable_object.frame_left.update_color_bounds()
+        drone_1.recognizable_object.frame_right.update_color_bounds()
+        drone_2.recognizable_object.frame_left.update_color_bounds()
+        drone_2.recognizable_object.frame_right.update_color_bounds()
+        balloon.frame_right.update_color_bounds()
+        balloon.frame_right.update_color_bounds()
 
     return True
 
@@ -92,12 +100,14 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
     borders = Borders()
     drones = [drone_1.recognizable_object, drone_2.recognizable_object]
     recognizable_objects = [balloon] + drones
-    #read_colors(COLORS_FILENAME, recognizable_objects)
-    borders.read_borders(BORDERS_FILENAME)
+    load_colors(COLORS_FILENAME, recognizable_objects)
+    borders.load_borders(BORDERS_FILENAME, left)
 
     if borders.set_borders:
         drone_1.set_middle((borders.x_middle_1, borders.y_middle))
         drone_2.set_middle((borders.x_middle_2, borders.y_middle))
+    
+    drone_2.active = True
     
     while continue_loop:
         # Capture the video frame by frame
@@ -110,15 +120,18 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
             # Process frames
             recognizable_object.detect_and_set_coordinates(left, right, cameras_distance)
             
-        display_frames(balloon, drone_1, drone_2, left, right, borders)
+        display_frames(balloon, [drone_1, drone_2], left, right, borders)
 
         drone_2.dest_coords = (balloon.x, balloon.y, DRONE_DEFAULT_HEIGHT)
 
         # Set Obstacle
-        drone_1.set_obstacle(left)
-        drone_2.set_obstacle(left)
+        if drone_1.start:
+            drone_1.set_obstacle(left)
+        if drone_2.start:
+            drone_2.set_obstacle(left)
 
         # State Machine
+        state = drone_1.state
         state.run(drone_1, drone_2, balloon, borders)
         transition = state.to_transition(drone_1, drone_2, balloon, borders)
         if transition:
@@ -144,8 +157,8 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
 
 
 def main():
-    right_cam = C920_NIR_1
-    left_cam = C920_NIR_2
+    right_cam = C920_NIR_2
+    left_cam = C920_NIR_1
 
     drone_1 = Drone(1, (0, 191, 255), 7, iface_ip="192.168.10.2")
     drone_2 = Drone(2, (38, 38, 200), 7, iface_ip="192.168.10.10")

@@ -14,7 +14,7 @@ def add_2d_object(x, y, color, name, xy_display, limits, radius=15, circle_thick
     x_pix, y_pix = coor_to_pix(x, y, x_lower_limit, x_upper_limit, y_lower_limit, y_upper_limit)
 
     # object is inside limits of xy image
-    if x_pix >= 0 and y_pix >= 0:
+    if 0 <= x_pix <= NUM_PIXELS_X and 0 <= y_pix <= NUM_PIXELS_Y:
         xy_display = cv2.circle(xy_display, (x_pix, y_pix), radius, color, circle_thickness)
         if name:
             xy_display = cv2.putText(xy_display, name, (x_pix + text_shift, y_pix),
@@ -22,11 +22,12 @@ def add_2d_object(x, y, color, name, xy_display, limits, radius=15, circle_thick
     return xy_display
 
 
-def get_xy_display(borders, recognizable_objects, obstacle = None):
+def get_xy_display(borders, balloon, drones, obstacle = None):
     xy_display = np.zeros((NUM_PIXELS_X, NUM_PIXELS_Y, 3), np.uint8)
     x_lower_limit, x_upper_limit = np.min(borders.coordinates[:, 0]) - MARGINS, np.max(borders.coordinates[:, 0]) + MARGINS
     y_lower_limit, y_upper_limit = np.min(borders.coordinates[:, 1]) - MARGINS, np.max(borders.coordinates[:, 1]) + MARGINS
     limits = (x_lower_limit, x_upper_limit, y_lower_limit, y_upper_limit)
+    recognizable_object = [balloon] + [drone.recognizable_object for drone in drones]
     
     if borders.set_borders:
         borders_color = (0, 240, 0)  # green
@@ -34,17 +35,18 @@ def get_xy_display(borders, recognizable_objects, obstacle = None):
         xy_display = draw_grid(xy_display, limits)
 
         # calculats coordinates in pixels
-        for i, recognizable_object in enumerate(recognizable_objects):
-            xy_display = add_2d_object(borders, recognizable_object.x, recognizable_object.y, recognizable_object.text_colors,
-                                       recognizable_object.name, xy_display)
+        for i, recognizable_object in enumerate(recognizable_object):
+            xy_display = add_2d_object(recognizable_object.x, recognizable_object.y, recognizable_object.text_colors,
+                                       recognizable_object.name, xy_display, limits)
 
-            if borders.in_borders(recognizable_object):
-                borders_color = (240, 0, 0)
+            if not borders.in_borders(recognizable_object):
+                borders_color = (0, 0, 240)
 
-            # draws destinations
-            if i > 0 and np.any(recognizable_object.dest_coords):
-                xy_display = add_2d_object(recognizable_object.dest_coords[0], recognizable_object.dest_coords[1], 
-                                        (186, 85, 211), "dest"+str(i), xy_display, limits)
+        # draws destinations
+        for i, drone in enumerate(drones):
+            if np.any(drone.dest_coords):
+                xy_display = add_2d_object(drone.dest_coords[0], drone.dest_coords[1], 
+                                        (186, 85, 211), "dest"+str(i+1), xy_display, limits)
    
         xy_display = draw_borders(xy_display, borders, borders_color, limits)
 

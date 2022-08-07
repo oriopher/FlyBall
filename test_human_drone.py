@@ -42,11 +42,11 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
 
     # the 'p' button is set as the save text_colors to file
     elif key == ord('p'):
-        write_colors(COLORS_FILENAME, [balloon, drone_1])
+        save_colors(COLORS_FILENAME, [balloon, drone_1])
 
     # the 'k' button is set as the read text_colors from file
     elif key == ord('k'):
-        read_colors(COLORS_FILENAME, [balloon, drone_1])
+        load_colors(COLORS_FILENAME, [balloon, drone_1])
 
     # the 'j' button is set as the saving the borders. can save 4 coordinates
     elif key == ord('j'):
@@ -73,7 +73,7 @@ def capture_video(drone_1: Drone, balloon: RecognizableObject, cameras_distance,
 
     borders = Borders()
     recognizable_objects = [balloon, drone_1.recognizable_object]
-    read_colors(COLORS_FILENAME, recognizable_objects)
+    load_colors(COLORS_FILENAME, recognizable_objects)
     borders.read_borders(BORDERS_FILENAME)
 
     if borders.set_borders:

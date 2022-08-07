@@ -101,6 +101,8 @@ class Quadrangle:
 
     def _calc_edges_pix(self, left_cam):
         # calculate the coordinates pixels location on frame
+        if left_cam.last_capture == None:
+            return
         for i in range(len(self._pixels_coordinates)):
             if self.coordinates[i][1] != 0:
                 self._pixels_coordinates[i][0], self._pixels_coordinates[i][1] = phys_to_left_pix(self.coordinates[i][0],

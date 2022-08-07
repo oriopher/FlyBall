@@ -3,7 +3,7 @@ import cv2
 
 
 class ObjectInFrame:
-    H_RANGE = 20
+    H_RANGE = 15
     S_RANGE = 30
     V_RANGE = 170
 
@@ -16,8 +16,8 @@ class ObjectInFrame:
         self.y = 0
         self.threshold_size = 0
         self.search_range = 0
-        self.lower = ObjectInFrame.NO_LOWER_BOUNDS
-        self.upper = ObjectInFrame.NO_UPPER_BOUNDS
+        self.lower_hsv = ObjectInFrame.NO_LOWER_BOUNDS
+        self.upper_hsv = ObjectInFrame.NO_UPPER_BOUNDS
 
     @property
     def image(self):
@@ -26,7 +26,7 @@ class ObjectInFrame:
     @property
     def color_str(self):
         return "%.0f,%.0f,%.0f\n%.0f,%.0f,%.0f\n" % \
-               (self.lower[0], self.lower[1], self.lower[2], self.upper[0], self.upper[1], self.upper[2])
+               (self.lower_hsv[0], self.lower_hsv[1], self.lower_hsv[2], self.upper_hsv[0], self.upper_hsv[1], self.upper_hsv[2])
 
     def detect_pixel_coordinates(self, distance):
         search_range = max(1, self.frame.search_range_scale(distance))
@@ -40,7 +40,7 @@ class ObjectInFrame:
         detection_image = self.image[y_min:y_max, x_min:x_max]
         # convert to hsv
         hsv = cv2.cvtColor(detection_image, cv2.COLOR_BGR2HSV)
-        mask = cv2.inRange(hsv, self.lower, self.upper)
+        mask = cv2.inRange(hsv, self.lower_hsv, self.upper_hsv)
         # define kernel size
         kernel = np.ones((self.threshold_size, self.threshold_size), np.uint8)
         # Remove unnecessary noise from mask
@@ -54,26 +54,19 @@ class ObjectInFrame:
         x_coor = np.mean(balloon_pixels[:, 1])
         y_coor = np.mean(balloon_pixels[:, 0])
 
-        self.x = x_coor + x_min
-        self.y = y_coor + y_min
+        self.x = int(x_coor + x_min)
+        self.y = int(y_coor + y_min)
+
 
     def detect_color(self):
         y_shape = self.image.shape[0]
         x_shape = self.image.shape[1]
         crop_img = self.image[int(y_shape / 3): int(2 * y_shape / 3), int(x_shape / 3): int(2 * x_shape / 3)]
-        hsv = cv2.cvtColor(crop_img, cv2.COLOR_BGR2HSV)
-        h = hsv[:, :, 0]
-        s = hsv[:, :, 1]
-        v = hsv[:, :, 2]
-        ball_color = (int(np.median(h)), int(np.median(s)), int(np.median(v)))
-        self.lower = (max(0, ball_color[0] - ObjectInFrame.H_RANGE), max(0, ball_color[1] - ObjectInFrame.S_RANGE),
-                      max(20, ball_color[2] - ObjectInFrame.V_RANGE))
-        self.upper = (min(255, ball_color[0] + ObjectInFrame.H_RANGE), min(255, ball_color[1] + ObjectInFrame.S_RANGE),
-                      min(255, ball_color[2] + ObjectInFrame.V_RANGE))
+        self.set_color_bounds(crop_img)
 
     def save_bounds(self, lower, upper):
-        self.lower = self.str_to_color_bound(lower)
-        self.upper = self.str_to_color_bound(upper)
+        self.lower_hsv = self.str_to_color_bound(lower)
+        self.upper_hsv = self.str_to_color_bound(upper)
 
     def set_image(self, frame):
         self.frame = frame
@@ -82,3 +75,22 @@ class ObjectInFrame:
     def str_to_color_bound(bound):
         bound = bound.split(',')
         return int(bound[0]), int(bound[1]), int(bound[2])
+
+    def update_color_bounds(self, pixel_rect = 10):
+        y_max = min(self.y + pixel_rect, self.image.shape[0])
+        y_min = max(self.y - pixel_rect, 0)
+        x_max = min(self.x + pixel_rect, self.image.shape[1])
+        x_min = max(self.x - pixel_rect, 0)
+        crop_img = self.image[y_min: y_max, x_min: x_max]
+        self.set_color_bounds(crop_img)
+
+    def set_color_bounds(self, color_image):
+        hsv = cv2.cvtColor(color_image, cv2.COLOR_BGR2HSV)
+        h = hsv[:, :, 0]
+        s = hsv[:, :, 1]
+        v = hsv[:, :, 2]
+        ball_color = (int(np.median(h)), int(np.median(s)), int(np.median(v)))
+        self.lower_hsv = (max(0, ball_color[0] - ObjectInFrame.H_RANGE), max(0, ball_color[1] - ObjectInFrame.S_RANGE),
+                max(20, ball_color[2] - ObjectInFrame.V_RANGE))
+        self.upper_hsv = (min(255, ball_color[0] + ObjectInFrame.H_RANGE), min(255, ball_color[1] + ObjectInFrame.S_RANGE),
+                      min(255, ball_color[2] + ObjectInFrame.V_RANGE))

@@ -104,8 +104,9 @@ class Drone:
         return np.mean(self.old_dest_coords, axis=0)
 
     def track_3d(self, dest_x, dest_y, dest_z, obstacle=None):
-        if not self.active:
+        if not self.active and obstacle:
             dest_x, dest_y = obstacle.bypass_obstacle_coordinates(dest_x, dest_y)
+            print(dest_x, dest_y)
         self.drone_control.track_3d(dest_x, dest_y, dest_z, self.recognizable_object)
         self.dest_coords = (dest_x, dest_y, dest_z)
 
@@ -133,5 +134,8 @@ class Drone:
         self.drone_control.stop()
 
     def set_obstacle(self, left_cam):
+        if self.dest_coords == (0, 0, 0):
+            self.obstacle = None
+            return
         self.obstacle = Obstacle(self, left_cam)
  

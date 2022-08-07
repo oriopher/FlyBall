@@ -1,7 +1,7 @@
 import cv2, numpy as np
 from recognizable_object import RecognizableObject
 from drone import Drone
-from common import MAYA_PHONE_NIR, ORI_PHONE, read_colors, write_colors, display_frames, BORDERS_FILENAME, COLORS_FILENAME, EFRAT_WEB, NIR_PHONE_NIR
+from common import MAYA_PHONE_NIR, ORI_PHONE, load_colors, save_colors, display_frames, BORDERS_FILENAME, COLORS_FILENAME, EFRAT_WEB, NIR_PHONE_NIR
 from borders import Borders
 from camera import Camera
 
@@ -54,11 +54,11 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
 
     # the 'p' button is set as the save text_colors to file
     elif key == ord('p'):
-        write_colors(COLORS_FILENAME, [balloon, drone_1, drone_2])
+        save_colors(COLORS_FILENAME, [balloon, drone_1, drone_2])
 
     # the 'k' button is set as the read text_colors from file
     elif key == ord('k'):
-        read_colors(COLORS_FILENAME, [balloon, drone_1, drone_2])
+        load_colors(COLORS_FILENAME, [balloon, drone_1, drone_2])
 
     # the 'j' button is set as the saving the borders. can save 4 coordinates
     elif key == ord('j'):

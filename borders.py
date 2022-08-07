@@ -72,6 +72,8 @@ class Borders:
         return self.coordinate_in_borders(recognizable_object.x, recognizable_object.y)
 
     def draw_borders(self, show_img, recognizable_objects, color_in=(240, 0, 240), color_out=(240, 0, 240)):
+        if not self.set_borders:
+            return show_img
         color = color_in
         for recognizable_object in recognizable_objects:
             if not self.in_borders(recognizable_object):
@@ -82,8 +84,8 @@ class Borders:
         return show_img
 
     # saves borders coordinates to filename
-    def save_borders(self, filename, left_camera):
-        file_text = str(self.quad) + str(left_camera)
+    def save_borders(self, filename):
+        file_text = str(self.quad)
 
         if os.path.exists(filename):
             os.remove(filename)
@@ -106,7 +108,6 @@ class Borders:
         self._read_coor(1, lines[1])
         self._read_coor(2, lines[2])
         self._read_coor(3, lines[3])
-        self._read_img_info(lines[4])
 
         self.calc_borders(left_cam)
         self.set_borders = True
@@ -114,12 +115,5 @@ class Borders:
 
     def _read_coor(self, idx, line):
         line_s = line.split(',')
-        self.quad.coordinates[idx][0] = float(line_s[0])
-        self.quad.coordinates[idx][1] = float(line_s[1])
-
-    def _read_img_info(self, line):
-        line_s = line.split(',')
-        self.quad.fov_horz = float(line_s[0])
-        self.quad.fov_vert = float(line_s[1])
-        self.quad.x_n_pix = int(line_s[2])
-        self.quad.z_n_pix = int(line_s[3])
+        self.coordinates[idx][0] = float(line_s[0])
+        self.coordinates[idx][1] = float(line_s[1])
