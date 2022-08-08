@@ -19,8 +19,9 @@ import numpy as np
 
 
 class Obstacle:
+    EPSILON = 1e-3
     EXIT_MARGIN = 100
-    MARGINS = 0
+    MARGINS = 1
     MARGINS_END = 35
     MARGINS_START = 20
     MARGINS_SIDES = 20
@@ -28,6 +29,7 @@ class Obstacle:
     def __init__(self, drone, left_cam):
         self.start = (drone.x, drone.y)
         self.end = (drone.dest_coords[0], drone.dest_coords[1])
+        print("obstacle start, end = ", self.start, self.end)
         self._preparation_dest = (0, 0)
         self._quad = Quadrangle(self._calc_corners(), left_cam)
 
@@ -44,7 +46,7 @@ class Obstacle:
             corner2 = (mid[0] - margin2, mid[1])
 
         # horizontal track
-        elif p1[1] == p2[1]:
+        elif np.abs(p1[1] - p2[1]) < self.EPSILON:
             corner1 = (mid[0], mid[1] + margin2)
             corner2 = (mid[0], mid[1] - margin2)
 
@@ -89,7 +91,7 @@ class Obstacle:
         if self.coord_in_obstacle(target[0], target[1]):
             new_target = self._get_exit_dest(target[0], target[1])
             print("dest in obstacle, new dest: ", target[0], target[1])
-            return self.bypass_obstacle_coordinates(source, new_target)             
+            return self.bypass_obstacle_coordinates(source, new_target)
 
         obstacle_distances = self._get_corners_reachable_distances()
         target_vertices = np.vstack([self.coordinates, target])
@@ -165,16 +167,17 @@ class Obstacle:
                 distances = np.append(distances, abs(curve[0] * x - y + curve[1]) / np.sqrt(curve[0] ** 2 + 1))
         return distances
 
-    def _continue_line_to_distance(self, x1, y1, x2, y2, r):
-        if x1 == x2:
+    @staticmethod
+    def _continue_line_to_distance(x1, y1, x2, y2, r):
+        if np.abs(x1-x2) < Obstacle.EPSILON:
             s = 0 if y2 > y1 else 1
             return (x1, y1 + r * (-1)**s), (x1, y1 + r * (-1)**(1-s))
         a = (y1 - y2) / (x1 - x2)
         b = y1 - a*x1
         s = 0 if x2 > x1 else 1
-        x3 = self._solve_quadratic(a**2 + 1, 2*(a*b - x1 - a*y1), y1**2+x1**2+b**2-2*b*y1-r**2, s)
+        x3 = Obstacle._solve_quadratic(a**2 + 1, 2*(a*b - x1 - a*y1), y1**2+x1**2+b**2-2*b*y1-r**2, s)
         y3 = a*x3 + b
-        x4 = self._solve_quadratic(a**2 + 1, 2*(a*b - x1 - a*y1), y1**2+x1**2+b**2-2*b*y1-r**2, 1-s)
+        x4 = Obstacle._solve_quadratic(a**2 + 1, 2*(a*b - x1 - a*y1), y1**2+x1**2+b**2-2*b*y1-r**2, 1-s)
         y4 = a*x4 + b
         return (x3, y3), (x4, y4)
 
@@ -213,9 +216,7 @@ class Obstacle:
 
     @staticmethod
     def _solve_quadratic(a, b, c, s):
-        try:
-            res = (-b + np.sqrt(b ** 2 - 4 * a * c) * ((-1) ** s)) / (2 * a)
-        except:
-            print("quadratic error: a = {:.2f}, b = {:.2f}, c = {:.2f}, b^2-4ac = {:.2f}".format(a, b, c, b**2 - 4*a*c))
-            res = -b/(2 * a)
-        return res
+        delta = b ** 2 - 4 * a * c
+        if delta < 0:
+            print("quadratic error: a = {:.2f}, b = {:.2f}, c = {:.2f}, b^2-4ac = {:.2f}".format(a, b, c, delta))
+        return (-b + np.sqrt(delta) * ((-1) ** s)) / (2 * a)

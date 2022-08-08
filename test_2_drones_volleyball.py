@@ -43,11 +43,11 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
 
     elif key == ord('t'):
         drone_1.takeoff()
-        # drone_2.takeoff()
+        drone_2.takeoff()
 
     elif key == ord('y'):
         drone_1.start_track()
-        drone_2.start = True
+        drone_2.start_track()
 
     # the 'q' button is set as the quitting button
     elif key == ord('q'):
@@ -82,14 +82,6 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
     elif key == ord('x'):
         drone_1.testing = 0
 
-    elif key == ord('m'):
-        drone_1.recognizable_object.frame_left.update_color_bounds()
-        drone_1.recognizable_object.frame_right.update_color_bounds()
-        drone_2.recognizable_object.frame_left.update_color_bounds()
-        drone_2.recognizable_object.frame_right.update_color_bounds()
-        balloon.frame_right.update_color_bounds()
-        balloon.frame_right.update_color_bounds()
-
     return True
 
 
@@ -98,8 +90,8 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
     continue_loop = True
 
     borders = Borders()
-    drones = [drone_1.recognizable_object, drone_2.recognizable_object]
-    recognizable_objects = [balloon] + drones
+    drones = [drone_1, drone_2]
+    recognizable_objects = [balloon] + [drone.recognizable_object for drone in drones]
     load_colors(COLORS_FILENAME, recognizable_objects)
     borders.load_borders(BORDERS_FILENAME, left)
 
@@ -107,7 +99,7 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
         drone_1.set_middle((borders.x_middle_1, borders.y_middle))
         drone_2.set_middle((borders.x_middle_2, borders.y_middle))
     
-    drone_2.active = True
+    drone_1.active = True
     
     while continue_loop:
         # Capture the video frame by frame
@@ -120,36 +112,35 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
             # Process frames
             recognizable_object.detect_and_set_coordinates(left, right, cameras_distance)
             
-        display_frames(balloon, [drone_1, drone_2], left, right, borders)
-
-        drone_2.dest_coords = (balloon.x, balloon.y, DRONE_DEFAULT_HEIGHT)
+        display_frames(balloon, drones, left, right, borders)
 
         # Set Obstacle
-        if drone_1.start:
-            print("drone1 obstacle")
-            drone_1.set_obstacle(left)
-        if drone_2.start:
-            print("drone2 obstacle")
-            drone_2.set_obstacle(left)
+        for drone in drones:
+            if drone.start:
+                drone.set_obstacle(left)
 
         # State Machine
-        state = drone_1.state
-        state.run(drone_1, drone_2, balloon, borders)
-        transition = state.to_transition(drone_1, drone_2, balloon, borders)
-        if transition:
-            state.cleanup(transition, drone_1, drone_2, balloon, borders)
-            state = drone_1.state = state.next(transition)
-            print(state)
-            state.setup(drone_1, drone_2, balloon, borders)
+        for i, drone in enumerate(drones):
+            drone.state.run(drone, drone[1-i], balloon, borders)
+            transition = drone.state.to_transition(drone, drone[1-i], balloon, borders)
+            if transition:
+                drone.state.cleanup(transition, drone, drone[1-i], balloon, borders)
+                drone.state = drone.state.next(transition)
+                print(drone.state)
+                drone.state.setup(drone, drone[1-i], balloon, borders)
 
         continue_loop = interactive_loop(borders, left, balloon, drone_1, drone_2)
 
+    for i in range(3):
+        for drone in drones:
+            drone.stop()
 
-    if drone_1.tookoff:
-        try:
-            drone_1.land()
-        except:
-            pass
+    for drone in drones:
+        if drone.tookoff:
+            try:
+                drone.land()
+            except:
+                pass
 
     # After the loop release the cap object
     left.release()

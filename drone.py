@@ -5,7 +5,8 @@ from common import DRONE_DEFAULT_HEIGHT
 from obstacle import Obstacle
 from recognizable_object import RecognizableObject
 # from loop_state_machine import ON_GROUND
-from loop_state_machine_passive_test import ON_GROUND
+# from loop_state_machine_passive_test import ON_GROUND
+from loop_state_machine_2_drones_volleyball import ON_GROUND
 from tello_drone_control import TelloDroneControl
 
 

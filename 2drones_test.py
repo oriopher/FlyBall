@@ -75,10 +75,6 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
         drone_1.set_middle((borders.x_middle_1, borders.y_middle))
         drone_2.set_middle((borders.x_middle_2, borders.y_middle))
 
-    # the 'a' button is set to abort hitting state back to seek middle
-    elif key == ord('a'):
-        drone_1.stop_hit()
-
     elif key == ord('z'):
         drone_1.testing = 1
 
