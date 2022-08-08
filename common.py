@@ -116,7 +116,6 @@ def display_frames(balloon, drones, left_cam, right_cam, borders):
     for drone in drones:
         if drone.start and drone.active:
             obstacle = drone.obstacle
-            print("defined obstacle")
             break
     
     xy_display = get_xy_display(borders, balloon, drones, obstacle)

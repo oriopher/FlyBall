@@ -14,5 +14,8 @@ EFRAT_PHONE_NIR = Camera(68, 77, 2, False)
 C920_NIR_1 = Camera(56, 39, 4, False)
 C920_NIR_2 = Camera(56, 39, 3, False)
 
+C920_ORI_1 = Camera(56, 39, 7, False)
+C920_ORI_2 = Camera(56, 39, 6, False)
+
 COLORS_FILENAME = "color_bounds.txt"
 BORDERS_FILENAME = "borders.txt"

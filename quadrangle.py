@@ -113,6 +113,7 @@ class Quadrangle:
                                                                                                   left_cam.fov_vert)
 
     def _generate_arrangement(self):
+        print("obstacle: ", self.coordinates)
         points = [self._point_to_cgal(point) for point in self.coordinates]
         curves = []
         for i, cor in enumerate(self.CORNERS):

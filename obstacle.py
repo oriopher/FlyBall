@@ -20,7 +20,7 @@ import numpy as np
 
 class Obstacle:
     EXIT_MARGIN = 100
-    MARGINS = 25
+    MARGINS = 0
     MARGINS_END = 35
     MARGINS_START = 20
     MARGINS_SIDES = 20
@@ -28,141 +28,40 @@ class Obstacle:
     def __init__(self, drone, left_cam):
         self.start = (drone.x, drone.y)
         self.end = (drone.dest_coords[0], drone.dest_coords[1])
-        self._quad = Quadrangle(self.calc_corners(), left_cam)
+        self._preparation_dest = (0, 0)
+        self._quad = Quadrangle(self._calc_corners(), left_cam)
 
     @property
     def coordinates(self):
         return self._quad.coordinates
 
-    def _calc_middles(self):
-        x_middle = (self.start[0] + self.end[0]) / 2
-        y_middle = (self.start[1] + self.end[1]) / 2
+    def _closest_corners(self, p1, p2, margin1, margin2):
+        _, mid = self._continue_line_to_distance(*p1, *p2, margin1)
 
-        # rectangle parallel to y axis
-        if self.end[0] == self.start[0]:
-            x_middle_low = x_middle - self.MARGINS_SIDES
-            x_middle_upper = x_middle + self.MARGINS_SIDES
-            y_middle_low = y_middle
-            y_middle_upper = y_middle
+        # vertical track
+        if p1[0] == p2[0]:
+            corner1 = (mid[0] + margin2, mid[1])
+            corner2 = (mid[0] - margin2, mid[1])
 
-        # rectangle parallel to x axis
-        elif self.end[1] == self.start[1]:
-            x_middle_low = x_middle
-            x_middle_upper = x_middle
-            y_middle_low = y_middle - self.MARGINS_SIDES
-            y_middle_upper = y_middle + self.MARGINS_SIDES
+        # horizontal track
+        elif p1[1] == p2[1]:
+            corner1 = (mid[0], mid[1] + margin2)
+            corner2 = (mid[0], mid[1] - margin2)
 
         else:
-            m_track = (self.start[1] - self.end[1]) / (self.start[0] - self.end[0])
-            b_track = y_middle - m_track * x_middle
+            a = -(p2[0] - p1[0])/(p2[1] - p1[1])  # slope of perpendicular line
+            b = mid[1] - a * mid[0]
+            x2 = mid[0] + 1
+            y2 = a*x2 + b
+            corner1, corner2 = self._continue_line_to_distance(*mid, x2, y2, margin2)
 
-            x_middle_low, y_middle_low = self._calc_coor_below(m_track, b_track, x_middle, y_middle, self.MARGINS_SIDES)
-            x_middle_upper, y_middle_upper = self._calc_coor_above(m_track, b_track, x_middle, y_middle, self.MARGINS_SIDES)
+        return corner1, corner2, mid
 
-        return x_middle_low, y_middle_low, x_middle_upper, y_middle_upper
+    def _calc_corners(self):
+        corner1, corner2, self._preparation_dest = self._closest_corners(self.end, self.start, self.MARGINS_END, self.MARGINS_SIDES)
+        corner3, corner4, _ = self._closest_corners(self.start, self.end, self.MARGINS_START, self.MARGINS_SIDES)
 
-    # finds the vertexes of the rectangle
-    def calc_corners(self):
-        x_middle_low, y_middle_low, x_middle_upper, y_middle_upper = self._calc_middles()
-        length_end = 0.5 * np.sqrt((self.start[0] - self.end[0]) ** 2 + (self.start[1] - self.end[1]) ** 2) + self.MARGINS_END
-        length_start = 0.5 * np.sqrt((self.start[0] - self.end[0]) ** 2 + (self.start[1] - self.end[1]) ** 2) + self.MARGINS_START
-                
-        # Horizontal rectangle
-        if x_middle_upper == x_middle_low:
-            if self.end[0] >= self.start[0]:
-                a_x = x_middle_upper - length_start
-                a_y = y_middle_upper
-                
-                d_x = x_middle_upper + length_end
-                d_y = y_middle_upper
-                
-                b_x = x_middle_low - length_start
-                b_y = y_middle_low
-
-                c_x = x_middle_low + length_end
-                c_y = y_middle_low
-        
-            else:
-                a_x = x_middle_upper - length_end
-                a_y = y_middle_upper
-                
-                d_x = x_middle_upper + length_start
-                d_y = y_middle_upper
-                
-                b_x = x_middle_low - length_end
-                b_y = y_middle_low
-
-                c_x = x_middle_low + length_start
-                c_y = y_middle_low
-
-            
-        # Vertical rectangle
-        elif y_middle_upper == y_middle_low:
-            if self.end[1] >= self.start[1]:
-                a_y = y_middle_upper - length_start
-                a_x = x_middle_upper
-
-                d_y = y_middle_upper + length_end
-                d_x = x_middle_upper
-
-                b_y = y_middle_low - length_start
-                b_x = x_middle_low
-
-                c_y = y_middle_low + length_end
-                c_x = x_middle_low
-
-            else:
-                a_y = y_middle_upper - length_end
-                a_x = x_middle_upper
-
-                d_y = y_middle_upper + length_start
-                d_x = x_middle_upper
-
-                b_y = y_middle_low - length_end
-                b_x = x_middle_low
-
-                c_y = y_middle_low + length_start
-                c_x = x_middle_low
-
-        # Slanted rectangle
-        else:
-            # Calculate slope of the side
-            m = (x_middle_upper - x_middle_low) / (y_middle_low - y_middle_upper)
-            
-            # Calculate displacements along axes
-            dx_end = (length_end / np.sqrt(1 + (m ** 2)))
-            dy_end = m * dx_end
-            dx_start = (length_start / np.sqrt(1 + (m ** 2)))
-            dy_start = m *dx_start
-            
-            if (m < 0 and self.end[1] > self.start[1]) or (m > 0 and self.end[1] < self.start[1]):
-                a_x = x_middle_upper - dx_start
-                a_y = y_middle_upper - dy_start
-
-                d_x = x_middle_upper + dx_end
-                d_y = y_middle_upper + dy_end
-
-                b_x = x_middle_low - dx_start
-                b_y = y_middle_low - dy_start
-
-                c_x = x_middle_low + dx_end
-                c_y = y_middle_low + dy_end
-
-            else:
-                a_x = x_middle_upper - dx_end
-                a_y = y_middle_upper - dy_end
-
-                d_x = x_middle_upper + dx_start
-                d_y = y_middle_upper + dy_start
-
-                b_x = x_middle_low - dx_end
-                b_y = y_middle_low - dy_end
-
-                c_x = x_middle_low + dx_start
-                c_y = y_middle_low + dy_start                    
-
-        # retruns rectangle's coordinates
-        return [(c_x, c_y), (b_x, b_y), (d_x, d_y), (a_x, a_y)]
+        return corner1, corner2, corner3, corner4
 
     # checks if the drone is inside the obstacle
     def inside_obstacle(self, drone):
@@ -183,12 +82,13 @@ class Obstacle:
         return show_img
 
     def bypass_obstacle_coordinates(self, source, target):
-
         if self.coord_in_obstacle(source[0], source[1]):
+            print("EXIT!!!")
             return self._get_exit_dest(source[0], source[1], self.EXIT_MARGIN)
 
         if self.coord_in_obstacle(target[0], target[1]):
             new_target = self._get_exit_dest(target[0], target[1])
+            print("dest in obstacle, new dest: ", target[0], target[1])
             return self.bypass_obstacle_coordinates(source, new_target)             
 
         obstacle_distances = self._get_corners_reachable_distances()
@@ -203,7 +103,7 @@ class Obstacle:
         next_vertex = path[0]
         next_point = target_vertices[next_vertex - 1]
         print("next point: ", next_point)
-        return self._continue_line_to_distance(*source, *next_point, np.linalg.norm(np.array(source) - np.array(target)))
+        return self._continue_line_to_distance(*source, *next_point, np.linalg.norm(np.array(source) - np.array(target)))[0]
 
     def _get_reachable_distances(self, point, vertices):
         distances = np.linalg.norm(vertices - point, axis=1)
@@ -218,25 +118,10 @@ class Obstacle:
         return obstacle_distances
 
     def get_preparation_dest(self):
-        distances = np.array([])
-        # calculates squared distance to every point of te rectangle
-        for coordinate in self.coordinates:
-            dist_start = (self.start[0] - coordinate[0]) ** 2 + (self.start[1] - coordinate[1]) ** 2
-            dist_end = (self.end[0] - coordinate[0]) ** 2 + (self.end[1] - coordinate[1]) ** 2
-            distances = np.append(distances, dist_end - dist_start)
-
-        # finds 2 nearest points to end point
-        first_point = self.coordinates[np.argmin(distances)]
-        distances[np.argmin(distances)] = np.max(distances) + 1
-        second_point = self.coordinates[np.argmin(distances)]
-
-        x_dest = (first_point[0] + second_point[0]) / 2
-        y_dest = (first_point[1] + second_point[1]) / 2
-
-        return x_dest, y_dest
+        return self._preparation_dest
 
     # returns the nearest exit point from obstacle
-    def _get_exit_dest(self, x, y, exit_dist=EXIT_MARGIN):
+    def _get_exit_dest(self, x, y, exit_dist=MARGINS):
         curves = np.zeros((4, 2))
 
         if self.coord_in_obstacle(x, y):
@@ -283,13 +168,15 @@ class Obstacle:
     def _continue_line_to_distance(self, x1, y1, x2, y2, r):
         if x1 == x2:
             s = 0 if y2 > y1 else 1
-            return x1, y1 + r * (-1)**s
+            return (x1, y1 + r * (-1)**s), (x1, y1 + r * (-1)**(1-s))
         a = (y1 - y2) / (x1 - x2)
         b = y1 - a*x1
         s = 0 if x2 > x1 else 1
-        x = self._solve_quadratic(a**2 + 1, 2*(a*b - x1 - a*y1), y1**2+x1**2+b**2-2*b*y1-r**2, s)
-        y = a*x + b
-        return x, y
+        x3 = self._solve_quadratic(a**2 + 1, 2*(a*b - x1 - a*y1), y1**2+x1**2+b**2-2*b*y1-r**2, s)
+        y3 = a*x3 + b
+        x4 = self._solve_quadratic(a**2 + 1, 2*(a*b - x1 - a*y1), y1**2+x1**2+b**2-2*b*y1-r**2, 1-s)
+        y4 = a*x4 + b
+        return (x3, y3), (x4, y4)
 
     # returns the coor above given line in a given distance
     @staticmethod
@@ -326,4 +213,9 @@ class Obstacle:
 
     @staticmethod
     def _solve_quadratic(a, b, c, s):
-        return (-b + np.sqrt(b ** 2 - 4 * a * c) * ((-1) ** s)) / (2 * a)
+        try:
+            res = (-b + np.sqrt(b ** 2 - 4 * a * c) * ((-1) ** s)) / (2 * a)
+        except:
+            print("quadratic error: a = {:.2f}, b = {:.2f}, c = {:.2f}, b^2-4ac = {:.2f}".format(a, b, c, b**2 - 4*a*c))
+            res = -b/(2 * a)
+        return res

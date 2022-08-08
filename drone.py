@@ -105,7 +105,7 @@ class Drone:
 
     def track_3d(self, dest_x, dest_y, dest_z, obstacle=None):
         if not self.active and obstacle:
-            print('original dest: ', self.x, self.y)
+            print('original dest: ', dest_x, dest_y)
             dest_x, dest_y = obstacle.bypass_obstacle_coordinates((self.x, self.y),(dest_x, dest_y))
             print("dest: ", dest_x, dest_y)
             print("location: ", self.x, self.y)

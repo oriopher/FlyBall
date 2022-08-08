@@ -1,11 +1,11 @@
 import cv2, numpy as np
-from consts import C920_NIR_1, C920_NIR_2, DRONE_DEFAULT_HEIGHT, BORDERS_FILENAME, COLORS_FILENAME
+from consts import C920_NIR_1, C920_NIR_2, C920_ORI_1, C920_ORI_2, DRONE_DEFAULT_HEIGHT, BORDERS_FILENAME, COLORS_FILENAME
 from recognizable_object import RecognizableObject
 from drone import Drone
 from common import load_colors, save_colors, display_frames
 from borders import Borders
 from camera import Camera
-
+import faulthandler
 
 def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableObject, drone_1: Drone, drone_2: Drone) -> bool:
     key = cv2.waitKey(1) & 0xFF
@@ -31,7 +31,7 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
         drone_1.detect_color(False)
         print(str_colors_changed)
 
-    # the 'w' button is set as the detect color of drone_2 in the right_cam cam
+    # the 'w' button is set as the detect color of drone_2 in the left_cam cam
     elif key == ord('w'):
         drone_2.detect_color(True)
         print(str_colors_changed)
@@ -157,8 +157,8 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
 
 
 def main():
-    right_cam = C920_NIR_2
-    left_cam = C920_NIR_1
+    right_cam = C920_ORI_1
+    left_cam = C920_ORI_2
 
     drone_1 = Drone(1, (0, 191, 255), 7, iface_ip="192.168.10.2")
     drone_2 = Drone(2, (38, 38, 200), 7, iface_ip="192.168.10.10")
@@ -169,4 +169,5 @@ def main():
 
 
 if __name__ == "__main__":
+    faulthandler.enable()
     main()
