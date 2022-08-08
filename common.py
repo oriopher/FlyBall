@@ -5,9 +5,8 @@ from consts import *
 
 from xy_display import get_xy_display
 
-def first_on_second_off(drone1, drone2):
-    drone1.active = True
-    drone2.active = False
+def swap_activity(drone1, drone2):
+    drone1.active, drone2.active = drone2.active, drone1.active
 
 def phys_to_left_pix_img(x_cm, y_cm, z_cm, image, cam):  # image is a direct image from the camera and not image3d
     return phys_to_left_pix(x_cm, y_cm, z_cm, cam.last_capture.x_n_pix, cam.last_capture.z_n_pix, cam.fov_horz, cam.fov_vert)

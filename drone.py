@@ -1,7 +1,7 @@
 import datetime
 import numpy as np
 
-from common import DRONE_DEFAULT_HEIGHT
+from consts import DRONE_DEFAULT_HEIGHT
 from obstacle import Obstacle
 from recognizable_object import RecognizableObject
 # from loop_state_machine import ON_GROUND
