@@ -29,7 +29,7 @@ class Obstacle:
     def __init__(self, drone, left_cam):
         self.start = (drone.x, drone.y)
         self.end = (drone.dest_coords[0], drone.dest_coords[1])
-        print("obstacle start, end = ", self.start, self.end)
+        # print("obstacle start, end = ", self.start, self.end)
         self._preparation_dest = (0, 0)
         self._quad = Quadrangle(self._calc_corners(), left_cam)
 
@@ -84,13 +84,13 @@ class Obstacle:
         return show_img
 
     def bypass_obstacle_coordinates(self, source, target):
-        if self.coord_in_obstacle(source[0], source[1]):
-            print("EXIT!!!")
-            return self._get_exit_dest(source[0], source[1], self.EXIT_MARGIN)
+        if self.coord_in_obstacle(*source):
+            # print("EXIT!!!")
+            return self._get_exit_dest(*source, self.EXIT_MARGIN)
 
-        if self.coord_in_obstacle(target[0], target[1]):
-            new_target = self._get_exit_dest(target[0], target[1])
-            print("dest in obstacle, new dest: ", target[0], target[1])
+        if self.coord_in_obstacle(*target):
+            new_target = self._get_exit_dest(*target)
+            # print("dest in obstacle, new dest: ", target[0], target[1])
             return self.bypass_obstacle_coordinates(source, new_target)
 
         obstacle_distances = self._get_corners_reachable_distances()
@@ -104,7 +104,7 @@ class Obstacle:
             return source
         next_vertex = path[0]
         next_point = target_vertices[next_vertex - 1]
-        print("next point: ", next_point)
+        # print("next point: ", next_point)
         return self._continue_line_to_distance(*source, *next_point, np.linalg.norm(np.array(source) - np.array(target)))[0]
 
     def _get_reachable_distances(self, point, vertices):
@@ -217,6 +217,6 @@ class Obstacle:
     @staticmethod
     def _solve_quadratic(a, b, c, s):
         delta = b ** 2 - 4 * a * c
-        if delta < 0:
-            print("quadratic error: a = {:.2f}, b = {:.2f}, c = {:.2f}, b^2-4ac = {:.2f}".format(a, b, c, delta))
+        # if delta < 0:
+            # print("quadratic error: a = {:.2f}, b = {:.2f}, c = {:.2f}, b^2-4ac = {:.2f}".format(a, b, c, delta))
         return (-b + np.sqrt(delta) * ((-1) ** s)) / (2 * a)

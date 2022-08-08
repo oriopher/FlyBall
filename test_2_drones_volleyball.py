@@ -42,8 +42,8 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
         print(str_colors_changed)
 
     elif key == ord('t'):
-        drone_1.takeoff()
-        drone_2.takeoff()
+        drone_1.tookoff = True
+        drone_2.tookoff = True
 
     elif key == ord('y'):
         drone_1.start_track()
@@ -69,6 +69,7 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
             borders.save_borders(BORDERS_FILENAME)
             drone_1.set_middle((borders.x_middle_1, borders.y_middle))
             drone_2.set_middle((borders.x_middle_2, borders.y_middle))
+            # drone_2.default_height = drone_q.default_height + 30 # for safety we can delete this when seek middle works
 
     # the 'r' button is set as the read text_colors from file
     elif key == ord('r'):
@@ -98,6 +99,8 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
         drone_2.set_middle((borders.x_middle_2, borders.y_middle))
     
     drone_1.active = True
+    drone_1.set_middle((90, 350))
+    drone_2.set_middle((7, 365))
     
     while continue_loop:
         # Capture the video frame by frame
@@ -119,13 +122,13 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
 
         # State Machine
         for i, drone in enumerate(drones):
-            drone.state.run(drone, drone[1-i], balloon, borders)
-            transition = drone.state.to_transition(drone, drone[1-i], balloon, borders)
+            drone.state.run(drone, drones[1-i], balloon, borders)
+            transition = drone.state.to_transition(drone, drones[1-i], balloon, borders)
             if transition:
-                drone.state.cleanup(transition, drone, drone[1-i], balloon, borders)
+                drone.state.cleanup(transition, drone, drones[1-i], balloon, borders)
                 drone.state = drone.state.next(transition)
-                print(drone.state)
-                drone.state.setup(drone, drone[1-i], balloon, borders)
+                print("drone", drone.ident, " state:", drone.state)
+                drone.state.setup(drone, drones[1-i], balloon, borders)
 
         continue_loop = interactive_loop(borders, left, balloon, drone_1, drone_2)
 
@@ -148,8 +151,8 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
 
 
 def main():
-    right_cam = C920_ORI_1
-    left_cam = C920_ORI_2
+    right_cam = C920_NIR_2
+    left_cam = C920_NIR_1
 
     drone_1 = Drone(1, (0, 191, 255), 7, iface_ip="192.168.10.2")
     drone_2 = Drone(2, (38, 38, 200), 7, iface_ip="192.168.10.10")

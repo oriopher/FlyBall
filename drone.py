@@ -59,7 +59,7 @@ class Drone:
 
     @property
     def battery(self):
-        return "battery = {:d}%".format(self.drone_control.get_battery())
+        return "drone{} battery = {:d}%".format(self.ident, self.drone_control.get_battery())
 
     def detect_color(self, is_left):
         self.recognizable_object.detect_color(is_left)
@@ -68,7 +68,6 @@ class Drone:
         self.drone_control.connect()
         print(self.battery)
         self.drone_control.takeoff()
-        self.tookoff = True
 
     def land(self):
         self.drone_control.land()
@@ -106,12 +105,13 @@ class Drone:
 
     def track_3d(self, dest_x, dest_y, dest_z, obstacle=None):
         if not self.active and obstacle:
-            print('original dest: ', dest_x, dest_y)
+            # print('original dest: ', dest_x, dest_y)
             dest_x, dest_y = obstacle.bypass_obstacle_coordinates((self.x, self.y),(dest_x, dest_y))
-            print("dest: ", dest_x, dest_y)
-            print("location: ", self.x, self.y)
-            print(obstacle.coordinates)
-        self.drone_control.track_3d(dest_x, dest_y, dest_z, self.recognizable_object)
+            # print("dest: ", dest_x, dest_y)
+            # print("location: ", self.x, self.y)
+            # print(obstacle.coordinates)
+        if self.dest_coords != (0,0,0):
+            self.drone_control.track_3d(dest_x, dest_y, dest_z, self.recognizable_object)
         self.dest_coords = (dest_x, dest_y, dest_z)
 
     def track_balloon(self, balloon, obstacle=None):
@@ -129,8 +129,8 @@ class Drone:
 
     def track_descending(self, obstacle=None):
         dest_x, dest_y = self.middle
-        if not self.active:
-            dest_x, dest_y = obstacle.bypass_obstacle_coordinates(dest_x, dest_y)
+        if not self.active and obstacle:
+            dest_x, dest_y = obstacle.bypass_obstacle_coordinates((self.x, self.y),(dest_x, dest_y))
         self.drone_control.track_descending(dest_x, dest_y, self.recognizable_object)
         self.dest_coords = (dest_x, dest_y, self.default_height)
 
