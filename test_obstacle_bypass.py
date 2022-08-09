@@ -51,12 +51,12 @@ def interactive_loop(borders: Borders, obstacle: Obstacle, left_cam: Camera, bal
         print("Saved the %.0f coordinate: (%.0f,%.0f)" % (borders.index, balloon.x, balloon.y))
         if borders.index == 4:
             borders.save_borders(BORDERS_FILENAME)
-            drone.set_middle((borders.x_middle, borders.y_middle))
+            drone.set_home((borders.x_middle, borders.y_middle))
 
     # the 'r' button is set as the read text_colors from file
     elif key == ord('r'):
         borders.load_borders(BORDERS_FILENAME)
-        drone.set_middle((borders.x_middle, borders.y_middle))
+        drone.set_home((borders.x_middle, borders.y_middle))
 
     elif key == ord('b'):
         obstacle.update_obstacle(balloon.x, balloon.y, balloon.x + np.random.randint(2, 15), balloon.y + np.random.randint(2, 15), balloon, drone, left_cam)
@@ -77,7 +77,7 @@ def capture_video(drone: Drone, balloon: RecognizableObject, cameras_distance, l
     load_colors(COLORS_FILENAME, recognizable_objects)
     borders.load_borders(BORDERS_FILENAME)
     if borders.set_borders:
-        drone.set_middle((borders.x_middle, borders.y_middle))
+        drone.set_home((borders.x_middle, borders.y_middle))
 
     while continue_loop:
         # Capture the video frame by frame

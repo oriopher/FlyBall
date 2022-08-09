@@ -23,8 +23,8 @@ class Obstacle:
     EXIT_MARGIN = 100
     MARGINS = 1
     MARGINS_END = 35
-    MARGINS_START = 20
-    MARGINS_SIDES = 20
+    MARGINS_START = 30
+    MARGINS_SIDES = 30 # start must be graeter than sides
 
     def __init__(self, drone, left_cam):
         self.start = (drone.x, drone.y)

@@ -1,5 +1,5 @@
 import cv2, numpy as np
-from consts import C920_NIR_1, C920_NIR_2, C920_ORI_1, C920_ORI_2, DRONE_DEFAULT_HEIGHT, BORDERS_FILENAME, COLORS_FILENAME
+from consts import *
 from recognizable_object import RecognizableObject
 from drone import Drone
 from common import load_colors, save_colors, display_frames
@@ -67,15 +67,15 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
         print("Saved the %.0f coordinate: (%.0f,%.0f)" % (borders.index, balloon.x, balloon.y))
         if borders.index == 4:
             borders.save_borders(BORDERS_FILENAME)
-            drone_1.set_middle((borders.x_middle_1, borders.y_middle))
-            drone_2.set_middle((borders.x_middle_2, borders.y_middle))
+            drone_1.set_home((borders.x_middle_1, borders.y_middle))
+            drone_2.set_home((borders.x_middle_2, borders.y_middle))
             # drone_2.default_height = drone_q.default_height + 30 # for safety we can delete this when seek middle works
 
     # the 'r' button is set as the read text_colors from file
     elif key == ord('r'):
         borders.load_borders(BORDERS_FILENAME)
-        drone_1.set_middle((borders.x_middle_1, borders.y_middle))
-        drone_2.set_middle((borders.x_middle_2, borders.y_middle))
+        drone_1.set_home((borders.x_middle_1, borders.y_middle))
+        drone_2.set_home((borders.x_middle_2, borders.y_middle))
 
     elif key == ord('z'):
         drone_1.testing = 1
@@ -95,12 +95,12 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
     borders.load_borders(BORDERS_FILENAME, left)
 
     if borders.set_borders:
-        drone_1.set_middle((borders.x_middle_1, borders.y_middle))
-        drone_2.set_middle((borders.x_middle_2, borders.y_middle))
+        drone_1.set_home((borders.x_middle_1, borders.y_middle))
+        drone_2.set_home((borders.x_middle_2, borders.y_middle))
     
     drone_1.active = True
-    drone_1.set_middle((90, 350))
-    drone_2.set_middle((7, 365))
+    drone_1.set_home((90, 350))
+    drone_2.set_home((7, 365))
     
     while continue_loop:
         # Capture the video frame by frame

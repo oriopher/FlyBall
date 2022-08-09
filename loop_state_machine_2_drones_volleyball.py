@@ -1,10 +1,10 @@
 from datetime import datetime
 from pickle import FALSE
+from consts import DRONE_MIN_HEIGHT
 from prediction import NumericBallPredictor
 import numpy as np
-from common import reachability, first_on_second_off, FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
-
-MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
+from common import reachability, first_on_second_off
+from consts import DRONE_MIN_HEIGHT
 
 # INVARIANT: at all time one drone is active and one is inactive.
 class State:
@@ -74,7 +74,7 @@ class WAITING(State):
         return 0
 
     def run(self, drone, other_drone, balloon, borders):
-        drone.seek_middle(other_drone.obstacle)
+        drone.go_home(other_drone.obstacle)
 
 class STANDING_BY(State):
     XY_VEL_BOUND = 30
@@ -114,7 +114,7 @@ class STANDING_BY(State):
 
     def run(self, drone, other_drone, balloon, borders):
         if borders.set_borders:
-            drone.seek_middle(other_drone.obstacle)
+            drone.go_home(other_drone.obstacle)
         else:
             x_dest, y_dest = drone.x_0, drone.y_0
             drone.track_2d(x_dest, y_dest)
@@ -164,8 +164,8 @@ class SEARCHING_PREDICTION(State):
                                                                 start_time=time_until_hit)
         if not np.any(pred_coords):  # if pred_coords != (0,0,0)
             z_dest = pred_coords[2] - self.Z_OFFSET
-            if z_dest < MIN_SAFE_HEIGHT:
-                z_dest = MIN_SAFE_HEIGHT
+            if z_dest < DRONE_MIN_HEIGHT:
+                z_dest = DRONE_MIN_HEIGHT
 
         drone.track_3d(x_dest, y_dest, z_dest)
 
@@ -253,7 +253,8 @@ class DESCENDING(State):
         return drone.z <= other_drone.z + Z_OFFSET
 
     def run(self, drone, other_drone, balloon, borders):
-        drone.track_descending(other_drone.obstacle)
+        # drone.track_descending(other_drone.obstacle)
+        drone.track_descending_2drones(other_drone)
 
 
 class PREPARE_AND_AVOID(State):
@@ -275,8 +276,8 @@ class PREPARE_AND_AVOID(State):
         
         if not drone.active: 
             x_dest, y_dest = other_drone.obstacle.get_preparation_dest()
-            z_dest = HEIGHT_PREPARATION_FACTOR * other_drone.z
+            z_dest = DRONE_MIN_HEIGHT
         else:   # this occurs only when the other drone finished the hitting stage
-            x_dest, y_dest, z_dest = drone.dest_coords[0], drone.dest_coords[1], drone.dest_coords[2]
+            x_dest, y_dest, z_dest = drone.dest_coords
 
         drone.track_3d(x_dest, y_dest, z_dest, other_drone.obstacle)
