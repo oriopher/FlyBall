@@ -9,7 +9,7 @@ def first_on_second_off(drone1, drone2):
     drone1.active, drone2.active = True, False
     print(drone1.ident, "active")
 
-def phys_to_left_pix_img(x_cm, y_cm, z_cm, image, cam):  # image is a direct image from the camera and not image3d
+def phys_to_left_pix_img(x_cm, y_cm, z_cm, cam):
     return phys_to_left_pix(x_cm, y_cm, z_cm, cam.last_capture.x_n_pix, cam.last_capture.z_n_pix, cam.fov_horz, cam.fov_vert)
 
 
@@ -27,8 +27,8 @@ def image_with_circle(cam, show_img, coords_phys, rad_phys, color=(240, 240, 240
     if not np.any(coords_phys):
         return show_img
     x_phys, y_phys, z_phys = coords_phys
-    radius = phys_to_left_pix_img(x_phys + rad_phys, y_phys, z_phys, show_img, cam)[0] - phys_to_left_pix_img(x_phys, y_phys, z_phys, show_img, cam)[0]
-    coordinates = phys_to_left_pix_img(x_phys, y_phys, z_phys, show_img, cam)
+    radius = phys_to_left_pix_img(x_phys + rad_phys, y_phys, z_phys, cam)[0] - phys_to_left_pix_img(x_phys, y_phys, z_phys, cam)[0]
+    coordinates = phys_to_left_pix_img(x_phys, y_phys, z_phys, cam)
     if radius > 0:
         show_img = cv2.circle(show_img, coordinates, radius, color, thickness=thickness)
 
