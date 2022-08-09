@@ -1,9 +1,6 @@
 from drone_control import DroneControl
 import numpy as np
 from tello import Tello
-from scipy.spatial import distance_matrix
-from scipy.sparse import csr_matrix
-from scipy.sparse.csgraph import dijkstra
 
 
 class TelloDroneControl(DroneControl):
@@ -98,7 +95,6 @@ class TelloDroneControl(DroneControl):
         Moves the tello drone in the direction of the inputted destination while descending.
         :param dest_x: the desired x coordinate.
         :param dest_y: the desired y coordinate.
-        :param dest_z: the desired z coordinate
         :param recognizable_object: the drones RecognizableObject.
         """
         x_cm_rel = dest_x - recognizable_object.x
