@@ -37,11 +37,11 @@ def interactive_loop(borders: Borders, obstacle: Obstacle, left_cam: Camera, bal
     elif key == ord('q'):
         return False
 
-    # the 'p' button is set as the save text_colors to file
+    # the 'p' button is set as the save text_color to file
     elif key == ord('p'):
         save_colors(COLORS_FILENAME, [balloon, drone])
 
-    # the 'k' button is set as the read text_colors from file
+    # the 'k' button is set as the read text_color from file
     elif key == ord('k'):
         load_colors(COLORS_FILENAME, [balloon, drone])
 
@@ -53,7 +53,7 @@ def interactive_loop(borders: Borders, obstacle: Obstacle, left_cam: Camera, bal
             borders.save_borders(BORDERS_FILENAME)
             drone.set_home((borders.x_middle, borders.y_middle))
 
-    # the 'r' button is set as the read text_colors from file
+    # the 'r' button is set as the read text_color from file
     elif key == ord('r'):
         borders.load_borders(BORDERS_FILENAME)
         drone.set_home((borders.x_middle, borders.y_middle))

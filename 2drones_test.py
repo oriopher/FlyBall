@@ -52,11 +52,11 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
     elif key == ord('q'):
         return False
 
-    # the 'p' button is set as the save text_colors to file
+    # the 'p' button is set as the save text_color to file
     elif key == ord('p'):
         save_colors(COLORS_FILENAME, [balloon, drone_1, drone_2])
 
-    # the 'k' button is set as the read text_colors from file
+    # the 'k' button is set as the read text_color from file
     elif key == ord('k'):
         load_colors(COLORS_FILENAME, [balloon, drone_1, drone_2])
 
@@ -69,7 +69,7 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
             drone_1.set_home((borders.x_middle_1, borders.y_middle))
             drone_2.set_home((borders.x_middle_2, borders.y_middle))
 
-    # the 'r' button is set as the read text_colors from file
+    # the 'r' button is set as the read text_color from file
     elif key == ord('r'):
         borders.read_borders(BORDERS_FILENAME)
         drone_1.set_home((borders.x_middle_1, borders.y_middle))
