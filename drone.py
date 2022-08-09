@@ -148,7 +148,7 @@ class Drone:
         self.drone_search_pred_time = datetime.datetime.now()
         self.drone_search_pred_coords = (self.x, self.y, self.z)
         self.old_dest_coords = np.zeros((0, 3))
-        
+
     def start_hit(self):
         """
         Resets the hitting parameters of the drone.
@@ -184,11 +184,11 @@ class Drone:
         """
         if not self.active and obstacle:
             # print('original dest: ', dest_x, dest_y)
-            dest_x, dest_y = obstacle.bypass_obstacle_coordinates((self.x, self.y),(dest_x, dest_y))
+            dest_x, dest_y = obstacle.bypass_obstacle_coordinates((self.x, self.y), (dest_x, dest_y))
             # print("dest: ", dest_x, dest_y)
             # print("location: ", self.x, self.y)
             # print(obstacle.coordinates)
-        if self.dest_coords != (0,0,0):
+        if self.dest_coords != (0, 0, 0):
             self.drone_control.track_3d(dest_x, dest_y, dest_z, self.recognizable_object)
         self.dest_coords = (dest_x, dest_y, dest_z)
 
@@ -228,7 +228,7 @@ class Drone:
         """
         dest_x, dest_y = self.home
         if not self.active and obstacle:
-            dest_x, dest_y = obstacle.bypass_obstacle_coordinates((self.x, self.y),(dest_x, dest_y))
+            dest_x, dest_y = obstacle.bypass_obstacle_coordinates((self.x, self.y), (dest_x, dest_y))
         self.drone_control.track_descending(dest_x, dest_y, self.recognizable_object)
         self.dest_coords = (dest_x, dest_y, self.default_height)
 
@@ -251,4 +251,3 @@ class Drone:
             self.obstacle = None
             return
         self.obstacle = Obstacle(self, left_cam)
- 
