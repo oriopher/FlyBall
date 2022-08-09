@@ -14,19 +14,19 @@ class DroneControl:
 
     def takeoff(self):
         """
-        Command the drone to takeoff.
+        Commands the drone to takeoff.
         """
         raise NotImplemented
 
     def land(self):
         """
-        Command the drone to land.
+        Commands the drone to land.
         """
         raise NotImplemented
 
     def stop(self):
         """
-        Command the drone to stop.
+        Commands the drone to stop.
         """
         raise NotImplemented
 
