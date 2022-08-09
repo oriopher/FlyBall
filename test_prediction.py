@@ -106,7 +106,6 @@ def capture_video(balloon: RecognizableObject, cameras_distance, left: Camera, r
 
         if pred:
             pred_coords = pred.get_prediction((datetime.now() - start_pred_timer).total_seconds())
-            print(pred_coords)
         else:
             pred_coords = None
             
