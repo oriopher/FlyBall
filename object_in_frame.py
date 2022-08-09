@@ -6,7 +6,7 @@ class ObjectInFrame:
     """
     A class representing the location of a specific object in a frame (the frame is updated each cycle).
     """
-    H_RANGE = 20
+    H_RANGE = 15
     S_RANGE = 30
     V_RANGE = 170
 
@@ -22,8 +22,8 @@ class ObjectInFrame:
         self.y = 0
         self.threshold_size = 0
         self.search_range = 0
-        self.lower = ObjectInFrame.NO_LOWER_BOUNDS
-        self.upper = ObjectInFrame.NO_UPPER_BOUNDS
+        self.lower_hsv = ObjectInFrame.NO_LOWER_BOUNDS
+        self.upper_hsv = ObjectInFrame.NO_UPPER_BOUNDS
 
     @property
     def image(self):
@@ -37,8 +37,7 @@ class ObjectInFrame:
         """
         :return: a string of the color bounds of the object in the frame.
         """
-        return "{:.0f},{:.0f},{:.0f}\n{:.0f},{:.0f},{:.0f}\n".format(self.lower[0], self.lower[1], self.lower[2],
-                                                                     self.upper[0], self.upper[1], self.upper[2])
+        return "{:.0f},{:.0f},{:.0f}\n{:.0f},{:.0f},{:.0f}\n".format(*self.lower_hsv, *self.upper_hsv)
 
     def detect_pixel_coordinates(self, distance):
         """
@@ -56,7 +55,7 @@ class ObjectInFrame:
         detection_image = self.image[y_min:y_max, x_min:x_max]
         # convert to hsv
         hsv = cv2.cvtColor(detection_image, cv2.COLOR_BGR2HSV)
-        mask = cv2.inRange(hsv, self.lower, self.upper)
+        mask = cv2.inRange(hsv, self.lower_hsv, self.upper_hsv)
         # define kernel size
         kernel = np.ones((self.threshold_size, self.threshold_size), np.uint8)
         # Remove unnecessary noise from mask
@@ -70,8 +69,9 @@ class ObjectInFrame:
         x_coor = np.mean(balloon_pixels[:, 1])
         y_coor = np.mean(balloon_pixels[:, 0])
 
-        self.x = x_coor + x_min
-        self.y = y_coor + y_min
+        self.x = int(x_coor + x_min)
+        self.y = int(y_coor + y_min)
+
 
     def detect_color(self):
         """
@@ -80,15 +80,7 @@ class ObjectInFrame:
         y_shape = self.image.shape[0]
         x_shape = self.image.shape[1]
         crop_img = self.image[int(y_shape / 3): int(2 * y_shape / 3), int(x_shape / 3): int(2 * x_shape / 3)]
-        hsv = cv2.cvtColor(crop_img, cv2.COLOR_BGR2HSV)
-        h = hsv[:, :, 0]
-        s = hsv[:, :, 1]
-        v = hsv[:, :, 2]
-        ball_color = (int(np.median(h)), int(np.median(s)), int(np.median(v)))
-        self.lower = (max(0, ball_color[0] - ObjectInFrame.H_RANGE), max(0, ball_color[1] - ObjectInFrame.S_RANGE),
-                      max(20, ball_color[2] - ObjectInFrame.V_RANGE))
-        self.upper = (min(255, ball_color[0] + ObjectInFrame.H_RANGE), min(255, ball_color[1] + ObjectInFrame.S_RANGE),
-                      min(255, ball_color[2] + ObjectInFrame.V_RANGE))
+        self.set_color_bounds(crop_img)
 
     def save_bounds(self, lower, upper):
         """
@@ -96,8 +88,8 @@ class ObjectInFrame:
         :param lower: the lower bound of the color of the object in the frame.
         :param upper: the upper bound of the color of the object in the frame.
         """
-        self.lower = self.str_to_color_bound(lower)
-        self.upper = self.str_to_color_bound(upper)
+        self.lower_hsv = self.str_to_color_bound(lower)
+        self.upper_hsv = self.str_to_color_bound(upper)
 
     def set_image(self, frame):
         """
@@ -115,3 +107,30 @@ class ObjectInFrame:
         """
         bound = bound.split(',')
         return int(bound[0]), int(bound[1]), int(bound[2])
+
+    def update_color_bounds(self, pixel_rect = 10):
+        """
+
+        :param pixel_rect:
+        """
+        y_max = min(self.y + pixel_rect, self.image.shape[0])
+        y_min = max(self.y - pixel_rect, 0)
+        x_max = min(self.x + pixel_rect, self.image.shape[1])
+        x_min = max(self.x - pixel_rect, 0)
+        crop_img = self.image[y_min: y_max, x_min: x_max]
+        self.set_color_bounds(crop_img)
+
+    def set_color_bounds(self, color_image):
+        """
+
+        :param color_image:
+        """
+        hsv = cv2.cvtColor(color_image, cv2.COLOR_BGR2HSV)
+        h = hsv[:, :, 0]
+        s = hsv[:, :, 1]
+        v = hsv[:, :, 2]
+        ball_color = (int(np.median(h)), int(np.median(s)), int(np.median(v)))
+        self.lower_hsv = (max(0, ball_color[0] - ObjectInFrame.H_RANGE), max(0, ball_color[1] - ObjectInFrame.S_RANGE),
+                max(20, ball_color[2] - ObjectInFrame.V_RANGE))
+        self.upper_hsv = (min(255, ball_color[0] + ObjectInFrame.H_RANGE), min(255, ball_color[1] + ObjectInFrame.S_RANGE),
+                      min(255, ball_color[2] + ObjectInFrame.V_RANGE))

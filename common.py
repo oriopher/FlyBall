@@ -3,14 +3,19 @@ import cv2
 import os
 from consts import *
 
-from xy_display import draw_xy_display
+from xy_display import get_xy_display
 
+def first_on_second_off(drone1, drone2):
+    drone1.active, drone2.active = True, False
+    print(drone1.ident, "active")
 
 def phys_to_left_pix_img(x_cm, y_cm, z_cm, image, cam):  # image is a direct image from the camera and not image3d
     return phys_to_left_pix(x_cm, y_cm, z_cm, cam.last_capture.x_n_pix, cam.last_capture.z_n_pix, cam.fov_horz, cam.fov_vert)
 
 
 def phys_to_left_pix(x_cm, y_cm, z_cm, x_n_pix, z_n_pix, cam_fov_horz, cam_fov_vert):
+    if y_cm == 0:
+        return 0, 0
     d_x = x_n_pix / 2 / np.tan(cam_fov_horz / 2)
     x_pix = int(x_n_pix / 2 + d_x * x_cm / y_cm)
     d_z = z_n_pix / 2 / np.tan(cam_fov_vert / 2)
@@ -48,7 +53,7 @@ def reachability(distance, offset=0.6):
     return plot[-1, 1]
 
 
-def write_colors(filename, recognizable_objects):
+def save_colors(filename, recognizable_objects):
     file_text = "".join([recognizable_object.colors_string for recognizable_object in recognizable_objects])
     if os.path.exists(filename):
         os.remove(filename)
@@ -57,9 +62,9 @@ def write_colors(filename, recognizable_objects):
         print("Colors Saved")
 
 
-def read_colors(filename, recognizable_objects):
+def load_colors(filename, recognizable_objects):
     if not os.path.exists(filename):
-        print("ERROR: text_colors file does not exist")
+        print("ERROR: colors file does not exist")
         return
 
     with open(filename, 'r') as f:
@@ -83,8 +88,8 @@ def image_to_show(show_img, frames, detection_sign=True, texts=None, text_color=
     return show_img
 
 
-def display_frames(balloon, drone_1, drone_2, left_cam, right_cam, borders, obstacle):
-    recognizable_objects = [balloon, drone_1.recognizable_object, drone_2.recognizable_object]
+def display_frames(balloon, drones, left_cam, right_cam, borders):
+    recognizable_objects = [balloon] + [drone.recognizable_object for drone in drones]
     texts_coor = ["c({:.0f},{:.0f},{:.0f})".format(recognizable_object.x, recognizable_object.y, recognizable_object.z)
                   for recognizable_object in recognizable_objects]
     texts_vel = [
@@ -95,22 +100,33 @@ def display_frames(balloon, drone_1, drone_2, left_cam, right_cam, borders, obst
                              [recognizable_object.frame_left for recognizable_object in recognizable_objects],
                              True, texts_coor, (150, 250, 200))
 
-    for recognizable_object in recognizable_objects[1:]:
-            if np.any(recognizable_object.dest_coords):
-                left_img = image_with_circle(left_cam, left_img, recognizable_object.dest_coords, rad_phys=7, thickness=2)
+    for drone in drones:
+        if np.any(drone.dest_coords):
+            left_img = image_with_circle(left_cam, left_img, drone.dest_coords, rad_phys=7, thickness=2)
 
     left_img = borders.draw_borders(left_img, recognizable_objects, color_in=(0, 240, 0), color_out=(0, 0, 240))
-    draw_xy_display(borders, recognizable_objects)
-
     cv2.imshow("left_cam", left_img)
+
     right_img = image_to_show(right_cam.last_capture.image,
                               [recognizable_object.frame_right for recognizable_object in recognizable_objects], True,
                               texts_vel, (240, 150, 240))
     cv2.imshow("right_cam", right_img)
-    draw_xy_display(borders, recognizable_objects)
+
+    obstacle = None
+    for drone in drones:
+        if drone.start and drone.active:
+            obstacle = drone.obstacle
+            break
+    
+    xy_display = get_xy_display(borders, balloon, drones, obstacle)
+    cv2.imshow('XY Display', xy_display)
 
 
 def calc_linear_eq(coor1, coor2):
+    # line parallel to y axis
+    if coor2[0] - coor1[0] == 0:
+        return None, coor2[0]
+
     m = (coor2[1] - coor1[1]) / (coor2[0] - coor1[0])
     b = coor2[1] - m * coor2[0]
     return m, b

@@ -15,10 +15,10 @@ class DroneControl:
     def stop(self):
         raise NotImplemented
 
-    def track_descending(self, dest_x, dest_y, recognizable_object, is_active, obstacle):
+    def track_descending(self, dest_x, dest_y, recognizable_object):
         raise NotImplemented
 
-    def track_3d(self, dest_x, dest_y, dest_z, recognizable_object, is_active, obstacle):
+    def track_3d(self, dest_x, dest_y, dest_z, recognizable_object):
         raise NotImplemented
 
     def track_hitting(self, dest_x, dest_y, dest_z, recognizable_object):

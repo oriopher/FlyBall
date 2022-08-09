@@ -1,10 +1,12 @@
 import datetime
 import numpy as np
 
-from common import DRONE_DEFAULT_HEIGHT
+from consts import DRONE_DEFAULT_HEIGHT
+from obstacle import Obstacle
 from recognizable_object import RecognizableObject
 # from loop_state_machine import ON_GROUND
-from loop_state_machine_passive_test import ON_GROUND
+# from loop_state_machine_passive_test import ON_GROUND
+from loop_state_machine_2_drones_volleyball import ON_GROUND
 from tello_drone_control import TelloDroneControl
 
 
@@ -15,7 +17,7 @@ class Drone:
                  iface_ip: str = '192.168.10.2'):
         self.recognizable_object = RecognizableObject(text_colors, radius, "drone" + str(ident))
         self.drone_control = TelloDroneControl(iface_ip)
-        self.middle = (0, 0)
+        self.home = (0, 0)
         self.ident = ident
         self.tookoff = self.start = self.first_seek = self.active = False
         self.state = ON_GROUND()
@@ -28,6 +30,8 @@ class Drone:
         self.drone_search_pred_time = 0
         self.testing = 0
         self.active = False
+        self.default_height = DRONE_DEFAULT_HEIGHT
+        self.obstacle = None
 
     @property
     def x(self):
@@ -55,7 +59,7 @@ class Drone:
 
     @property
     def battery(self):
-        return "battery = {:d}%".format(self.drone_control.get_battery())
+        return "drone{} battery = {:d}%".format(self.ident, self.drone_control.get_battery())
 
     def detect_color(self, is_left):
         self.recognizable_object.detect_color(is_left)
@@ -64,7 +68,6 @@ class Drone:
         self.drone_control.connect()
         print(self.battery)
         self.drone_control.takeoff()
-        self.tookoff = True
 
     def land(self):
         self.drone_control.land()
@@ -91,8 +94,8 @@ class Drone:
     def start_hit(self):
         self.start_hit_timer = datetime.datetime.now()
 
-    def set_middle(self, middle):
-        self.middle = middle
+    def set_home(self, coords):
+        self.home = coords
 
     def new_pred(self, coords):
         if len(self.old_dest_coords) >= self.OLD_DEST_NUM:
@@ -101,26 +104,48 @@ class Drone:
         return np.mean(self.old_dest_coords, axis=0)
 
     def track_3d(self, dest_x, dest_y, dest_z, obstacle=None):
-        self.dest_coords = self.drone_control.track_3d(dest_x, dest_y, dest_z, self.recognizable_object, self.active, obstacle)
+        if not self.active and obstacle:
+            # print('original dest: ', dest_x, dest_y)
+            dest_x, dest_y = obstacle.bypass_obstacle_coordinates((self.x, self.y),(dest_x, dest_y))
+            # print("dest: ", dest_x, dest_y)
+            # print("location: ", self.x, self.y)
+            # print(obstacle.coordinates)
+        if self.dest_coords != (0,0,0):
+            self.drone_control.track_3d(dest_x, dest_y, dest_z, self.recognizable_object)
+        self.dest_coords = (dest_x, dest_y, dest_z)
 
     def track_balloon(self, balloon, obstacle=None):
         self.track_2d(balloon.x, balloon.y, obstacle)
 
     def track_2d(self, dest_x, dest_y, obstacle=None):
-        self.track_3d(dest_x, dest_y, DRONE_DEFAULT_HEIGHT, obstacle)
+        self.track_3d(dest_x, dest_y, self.default_height, obstacle)
 
-    def seek_middle(self, obstacle=None):
-        self.track_2d(*self.middle, obstacle)
+    def go_home(self, obstacle=None):
+        self.track_2d(*self.home, obstacle)
 
     def track_hitting(self, dest_x, dest_y, dest_z):
         self.dest_coords = (dest_x, dest_y, dest_z)
         self.drone_control.track_hitting(dest_x, dest_y, dest_z, self.recognizable_object)
 
     def track_descending(self, obstacle=None):
-        dest_x, dest_y = self.middle
-        dest_x, dest_y = (self.drone_control.track_descending(dest_x, dest_y,
-                                                              self.recognizable_object, self.active, obstacle))
-        self.dest_coords = (dest_x, dest_y, DRONE_DEFAULT_HEIGHT)
+        dest_x, dest_y = self.home
+        if not self.active and obstacle:
+            dest_x, dest_y = obstacle.bypass_obstacle_coordinates((self.x, self.y),(dest_x, dest_y))
+        self.drone_control.track_descending(dest_x, dest_y, self.recognizable_object)
+        self.dest_coords = (dest_x, dest_y, self.default_height)
+
+    def track_descending_2drones(self, other_drone):
+        dest_x = 2 * self.x - other_drone.x  # add vector other_drone-self to the location vector of self 
+        dest_y = 2 * self.y - other_drone.y
+        self.drone_control.track_descending(dest_x, dest_y, self.recognizable_object)
+        self.dest_coords = (dest_x, dest_y, self.default_height)
 
     def stop(self):
         self.drone_control.stop()
+
+    def set_obstacle(self, left_cam):
+        if self.dest_coords == (0, 0, 0):
+            self.obstacle = None
+            return
+        self.obstacle = Obstacle(self, left_cam)
+ 
