@@ -31,7 +31,11 @@ class ON_GROUND(State):
         return HOVERING()
 
     def to_transition(self, drone, balloon, borders):
-        return drone.tookoff
+        return drone.tookoff and borders.set_borders
+
+    def cleanup(self, transition, drone, balloon, borders):
+        drone.takeoff()
+        drone.stop()
 
     def run(self, drone, balloon, borders):
         return
@@ -42,7 +46,6 @@ class HOVERING(State):
         return "Hovering"
 
     def next(self, state=1):
-        print("Waiting")
         return WAITING()
 
     def to_transition(self, drone, balloon, borders):
@@ -57,7 +60,6 @@ class WAITING(State):
         return "Waiting"
 
     def next(self, state=1):
-        print("Stand By")
         return STANDING_BY()
 
     def to_transition(self, drone, balloon, borders):
@@ -67,30 +69,20 @@ class WAITING(State):
         return 0
 
     def run(self, drone, balloon, borders):
-        if borders.set_borders:
-            drone.seek_middle()
-        else:
-            x_dest, y_dest = drone.x_0, drone.y_0
-            drone.track_2d(x_dest, y_dest)
-
+        drone.go_home()
 
 class STANDING_BY(State):
     def __str__(self):
         return "Standing By"
 
     def next(self, state=1):
-        print("Search Prediction")
         return SEARCHING_PREDICTION()
 
     def to_transition(self, drone, balloon, borders):
         return borders.in_borders(balloon)
 
     def run(self, drone, balloon, borders):
-        if borders.set_borders:
-            drone.seek_middle()
-        else:
-            x_dest, y_dest = drone.x_0, drone.y_0
-            drone.track_2d(x_dest, y_dest)
+        drone.go_home()
 
 
 class SEARCHING_PREDICTION(State):
@@ -101,10 +93,6 @@ class SEARCHING_PREDICTION(State):
         return "Searching Prediction"
 
     def next(self, state=1):
-        if state == 1:
-            print("Searching")
-        else:
-            print("Stand By")
         return SEARCHING() if state == 1 else STANDING_BY()
 
     def setup(self, drone, balloon, borders):
@@ -154,10 +142,6 @@ class SEARCHING(State):
         return "Searching"
 
     def next(self, state=1):
-        if state == 1:
-            print("Hitting")
-        else:
-            print("Stand By")
         return HITTING() if state == 1 else STANDING_BY()
 
     def to_transition(self, drone, balloon, borders):

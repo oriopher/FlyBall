@@ -5,6 +5,8 @@ from common import *
 from borders import Borders
 from camera import Camera
 
+COLORS_FILENAME = "human_drone_colors.txt"
+
 
 def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableObject, drone_1: Drone) -> bool:
     key = cv2.waitKey(1) & 0xFF
@@ -31,7 +33,7 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
         print(str_colors_changed)
 
     elif key == ord('t'):
-        drone_1.takeoff()
+        drone_1.tookoff = True
 
     elif key == ord('y'):
         drone_1.start_track()
@@ -42,11 +44,11 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
 
     # the 'p' button is set as the save text_colors to file
     elif key == ord('p'):
-        save_colors(COLORS_FILENAME, [balloon, drone_1])
+        save_colors(COLORS_FILENAME, [balloon, drone_1.recognizable_object])
 
     # the 'k' button is set as the read text_colors from file
     elif key == ord('k'):
-        load_colors(COLORS_FILENAME, [balloon, drone_1])
+        load_colors(COLORS_FILENAME, [balloon, drone_1.recognizable_object])
 
     # the 'j' button is set as the saving the borders. can save 4 coordinates
     elif key == ord('j'):
@@ -72,9 +74,10 @@ def capture_video(drone_1: Drone, balloon: RecognizableObject, cameras_distance,
     continue_loop = True
 
     borders = Borders()
+    drones = [drone_1]
     recognizable_objects = [balloon, drone_1.recognizable_object]
     load_colors(COLORS_FILENAME, recognizable_objects)
-    borders.read_borders(BORDERS_FILENAME)
+    borders.load_borders(BORDERS_FILENAME, left)
 
     if borders.set_borders:
         drone_1.set_home((borders.x_middle_1, borders.y_middle))
@@ -93,7 +96,7 @@ def capture_video(drone_1: Drone, balloon: RecognizableObject, cameras_distance,
             # Process frames
             recognizable_object.detect_and_set_coordinates(left, right, cameras_distance)
             
-        display_frames(recognizable_objects, left, right, borders)
+        display_frames(balloon, drones, left, right, borders)
 
         # State Machine
         state.run(drone_1, balloon, borders)
@@ -117,10 +120,10 @@ def capture_video(drone_1: Drone, balloon: RecognizableObject, cameras_distance,
 
 
 def main():
-    left_cam = C920_NIR_2
-    right_cam = C920_NIR_1
+    left_cam = C920_NIR_1
+    right_cam = C920_NIR_2
 
-    drone_1 = Drone(1, (0, 191, 255), 7, iface_ip="192.168.10.2")
+    drone_1 = Drone(1, (0, 191, 255), 7, iface_ip="192.168.10.10")
     balloon = RecognizableObject((255, 54, 89), 11.3, "balloon")
 
     distance = 111.9
