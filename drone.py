@@ -1,12 +1,12 @@
-import datetime
+from datetime import datetime
 import numpy as np
 
 from consts import DRONE_DEFAULT_HEIGHT
 from obstacle import Obstacle
 from recognizable_object import RecognizableObject
-from loop_state_machine_human_drone import ON_GROUND
+# from loop_state_machine_human_drone import ON_GROUND
 # from loop_state_machine_passive_test import ON_GROUND
-# from loop_state_machine_2_drones_volleyball import ON_GROUND
+from loop_state_machine_2_drones_volleyball import ON_GROUND
 from tello_drone_control import TelloDroneControl
 
 
@@ -25,13 +25,15 @@ class Drone:
         self.y_0 = 0
         self.dest_coords = (0, 0, 0)
         self.old_dest_coords = None
-        self.start_hit_timer = self.end_hit_timer = None
+        self.start_hit_timer = None
         self.drone_search_pred_coords = (0, 0, 0)
         self.drone_search_pred_time = 0
         self.testing = 0
         self.active = False
         self.default_height = DRONE_DEFAULT_HEIGHT
         self.obstacle = None
+        self.start_hit_vx = 0
+        self.start_hit_vy = 0
 
     @property
     def x(self):
@@ -87,12 +89,14 @@ class Drone:
             self.start = False
 
     def search_pred_start(self):
-        self.drone_search_pred_time = datetime.datetime.now()
+        self.drone_search_pred_time = datetime.now()
         self.drone_search_pred_coords = (self.x, self.y, self.z)
         self.old_dest_coords = np.zeros((0, 3))
         
     def start_hit(self):
-        self.start_hit_timer = datetime.datetime.now()
+        self.start_hit_timer = datetime.now()
+        self.start_hit_vx = self.vx
+        self.start_hit_vy = self.vy
 
     def set_home(self, coords):
         self.home = coords
@@ -126,6 +130,10 @@ class Drone:
     def track_hitting(self, dest_x, dest_y, dest_z):
         self.dest_coords = (dest_x, dest_y, dest_z)
         self.drone_control.track_hitting(dest_x, dest_y, dest_z, self.recognizable_object)
+
+    def track_hitting2(self, dest_x, dest_y, dest_z):
+        self.dest_coords = (dest_x, dest_y, dest_z)
+        self.drone_control.track_hitting2(dest_x, dest_y, dest_z, self.recognizable_object, self.start_hit_vx, self.start_hit_vy)
 
     def track_descending(self, obstacle=None):
         dest_x, dest_y = self.home

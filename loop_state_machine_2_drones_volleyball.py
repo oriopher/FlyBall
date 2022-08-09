@@ -222,7 +222,7 @@ class HITTING(State):
         first_on_second_off(other_drone, drone)
 
     def to_transition(self, drone, other_drone, balloon, borders):
-        Z_LIMIT = 25
+        Z_LIMIT = 15
         # XY_LIMIT = 40
 
         x_rel = balloon.x - drone.x

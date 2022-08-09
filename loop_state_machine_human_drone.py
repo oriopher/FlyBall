@@ -146,19 +146,15 @@ class SEARCHING(State):
 
     def to_transition(self, drone, balloon, borders):
         UPPER_LIMIT = 110
-        LOWER_LIMIT = 20
-        XY_LIMIT = 30
-        VEL_LIMIT = 30
+        # LOWER_LIMIT = 20
+        # XY_LIMIT = 30
+        # VEL_LIMIT = 30
 
         x_rel = balloon.x - drone.x
         y_rel = balloon.y - drone.y
         z_rel = balloon.z - drone.z
 
         if z_rel < UPPER_LIMIT and balloon.vz <= 0:
-            return 1
-        if abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT and LOWER_LIMIT < z_rel < UPPER_LIMIT \
-                and abs(drone.vx) < VEL_LIMIT and abs(drone.vy) < VEL_LIMIT \
-                and balloon.vz <= 0:
             return 1
         if balloon.vz <= 0 and balloon.z <= drone.z:
             return 2
@@ -200,15 +196,12 @@ class HITTING(State):
         pred = NumericBallPredictor(balloon)
         x_dest, y_dest, z_dest = pred.get_prediction(reachability(0, 0) - time_since_hitting)
 
-        drone.track_hitting(x_dest, y_dest, z_dest)
+        drone.track_hitting2(x_dest, y_dest, z_dest)
 
 
 class DESCENDING(State):
     def __str__(self):
         return "Descending"
-
-    def setup(self, drone, balloon, borders):
-        drone.active = False
 
     def next(self, state=1):
         return WAITING()
