@@ -33,8 +33,8 @@ class RecognizableObject:
             self.save_colors_side(bounds[i * len(sides)], bounds[i * len(sides) + 1], side)
 
     def set_frames(self, capture_left, capture_right):
-        self.frame_left.set_image(capture_left)
-        self.frame_right.set_image(capture_right)
+        self.frame_left.set_frame(capture_left)
+        self.frame_right.set_frame(capture_right)
 
     def detect_pixel_coordinates(self):
         self.frame_left.detect_pixel_coordinates(self.y)

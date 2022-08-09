@@ -72,7 +72,6 @@ class ObjectInFrame:
         self.x = int(x_coor + x_min)
         self.y = int(y_coor + y_min)
 
-
     def detect_color(self):
         """
         Detects the color of the object.
@@ -91,7 +90,7 @@ class ObjectInFrame:
         self.lower_hsv = self.str_to_color_bound(lower)
         self.upper_hsv = self.str_to_color_bound(upper)
 
-    def set_image(self, frame):
+    def set_frame(self, frame):
         """
         Sets the frame.
         :param frame: the frame to set.
@@ -108,10 +107,11 @@ class ObjectInFrame:
         bound = bound.split(',')
         return int(bound[0]), int(bound[1]), int(bound[2])
 
-    def update_color_bounds(self, pixel_rect = 10):
+    def update_color_bounds(self, pixel_rect=10):
         """
-
-        :param pixel_rect:
+        Updates the color bounds of an object (after first set of bounds).
+        :param pixel_rect: half of the side of the square (surrounding the current location)
+                           in which the new bounds are detected.
         """
         y_max = min(self.y + pixel_rect, self.image.shape[0])
         y_min = max(self.y - pixel_rect, 0)
@@ -122,15 +122,17 @@ class ObjectInFrame:
 
     def set_color_bounds(self, color_image):
         """
-
-        :param color_image:
+        Detects the color of the objects and sets it bounds.
+        :param color_image: the image in which the object is the largest object.
         """
         hsv = cv2.cvtColor(color_image, cv2.COLOR_BGR2HSV)
         h = hsv[:, :, 0]
         s = hsv[:, :, 1]
         v = hsv[:, :, 2]
         ball_color = (int(np.median(h)), int(np.median(s)), int(np.median(v)))
-        self.lower_hsv = (max(0, ball_color[0] - ObjectInFrame.H_RANGE), max(0, ball_color[1] - ObjectInFrame.S_RANGE),
-                max(20, ball_color[2] - ObjectInFrame.V_RANGE))
-        self.upper_hsv = (min(255, ball_color[0] + ObjectInFrame.H_RANGE), min(255, ball_color[1] + ObjectInFrame.S_RANGE),
-                      min(255, ball_color[2] + ObjectInFrame.V_RANGE))
+        self.lower_hsv = (max(0, ball_color[0] - ObjectInFrame.H_RANGE),
+                          max(0, ball_color[1] - ObjectInFrame.S_RANGE),
+                          max(20, ball_color[2] - ObjectInFrame.V_RANGE))
+        self.upper_hsv = (min(255, ball_color[0] + ObjectInFrame.H_RANGE),
+                          min(255, ball_color[1] + ObjectInFrame.S_RANGE),
+                          min(255, ball_color[2] + ObjectInFrame.V_RANGE))
