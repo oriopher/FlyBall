@@ -136,11 +136,11 @@ class RecognizableObject:
 
     def _calculate_z(self, cam: Camera, y_cm, z_pix):
         """
-        Calculates the real life z coordinate of the object in centimeters.
+        Calculates the real life z point of the object in centimeters.
         :param cam: one of the camera's Camera object (arbitrarily the left camera).
-        :param y_cm: the real life y coordinate of the objet
+        :param y_cm: the real life y point of the objet
         :param z_pix: the z pixel location of the object in the frame of the inputted camera.
-        :return: the z coordinate of the object.
+        :return: the z point of the object.
         """
         n_pixels = self.frame_right.image.shape[0]  # Number of pixels in z axis.
         p = (n_pixels / 2) / np.tan(cam.fov_vert / 2)

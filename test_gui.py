@@ -102,7 +102,7 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, w
     elif event == '-SetBorders-' or event == 'j':
         borders.set_image(image_3d, left_cam)
         window['-SetBorders-'].update('Set Borders('+ str(borders.index) + ')')
-        print("saved the %.0f coordinate: (%.0f,%.0f,%.0f)" % (borders.index, image_3d.phys_x_balloon, image_3d.phys_y_balloon, image_3d.phys_z_balloon))
+        print("saved the %.0f point: (%.0f,%.0f,%.0f)" % (borders.index, image_3d.phys_x_balloon, image_3d.phys_y_balloon, image_3d.phys_z_balloon))
         if borders.index == 4:
             borders.write_borders('borders.txt')
             window['-SetBorders-'].update(button_color = ('white','blue'))    

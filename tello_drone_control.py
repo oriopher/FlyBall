@@ -53,9 +53,9 @@ class TelloDroneControl(DroneControl):
     def track_3d(self, dest_x: float, dest_y: float, dest_z: float, recognizable_object):
         """
         Moves the tello drone in the direction of the inputted destination.
-        :param dest_x: the desired x coordinate.
-        :param dest_y: the desired y coordinate.
-        :param dest_z: the desired z coordinate
+        :param dest_x: the desired x point.
+        :param dest_y: the desired y point.
+        :param dest_z: the desired z point
         :param recognizable_object: the drones RecognizableObject.
         """
         x_cm_rel = dest_x - recognizable_object.x
@@ -69,9 +69,9 @@ class TelloDroneControl(DroneControl):
     def track_hitting(self, dest_x, dest_y, dest_z, recognizable_object):
         """
         Moves the tello drone in the direction of the inputted destination in order to hit the balloon.
-        :param dest_x: the desired x coordinate.
-        :param dest_y: the desired y coordinate.
-        :param dest_z: the desired z coordinate
+        :param dest_x: the desired x point.
+        :param dest_y: the desired y point.
+        :param dest_z: the desired z point
         :param recognizable_object: the drones RecognizableObject.
         """
         rx = dest_x - recognizable_object.x
@@ -93,8 +93,8 @@ class TelloDroneControl(DroneControl):
     def track_descending(self, dest_x, dest_y, recognizable_object):
         """
         Moves the tello drone in the direction of the inputted destination while descending.
-        :param dest_x: the desired x coordinate.
-        :param dest_y: the desired y coordinate.
+        :param dest_x: the desired x point.
+        :param dest_y: the desired y point.
         :param recognizable_object: the drones RecognizableObject.
         """
         x_cm_rel = dest_x - recognizable_object.x

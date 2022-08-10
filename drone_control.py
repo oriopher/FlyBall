@@ -33,8 +33,8 @@ class DroneControl:
     def track_descending(self, dest_x, dest_y, recognizable_object):
         """
         Uses the RecognizableObject of the drone to track the inputted destination while descending.
-        :param dest_x: the desired x coordinate.
-        :param dest_y: the desired y coordinate.
+        :param dest_x: the desired x point.
+        :param dest_y: the desired y point.
         :param recognizable_object: the drones RecognizableObject.
         """
         raise NotImplemented
@@ -42,9 +42,9 @@ class DroneControl:
     def track_3d(self, dest_x, dest_y, dest_z, recognizable_object):
         """
         Uses the RecognizableObject of the drone to track the inputted destination.
-        :param dest_x: the desired x coordinate.
-        :param dest_y: the desired y coordinate.
-        :param dest_z: the desired z coordinate
+        :param dest_x: the desired x point.
+        :param dest_y: the desired y point.
+        :param dest_z: the desired z point
         :param recognizable_object: the drones RecognizableObject.
         """
         raise NotImplemented
@@ -52,9 +52,9 @@ class DroneControl:
     def track_hitting(self, dest_x, dest_y, dest_z, recognizable_object):
         """
         Uses the RecognizableObject of the drone to track the inputted destination in order to hit the balloon.
-        :param dest_x: the desired x coordinate.
-        :param dest_y: the desired y coordinate.
-        :param dest_z: the desired z coordinate
+        :param dest_x: the desired x point.
+        :param dest_y: the desired y point.
+        :param dest_z: the desired z point
         :param recognizable_object: the drones RecognizableObject.
         """
         raise NotImplemented

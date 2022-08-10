@@ -69,9 +69,9 @@ class Obstacle:
     def inside_obstacle(self, drone):
         return self.coord_in_obstacle(drone.x, drone.y)
 
-    # checks if the given coordinate is inside the obstacle
+    # checks if the given point is inside the obstacle
     def coord_in_obstacle(self, x, y):
-        return self._quad.coordinate_in_quadrangle(x, y)
+        return self._quad.point_in_quadrangle(x, y)
 
     # draws the obstacle on left frame
     def draw_obstacle(self, show_img, recognizable_object, color_in=(240, 0, 0), color_out=(0, 240, 0)):

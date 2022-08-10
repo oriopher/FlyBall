@@ -62,10 +62,10 @@ class Borders:
         self.y_middle = (self.quad.coordinates[0][1] + self.quad.coordinates[1][1] + self.quad.coordinates[2][1] +
                          self.quad.coordinates[3][1]) / 4
 
-        # checks if a given coordinate is in borders
+        # checks if a given point is in borders
 
     def coordinate_in_borders(self, x, y):
-        return self.quad.coordinate_in_quadrangle(x, y)
+        return self.quad.point_in_quadrangle(x, y)
 
     # checks if recognizable_object is in borders
     def in_borders(self, recognizable_object: RecognizableObject):

@@ -47,21 +47,21 @@ class Drone:
     @property
     def x(self):
         """
-        :return: the x coordinate of the drone.
+        :return: the x point of the drone.
         """
         return self.recognizable_object.x
 
     @property
     def y(self):
         """
-        :return: the y coordinate of the drone.
+        :return: the y point of the drone.
         """
         return self.recognizable_object.y
 
     @property
     def z(self):
         """
-        :return: the z coordinate of the drone.
+        :return: the z point of the drone.
         """
         return self.recognizable_object.z
 
@@ -177,9 +177,9 @@ class Drone:
         """
         Moves the drone in the direction of the wanted destination.
         If the drone is not active and an obstacle is passed to the function - bypass it.
-        :param dest_x: the desired x coordinate.
-        :param dest_y: the desired y coordinate.
-        :param dest_z: the desired z coordinate
+        :param dest_x: the desired x point.
+        :param dest_y: the desired y point.
+        :param dest_z: the desired z point
         :param obstacle: an Obstacle the drone should avoid if its not active.
         """
         if not self.active and obstacle:
@@ -196,8 +196,8 @@ class Drone:
         """
         Moves the drone in the direction of the wanted destination in the xy plain, z destination is the default height.
         If the drone is not active and an obstacle is passed to the function - bypass it.
-        :param dest_x: the desired x coordinate.
-        :param dest_y: the desired y coordinate.
+        :param dest_x: the desired x point.
+        :param dest_y: the desired y point.
         :param obstacle: an Obstacle the drone should avoid if its not active.
         """
         self.track_3d(dest_x, dest_y, self.default_height, obstacle)
@@ -213,9 +213,9 @@ class Drone:
     def track_hitting(self, dest_x, dest_y, dest_z):
         """
         Moves the drone in the direction of the wanted destination in order to hit the balloon.
-        :param dest_x: the desired x coordinate.
-        :param dest_y: the desired y coordinate.
-        :param dest_z: the desired z coordinate
+        :param dest_x: the desired x point.
+        :param dest_y: the desired y point.
+        :param dest_z: the desired z point
         """
         self.dest_coords = (dest_x, dest_y, dest_z)
         self.drone_control.track_hitting(dest_x, dest_y, dest_z, self.recognizable_object)

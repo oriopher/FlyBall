@@ -36,24 +36,43 @@ class Quadrangle:
     ###############################
     """
 
+    # The order of the corners.
     CORNERS = [0, 1, 3, 2]
 
     def __init__(self, coordinates, left_cam):
+        """
+        Initializes a quadrangle.
+        :param coordinates: a list (or numpy array) of the coordinates of the corners (in any order).
+        :param left_cam: the Camera object of the left camera.
+        """
         self.coordinates = self._order_points(np.array(coordinates))
         self._arrangement = self._generate_arrangement()
         self._point_location = Arr_point_location(self._arrangement)
         self._pixels_coordinates = np.zeros((4, 2), dtype=int)
         if left_cam:
-            self._calc_edges_pix(left_cam)
+            self._calc_corners_pix(left_cam)
 
     def __str__(self):
+        """
+        :return: string representation of the quadrangle.
+        """
         return "".join([self._coordinate_str(coord) for coord in self.coordinates])
 
     @staticmethod
-    def _coordinate_str(coordinate):
-        return "%.2f,%.2f\n" % (coordinate[0], coordinate[1])
+    def _coordinate_str(point):
+        """
+        :param point: a coordinate (of a corner).
+        :return: a string representation of a single coordinate.
+        """
+        return "{:.2f},{:.2f}\n".format(*point)
 
-    def coordinate_in_quadrangle(self, x, y):
+    def point_in_quadrangle(self, x, y):
+        """
+        Checks if a point is inside the quadrangle (the corners and sides are outside).
+        :param x: the x coordinate of the point.
+        :param y: the y coordinate of the point.
+        :return: True if (x,y) is inside the quadrangle and False otherwise.
+        """
         point = self._point_to_cgal((x, y))
         query = TPoint(point.x(), point.y())
         obj = self._point_location.locate(query)
@@ -71,6 +90,12 @@ class Quadrangle:
                 return True
 
     def cross_quadrangle(self, point_a, point_b):
+        """
+        Checks if an inputted section crosses the quadrangle (if it crosses only  a corner it does not).
+        :param point_a: first end of the section.
+        :param point_b: second end of the section.
+        :return: True if the section connecting point_a and point_b crosses the quadrangle.
+        """
         res = []
         points = [self._point_to_cgal(point) for point in [point_a, point_b]]
         curve = Curve_2(*points)
@@ -90,6 +115,12 @@ class Quadrangle:
 
     # draws quadrangle on frame
     def draw_quadrangle(self, show_img, color=(240, 0, 240)):
+        """
+        Draws the quadrangle on given image from the left camera.
+        :param show_img: the frame of the left camera.
+        :param color: the color in which to use for the quadrangles sides.
+        :return: show_image with the quadrangle on it.
+        """
         for i, cor in enumerate(self.CORNERS):
             cor_next = self.CORNERS[(i + 1) % len(self.CORNERS)]
             show_img = cv2.line(show_img, (self._pixels_coordinates[cor][0], self._pixels_coordinates[cor][1]),
@@ -98,7 +129,11 @@ class Quadrangle:
 
         return show_img
 
-    def _calc_edges_pix(self, left_cam):
+    def _calc_corners_pix(self, left_cam):
+        """
+        Calculates and saves the location of the corners of the quadrangle in pixels (of the left camera).
+        :param left_cam: the left cameras Camera object.
+        """
         # calculate the coordinates pixels location on frame
         if left_cam.last_capture == None:
             return
@@ -113,6 +148,9 @@ class Quadrangle:
                                                                                                   left_cam.fov_vert)
 
     def _generate_arrangement(self):
+        """
+        Generates a CGALPY arrangement of the quadrangle.
+        """
         # print("obstacle: ", self.coordinates)
         points = [self._point_to_cgal(point) for point in self.coordinates]
         curves = []
@@ -125,12 +163,16 @@ class Quadrangle:
 
     @staticmethod
     def _point_to_cgal(point):
+        """
+        :param point: a 2d point (tuple/list/numpy array).
+        :return: a CGALPY point with the same coordinates of the given point.
+        """
         return Point2(*[FT(float(coord)) for coord in point])
 
     @staticmethod
     def _order_points(coordinates):
         """
-        order the inputted coordinate in the shape presented at the classes docstring
+        order the inputted point in the shape presented at the classes docstring
         code copied from: https://pyimagesearch.com/2016/03/21/ordering-coordinates-clockwise-with-python-and-opencv/
         :param coordinates: the coordinates of the quadrangles corners
         :return: the coordinates of the quadrangles corners in the correct order
@@ -138,7 +180,7 @@ class Quadrangle:
         # sort the points based on their x-coordinates
         xSorted = coordinates[np.argsort(coordinates[:, 0]), :]
         # grab the left-most and right-most points from the sorted
-        # x-coordinate points
+        # x-point points
         leftMost = xSorted[:2, :]
         rightMost = xSorted[2:, :]
         # now, sort the left-most coordinates according to their
@@ -146,7 +188,7 @@ class Quadrangle:
         # points, respectively
         leftMost = leftMost[np.argsort(leftMost[:, 1]), :]
         bl, tl = leftMost
-        # now that we have the top-left coordinate, use it as an
+        # now that we have the top-left point, use it as an
         # anchor to calculate the Euclidean distance between the
         # top-left and right-most points; by the Pythagorean
         # theorem, the point with the largest distance will be
