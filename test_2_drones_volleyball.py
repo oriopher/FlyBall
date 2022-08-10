@@ -154,8 +154,8 @@ def main():
     right_cam = C920_NIR_2
     left_cam = C920_NIR_1
 
-    drone_1 = Drone(1, (0, 191, 255), 7, iface_ip="192.168.10.2")
-    drone_2 = Drone(2, (38, 38, 200), 7, iface_ip="192.168.10.10")
+    drone_1 = Drone(1, (0, 191, 255), 7, iface_ip="192.168.10.10")
+    drone_2 = Drone(2, (38, 38, 200), 7, iface_ip="192.168.10.2")
     balloon = RecognizableObject((255, 54, 89), 11.3, "balloon")
 
     distance = 111.9

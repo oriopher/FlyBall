@@ -9,7 +9,7 @@ def first_on_second_off(drone1, drone2):
     drone1.active, drone2.active = True, False
     print(drone1.ident, "active")
 
-def phys_to_left_pix_img(x_cm, y_cm, z_cm, image, cam):  # image is a direct image from the camera and not image3d
+def phys_to_left_pix_img(x_cm, y_cm, z_cm, cam):
     return phys_to_left_pix(x_cm, y_cm, z_cm, cam.last_capture.x_n_pix, cam.last_capture.z_n_pix, cam.fov_horz, cam.fov_vert)
 
 
@@ -27,8 +27,8 @@ def image_with_circle(cam, show_img, coords_phys, rad_phys, color=(240, 240, 240
     if not np.any(coords_phys):
         return show_img
     x_phys, y_phys, z_phys = coords_phys
-    radius = phys_to_left_pix_img(x_phys + rad_phys, y_phys, z_phys, show_img, cam)[0] - phys_to_left_pix_img(x_phys, y_phys, z_phys, show_img, cam)[0]
-    coordinates = phys_to_left_pix_img(x_phys, y_phys, z_phys, show_img, cam)
+    radius = phys_to_left_pix_img(x_phys + rad_phys, y_phys, z_phys, cam)[0] - phys_to_left_pix_img(x_phys, y_phys, z_phys, cam)[0]
+    coordinates = phys_to_left_pix_img(x_phys, y_phys, z_phys, cam)
     if radius > 0:
         show_img = cv2.circle(show_img, coordinates, radius, color, thickness=thickness)
 
@@ -37,7 +37,7 @@ def image_with_circle(cam, show_img, coords_phys, rad_phys, color=(240, 240, 240
 
 def reachability(distance, offset=0.6):
     # distance in cm, only one axis
-    plot = np.array([[0, 0.95],
+    plot = np.array([[0, 0.9],
                      [2, 2],
                      [30, 2.76],
                      [50, 2.76],
@@ -97,19 +97,25 @@ def display_frames(balloon, drones, left_cam, right_cam, borders):
         for recognizable_object in recognizable_objects]
 
     left_img = image_to_show(left_cam.last_capture.image,
-                             [recognizable_object.frame_left for recognizable_object in recognizable_objects],
-                             True, texts_coor, (150, 250, 200))
+                             [recognizable_object.frame_left for recognizable_object in recognizable_objects], True)
 
-    for drone in drones:
-        if np.any(drone.dest_coords):
-            left_img = image_with_circle(left_cam, left_img, drone.dest_coords, rad_phys=7, thickness=2)
+    # for drone in drones:
+    #     if np.any(drone.dest_coords):
+    #         left_img = image_with_circle(left_cam, left_img, drone.dest_coords, rad_phys=7, thickness=2)
 
     left_img = borders.draw_borders(left_img, recognizable_objects, color_in=(0, 240, 0), color_out=(0, 0, 240))
+    scale_percent = 150 # percent of original size
+    width = int(left_img.shape[1] * scale_percent / 100)
+    height = int(left_img.shape[0] * scale_percent / 100)
+    dim = (width, height)
+  
+    # resize image
+    left_img = cv2.resize(left_img, dim, interpolation = cv2.INTER_AREA)
     cv2.imshow("left_cam", left_img)
 
     right_img = image_to_show(right_cam.last_capture.image,
                               [recognizable_object.frame_right for recognizable_object in recognizable_objects], True,
-                              texts_vel, (240, 150, 240))
+                              texts_coor, (240, 150, 240))
     cv2.imshow("right_cam", right_img)
 
     obstacle = None

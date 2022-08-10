@@ -67,6 +67,10 @@ class WAITING(State):
     def next(self, state=1):
         return STANDING_BY()
 
+    def setup(self, drone, other_drone, balloon, borders):
+        if drone.ident < other_drone.ident:
+            first_on_second_off(drone, other_drone)
+
     def to_transition(self, drone, other_drone, balloon, borders):
         if drone.testing:
             drone.testing = 0
@@ -84,41 +88,36 @@ class STANDING_BY(State):
     def next(self, state=1):
         return SEARCHING_PREDICTION() if state == 1 else PREPARE_AND_AVOID()
 
-    def to_transition(self, drone, other_drone, balloon, borders):
-        if not borders.in_borders(balloon):
-            return 0
-        pred = NumericBallPredictor(balloon)
-        pred_time, pred_coords = pred.get_optimal_hitting_point(z_bound=drone.z / 100,
-                                                            xy_vel_bound=self.XY_VEL_BOUND / 100)                                                    
-        
-        x_rel = pred_coords[0] - drone.x
-        y_rel = pred_coords[1] - drone.y
-        x_rel_other = pred_coords[0] - other_drone.x
-        y_rel_other = pred_coords[1] - other_drone.y
-
-        if (x_rel**2 + y_rel**2) == (x_rel_other**2 + y_rel_other**2):
-            return 1 if drone.active else 2
-        elif (x_rel**2 + y_rel**2) < (x_rel_other**2 + y_rel_other**2):
-            first_on_second_off(drone, other_drone)
-            return 1
-        else:
-            first_on_second_off(other_drone, drone)
-            return 2
-
     # def to_transition(self, drone, other_drone, balloon, borders):
     #     if not borders.in_borders(balloon):
     #         return 0
-    #     if drone.active:
+    #     pred = NumericBallPredictor(balloon)
+    #     pred_time, pred_coords = pred.get_optimal_hitting_point(z_bound=drone.z / 100,
+    #                                                         xy_vel_bound=self.XY_VEL_BOUND / 100)                                                    
+        
+    #     x_rel = pred_coords[0] - drone.x
+    #     y_rel = pred_coords[1] - drone.y
+    #     x_rel_other = pred_coords[0] - other_drone.x
+    #     y_rel_other = pred_coords[1] - other_drone.y
+
+    #     if (x_rel**2 + y_rel**2) == (x_rel_other**2 + y_rel_other**2):
+    #         return 1 if drone.active else 2
+    #     elif (x_rel**2 + y_rel**2) < (x_rel_other**2 + y_rel_other**2):
+    #         first_on_second_off(drone, other_drone)
     #         return 1
-    #     return 2
+    #     else:
+    #         first_on_second_off(other_drone, drone)
+    #         return 2
+
+    def to_transition(self, drone, other_drone, balloon, borders):
+        if not borders.in_borders(balloon):
+            return 0
+        if drone.active:
+            return 1
+        return 2
 
     def run(self, drone, other_drone, balloon, borders):
-        if borders.set_borders:
-            drone.go_home(other_drone.obstacle)
-        else:
-            x_dest, y_dest = drone.x_0, drone.y_0
-            drone.track_2d(x_dest, y_dest)
-
+        drone.go_home(other_drone.obstacle)
 
 class SEARCHING_PREDICTION(State):
     Z_OFFSET = 50
@@ -222,7 +221,7 @@ class HITTING(State):
         first_on_second_off(other_drone, drone)
 
     def to_transition(self, drone, other_drone, balloon, borders):
-        Z_LIMIT = 25
+        Z_LIMIT = 15
         # XY_LIMIT = 40
 
         x_rel = balloon.x - drone.x

@@ -9,15 +9,17 @@ class NumericBallPredictor:
     A predictor of the balloon's location in future time depending on its location and velocity
     that solves the balloon's equations of motion using a numeric ODE solver.
     """
-    r = 0.113  # in meters
+    # r = (0.65+0.71)/4/np.pi  # in meters
+    r = (0.695+0.75)/4/np.pi  # in meters
     g = 9.807  # Gravitational constant
     rho = 1.183  # Air density kg/m^3
     V = 4 / 3 * np.pi * r ** 3  # Balloon Volume
     disp_air_mass = V * rho
     C_d = 0.78  # Dimensionless drag constant
     A = np.pi * r ** 2  # Balloon cross section in m^2
-    B = 0.5*rho*A*C_d # A parameter of drag force
-    balloon_weight = 1.7 * 10 ** -3
+    B = 0.5*rho*A*C_d  # A parameter of drag force
+    # balloon_weight = 1.5 * 10 ** -3  # kg
+    balloon_weight = 1.75 * 10 ** -3  # kg
     m = disp_air_mass + balloon_weight  # Balloon mass.
 
     def __init__(self, balloon: RecognizableObject):

@@ -13,7 +13,7 @@ class Frame:
         self.image = image
         self.threshold_size = image.shape[1] // 120
         self.capture_time = datetime.datetime.now()
-        self.x_n_pix, self.z_n_pix = image.shape[1], image.shape[1]
+        self.x_n_pix, self.z_n_pix = image.shape[1], image.shape[0]
 
     @staticmethod
     def search_range_scale(distance):

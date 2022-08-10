@@ -31,7 +31,11 @@ class ON_GROUND(State):
         return HOVERING()
 
     def to_transition(self, drone, balloon, borders):
-        return drone.tookoff
+        return drone.tookoff and borders.set_borders
+
+    def cleanup(self, transition, drone, balloon, borders):
+        drone.takeoff()
+        drone.stop()
 
     def run(self, drone, balloon, borders):
         return
@@ -42,7 +46,6 @@ class HOVERING(State):
         return "Hovering"
 
     def next(self, state=1):
-        print("Waiting")
         return WAITING()
 
     def to_transition(self, drone, balloon, borders):
@@ -57,7 +60,6 @@ class WAITING(State):
         return "Waiting"
 
     def next(self, state=1):
-        print("Stand By")
         return STANDING_BY()
 
     def to_transition(self, drone, balloon, borders):
@@ -67,30 +69,20 @@ class WAITING(State):
         return 0
 
     def run(self, drone, balloon, borders):
-        if borders.set_borders:
-            drone.seek_middle()
-        else:
-            x_dest, y_dest = drone.x_0, drone.y_0
-            drone.track_2d(x_dest, y_dest)
-
+        drone.go_home()
 
 class STANDING_BY(State):
     def __str__(self):
         return "Standing By"
 
     def next(self, state=1):
-        print("Search Prediction")
         return SEARCHING_PREDICTION()
 
     def to_transition(self, drone, balloon, borders):
         return borders.in_borders(balloon)
 
     def run(self, drone, balloon, borders):
-        if borders.set_borders:
-            drone.seek_middle()
-        else:
-            x_dest, y_dest = drone.x_0, drone.y_0
-            drone.track_2d(x_dest, y_dest)
+        drone.go_home()
 
 
 class SEARCHING_PREDICTION(State):
@@ -101,10 +93,6 @@ class SEARCHING_PREDICTION(State):
         return "Searching Prediction"
 
     def next(self, state=1):
-        if state == 1:
-            print("Searching")
-        else:
-            print("Stand By")
         return SEARCHING() if state == 1 else STANDING_BY()
 
     def setup(self, drone, balloon, borders):
@@ -154,27 +142,19 @@ class SEARCHING(State):
         return "Searching"
 
     def next(self, state=1):
-        if state == 1:
-            print("Hitting")
-        else:
-            print("Stand By")
         return HITTING() if state == 1 else STANDING_BY()
 
     def to_transition(self, drone, balloon, borders):
         UPPER_LIMIT = 110
-        LOWER_LIMIT = 20
-        XY_LIMIT = 30
-        VEL_LIMIT = 30
+        # LOWER_LIMIT = 20
+        # XY_LIMIT = 30
+        # VEL_LIMIT = 30
 
         x_rel = balloon.x - drone.x
         y_rel = balloon.y - drone.y
         z_rel = balloon.z - drone.z
 
         if z_rel < UPPER_LIMIT and balloon.vz <= 0:
-            return 1
-        if abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT and LOWER_LIMIT < z_rel < UPPER_LIMIT \
-                and abs(drone.vx) < VEL_LIMIT and abs(drone.vy) < VEL_LIMIT \
-                and balloon.vz <= 0:
             return 1
         if balloon.vz <= 0 and balloon.z <= drone.z:
             return 2
@@ -216,15 +196,12 @@ class HITTING(State):
         pred = NumericBallPredictor(balloon)
         x_dest, y_dest, z_dest = pred.get_prediction(reachability(0, 0) - time_since_hitting)
 
-        drone.track_hitting(x_dest, y_dest, z_dest)
+        drone.track_hitting2(x_dest, y_dest, z_dest)
 
 
 class DESCENDING(State):
     def __str__(self):
         return "Descending"
-
-    def setup(self, drone, balloon, borders):
-        drone.active = False
 
     def next(self, state=1):
         return WAITING()
