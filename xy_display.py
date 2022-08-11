@@ -29,7 +29,7 @@ def get_xy_display(borders, balloon, drones, obstacle = None):
     limits = (x_lower_limit, x_upper_limit, y_lower_limit, y_upper_limit)
     recognizable_object = [balloon] + [drone.recognizable_object for drone in drones]
     
-    if borders.set_borders:
+    if borders.is_set:
         borders_color = (0, 240, 0)  # green
 
         xy_display = draw_grid(xy_display, limits)

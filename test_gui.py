@@ -100,7 +100,7 @@ def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, w
 
     # the 'j' button is set as the saving the borders. can save 4 coordinates
     elif event == '-SetBorders-' or event == 'j':
-        borders.set_image(image_3d, left_cam)
+        borders.set_corner(image_3d, left_cam)
         window['-SetBorders-'].update('Set Borders('+ str(borders.index) + ')')
         print("saved the %.0f point: (%.0f,%.0f,%.0f)" % (borders.index, image_3d.phys_x_balloon, image_3d.phys_y_balloon, image_3d.phys_z_balloon))
         if borders.index == 4:
@@ -174,7 +174,7 @@ def capture_video(cameras_distance, left: Camera, right: Camera, colors: ColorBo
 
         #image_now.frame_right.show_image("right", text_balloon=text_balloon_vel, text_drone=text_drone_vel, text_color=(240,150,240))
         # balloon is out of borders. drone is seeking the middle until the balloon is back
-        if borders.set_borders and loop_status.first_seek and (not borders.balloon_in_borders(image_now) or not loop_status.start):
+        if borders.is_set and loop_status.first_seek and (not borders.balloon_in_borders(image_now) or not loop_status.start):
             print("seek middle")
             loop_status.stop_track()
             #seek_middle(image_now, tello, borders)

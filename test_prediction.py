@@ -63,7 +63,7 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
 
     # the 'j' button is set as the saving the borders. can save 4 coordinates
     elif key == ord('j'):
-        borders.set_image(balloon, left_cam)
+        borders.set_corner(balloon, left_cam)
         print("Saved the %.0f coordinate: (%.0f,%.0f)" % (borders.index, balloon.x, balloon.y))
         if borders.index == 4:
             borders.save_borders(BORDERS_FILENAME)

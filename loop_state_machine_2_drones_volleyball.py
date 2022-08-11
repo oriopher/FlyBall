@@ -21,7 +21,7 @@ class ON_GROUND(State):
         return HOVERING()
 
     def to_transition(self, drone, other_drone, balloon, borders):
-        return drone.tookoff and borders.set_borders
+        return drone.tookoff and borders.is_set
 
     def cleanup(self, transition, drone, other_drone, balloon, borders):
         drone.takeoff()
