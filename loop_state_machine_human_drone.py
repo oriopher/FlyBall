@@ -1,26 +1,11 @@
 from datetime import datetime
-from prediction import NumericBallPredictor
 import numpy as np
+
+from loop_state_machine import State
+from prediction import NumericBallPredictor
 from common import reachability, FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
 
 MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
-
-
-class State:
-    def next(self, state=1):
-        raise NotImplemented
-
-    def to_transition(self, drone, balloon, borders):
-        raise NotImplemented
-
-    def run(self, drone, balloon, borders):
-        raise NotImplemented
-
-    def setup(self, drone, balloon, borders):
-        pass
-
-    def cleanup(self, transition, drone, balloon, borders):
-        pass
 
 
 class ON_GROUND(State):

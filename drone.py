@@ -243,7 +243,7 @@ class Drone:
         :param other_drone: the other drone's Drone object.
         """
         SPEED_FACTOR = 100
-        vec = [self.x - other_drone.x, self.y - other_drone.y] # vector drone minus vector other_drone
+        vec = [self.x - other_drone.x, self.y - other_drone.y]  # vector drone minus vector other_drone
         abs_vector = np.sqrt(vec[0]**2 + vec[1]**2)
         vec[0] = SPEED_FACTOR * vec[0] / abs_vector
         vec[1] = SPEED_FACTOR * vec[1] / abs_vector

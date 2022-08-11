@@ -1,28 +1,12 @@
 import numpy as np
 from common import FLOOR_HEIGHT
+from loop_state_machine import State
 
 MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
 X_DEST = 90
 Y_DEST = 350
 X_START = 40
 Y_START = 230
-
-
-class State:
-    def next(self, state=1):
-        raise NotImplemented
-
-    def to_transition(self, drone, other_drone, balloon, borders):
-        raise NotImplemented
-
-    def run(self, drone, other_drone, balloon, borders):
-        raise NotImplemented
-
-    def setup(self, drone, other_drone, balloon, borders):
-        pass
-
-    def cleanup(self, transition, drone, other_drone, balloon, borders):
-        pass
 
 
 class ON_GROUND(State):

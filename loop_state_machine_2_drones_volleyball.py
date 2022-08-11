@@ -1,42 +1,28 @@
 from datetime import datetime
 from pickle import FALSE
 from consts import DRONE_MIN_HEIGHT
+from loop_state_machine import State
 from prediction import NumericBallPredictor
 import numpy as np
 from common import reachability, first_on_second_off
 from consts import DRONE_MIN_HEIGHT
 
+
 # INVARIANT: at all time one drone is active and one is inactive.
-class State:
-    def next(self, state=1):
-        raise NotImplemented
-
-    def to_transition(self, drone, other_drone, balloon, borders):
-        raise NotImplemented
-
-    def run(self, drone, other_drone, balloon, borders):
-        raise NotImplemented
-
-    def setup(self, drone, other_drone, balloon, borders):
-        pass
-
-    def cleanup(self, transition, drone, other_drone, balloon, borders):
-        pass
-
 
 class ON_GROUND(State):
     def __str__(self):
         return "On Ground"
 
     def setup(self, drone, other_drone, balloon, borders):
-        drone.active = drone.ident < other_drone.ident # arbitrarly choose who is active and who is passive
+        drone.active = drone.ident < other_drone.ident  # arbitrarly choose who is active and who is passive
 
     def next(self, state=1):
         return HOVERING()
 
     def to_transition(self, drone, other_drone, balloon, borders):
         return drone.tookoff and borders.set_borders
-    
+
     def cleanup(self, transition, drone, other_drone, balloon, borders):
         drone.takeoff()
         drone.stop()
@@ -80,8 +66,10 @@ class WAITING(State):
     def run(self, drone, other_drone, balloon, borders):
         drone.go_home(other_drone.obstacle)
 
+
 class STANDING_BY(State):
     XY_VEL_BOUND = 30
+
     def __str__(self):
         return "Standing By"
 
@@ -94,7 +82,7 @@ class STANDING_BY(State):
     #     pred = NumericBallPredictor(balloon)
     #     pred_time, pred_coords = pred.get_optimal_hitting_point(z_bound=drone.z / 100,
     #                                                         xy_vel_bound=self.XY_VEL_BOUND / 100)                                                    
-        
+
     #     x_rel = pred_coords[0] - drone.x
     #     y_rel = pred_coords[1] - drone.y
     #     x_rel_other = pred_coords[0] - other_drone.x
@@ -118,6 +106,7 @@ class STANDING_BY(State):
 
     def run(self, drone, other_drone, balloon, borders):
         drone.go_home(other_drone.obstacle)
+
 
 class SEARCHING_PREDICTION(State):
     Z_OFFSET = 50
@@ -216,7 +205,7 @@ class HITTING(State):
 
     def setup(self, drone, other_drone, balloon, borders):
         drone.start_hit()
-    
+
     def cleanup(self, transition, drone, other_drone, balloon, borders):
         first_on_second_off(other_drone, drone)
 
@@ -260,19 +249,20 @@ class PREPARE_AND_AVOID(State):
         return SEARCHING_PREDICTION() if state == 1 else WAITING()
 
     def to_transition(self, drone, other_drone, balloon, borders):
-        if drone.active and (balloon.vz > 0 or balloon.z <= other_drone.z): # drone is active only after other drone hits
-            return 1 
+        if drone.active and (
+                balloon.vz > 0 or balloon.z <= other_drone.z):  # drone is active only after other drone hits
+            return 1
         if isinstance(other_drone.state, WAITING):
             return 2
         return 0
 
     def run(self, drone, other_drone, balloon, borders):
         HEIGHT_PREPARATION_FACTOR = 0.5
-        
-        if not drone.active: 
+
+        if not drone.active:
             x_dest, y_dest = other_drone.obstacle.get_preparation_dest()
             z_dest = DRONE_MIN_HEIGHT
-        else:   # this occurs only when the other drone finished the hitting stage
+        else:  # this occurs only when the other drone finished the hitting stage
             x_dest, y_dest, z_dest = drone.dest_coords
 
         drone.track_3d(x_dest, y_dest, z_dest, other_drone.obstacle)
