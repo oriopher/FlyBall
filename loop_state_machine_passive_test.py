@@ -1,6 +1,5 @@
 import numpy as np
-from common import reachability, FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
-from obstacle import Obstacle
+from common import FLOOR_HEIGHT
 
 MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
 X_DEST = 90

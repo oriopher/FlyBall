@@ -6,7 +6,7 @@ from recognizable_object import RecognizableObject
 
 class NumericBallPredictor:
     # r = (0.65+0.71)/4/np.pi  # in meters
-    r = (0.695+0.75)/4/np.pi  # in meters
+    r = (0.70+0.75)/4/np.pi  # in meters
     g = 9.807  # Gravitational constant
     rho = 1.183  # Air density kg/m^3
     V = 4 / 3 * np.pi * r ** 3  # Balloon Volume

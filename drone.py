@@ -13,13 +13,13 @@ from tello_drone_control import TelloDroneControl
 class Drone:
     OLD_DEST_NUM = 4
 
-    def __init__(self, ident: int, text_colors, radius,
+    def __init__(self, ident: int, text_colors,
                  iface_ip: str = '192.168.10.2'):
-        self.recognizable_object = RecognizableObject(text_colors, radius, "drone" + str(ident))
+        self.recognizable_object = RecognizableObject(text_colors, "drone" + str(ident))
         self.drone_control = TelloDroneControl(iface_ip)
         self.home = (0, 0)
         self.ident = ident
-        self.tookoff = self.start = self.first_seek = self.active = False
+        self.tookoff = self.start = self.active = False
         self.state = ON_GROUND()
         self.x_0 = 0
         self.y_0 = 0
@@ -79,10 +79,8 @@ class Drone:
     def start_track(self):
         if self.tookoff:
             self.start = True
-            if not self.first_seek:
-                self.first_seek = True
-                self.x_0 = self.x
-                self.y_0 = self.y
+            self.x_0 = self.x
+            self.y_0 = self.y
 
     def stop_track(self):
         if self.start:
@@ -97,6 +95,7 @@ class Drone:
         self.start_hit_timer = datetime.now()
         self.start_hit_vx = self.vx
         self.start_hit_vy = self.vy
+        print("hit v0: (%.0f, %.0f)" % (self.vx, self.vy))
 
     def set_home(self, coords):
         self.home = coords
@@ -143,10 +142,16 @@ class Drone:
         self.dest_coords = (dest_x, dest_y, self.default_height)
 
     def track_descending_2drones(self, other_drone):
-        dest_x = 2 * self.x - other_drone.x  # add vector other_drone-self to the location vector of self 
-        dest_y = 2 * self.y - other_drone.y
+        SPEED_FACTOR = 100
+        vec = [self.x - other_drone.x, self.y - other_drone.y] # vector drone minus vector other_drone
+        abs_vector = np.sqrt(vec[0]**2 + vec[1]**2)
+        vec[0] = SPEED_FACTOR * vec[0] / abs_vector
+        vec[1] =  SPEED_FACTOR * vec[1] / abs_vector 
+        dest_x = self.x + vec[0]
+        dest_y = self.y + vec[1]
         self.drone_control.track_descending(dest_x, dest_y, self.recognizable_object)
         self.dest_coords = (dest_x, dest_y, self.default_height)
+        
 
     def stop(self):
         self.drone_control.stop()

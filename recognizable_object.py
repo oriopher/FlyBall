@@ -7,7 +7,7 @@ import datetime
 class RecognizableObject:
     NUM_OF_PREVS = 10
 
-    def __init__(self, text_colors, radius, name):
+    def __init__(self, text_colors, name):
         self.frame_left = ObjectInFrame()
         self.frame_right = ObjectInFrame()
         self.x = self.y = self.z = 0
@@ -17,7 +17,6 @@ class RecognizableObject:
         self.time = 0
         self.prev_coordinates = np.zeros((0, 3))
         self.prev_times = np.zeros(0, dtype='datetime64')
-        self.radius = radius
         self.name = name
 
     @property

@@ -113,7 +113,7 @@ def main():
     right_cam = EFRAT_WEB
 
     distance = 74
-    capture_video(Drone(1, (0, 191, 255), 7, iface_ip="192.168.10.2"), RecognizableObject((255, 54, 89), 11.3, "balloon"), distance,
+    capture_video(Drone(1, (0, 191, 255), iface_ip="192.168.10.2"), RecognizableObject((255, 54, 89), "balloon"), distance,
                   left_cam, right_cam)
 
 
