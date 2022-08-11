@@ -83,10 +83,9 @@ class TelloDroneControl(DroneControl):
         MAX_VEL = 100
         MIN_VEL = 9
         A = 1.7
-        B = 1
         vz = MAX_VEL
-        vx = min(int(A * (vz - MIN_VEL) * np.tan(theta) * np.cos(phi) - B * recognizable_object.vx) + MIN_VEL, MAX_VEL)
-        vy = min(int(A * (vz - MIN_VEL) * np.tan(theta) * np.sin(phi) - B * recognizable_object.vy) + MIN_VEL, MAX_VEL)
+        vx = min(int(A * (vz - MIN_VEL) * np.tan(theta) * np.cos(phi)) + MIN_VEL, MAX_VEL)
+        vy = min(int(A * (vz - MIN_VEL) * np.tan(theta) * np.sin(phi)) + MIN_VEL, MAX_VEL)
 
         left_right, for_back, up_down = -vx, -vy, vz
         self.tello.send_rc_control(left_right, for_back, up_down, 0)
@@ -101,7 +100,7 @@ class TelloDroneControl(DroneControl):
         MAX_VEL = 100
         MIN_VEL = 9
         A = 1.7
-        B = 2
+        B = 1
         vz = MAX_VEL
         vx = min(int(A * (vz - MIN_VEL) * np.tan(theta) * np.cos(phi) - B * vx0) + MIN_VEL, MAX_VEL)
         vy = min(int(A * (vz - MIN_VEL) * np.tan(theta) * np.sin(phi) - B * vy0) + MIN_VEL, MAX_VEL)

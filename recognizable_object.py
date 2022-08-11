@@ -11,11 +11,10 @@ class RecognizableObject:
     # Number of previous measured locations of the object used to calculate it's velocity.
     NUM_OF_PREVS = 10
 
-    def __init__(self, text_color, radius, name):
+    def __init__(self, text_color, name):
         """
         Initializes the recognizable object.
         :param text_color: the color that will be representing the object in displays.
-        :param radius: the radius of the object (the balloon).
         :param name: the name of the object.
         """
         self.frame_left = ObjectInFrame()
@@ -27,7 +26,6 @@ class RecognizableObject:
         self.time = 0
         self.prev_coordinates = np.zeros((0, 3))
         self.prev_times = np.zeros(0, dtype='datetime64')
-        self.radius = radius
         self.name = name
 
     @property

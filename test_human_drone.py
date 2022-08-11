@@ -79,8 +79,7 @@ def capture_video(drone_1: Drone, balloon: RecognizableObject, cameras_distance,
     load_colors(COLORS_FILENAME, recognizable_objects)
     borders.load_borders(BORDERS_FILENAME, left)
 
-    if borders.set_borders:
-        drone_1.set_home((borders.x_middle_1, borders.y_middle))
+    drone_1.set_home((100, 320))
 
     drone_1.active = True
     
@@ -123,8 +122,8 @@ def main():
     left_cam = C920_NIR_1
     right_cam = C920_NIR_2
 
-    drone_1 = Drone(1, (0, 191, 255), 7, iface_ip="192.168.10.10")
-    balloon = RecognizableObject((255, 54, 89), 11.3, "balloon")
+    drone_1 = Drone(1, (0, 191, 255), iface_ip="192.168.10.10")
+    balloon = RecognizableObject((255, 54, 89), "balloon")
 
     distance = 111.9
     capture_video(drone_1, balloon, distance, left_cam, right_cam)

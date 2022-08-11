@@ -150,7 +150,7 @@ def main():
     left_cam = ORI_PHONE
 
     distance = 78.5
-    capture_video(Drone(1, (0, 191, 255), 7, iface_ip="192.168.10.2"), Drone(2, (38, 38, 200), 7, iface_ip="192.168.10.10"), RecognizableObject((255, 54, 89), 11.3, "balloon"), distance,
+    capture_video(Drone(1, (0, 191, 255), iface_ip="192.168.10.2"), Drone(2, (38, 38, 200), iface_ip="192.168.10.10"), RecognizableObject((255, 54, 89), "balloon"), distance,
                   left_cam, right_cam)
 
 

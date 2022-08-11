@@ -20,7 +20,6 @@ class ObjectInFrame:
         self.frame = None
         self.x = 0
         self.y = 0
-        self.threshold_size = 0
         self.search_range = 0
         self.lower_hsv = ObjectInFrame.NO_LOWER_BOUNDS
         self.upper_hsv = ObjectInFrame.NO_UPPER_BOUNDS
@@ -57,7 +56,7 @@ class ObjectInFrame:
         hsv = cv2.cvtColor(detection_image, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv, self.lower_hsv, self.upper_hsv)
         # define kernel size
-        kernel = np.ones((self.threshold_size, self.threshold_size), np.uint8)
+        kernel = np.ones((self.frame.threshold_size, self.frame.threshold_size), np.uint8)
         # Remove unnecessary noise from mask
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
         mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)

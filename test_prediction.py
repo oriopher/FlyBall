@@ -133,7 +133,7 @@ def main():
     left_cam = C920_NIR_1
     right_cam = C920_NIR_2
 
-    balloon = RecognizableObject((255, 54, 89), 11.3, "balloon")
+    balloon = RecognizableObject((255, 54, 89), "balloon")
 
     distance = 111.9
     capture_video(balloon, distance, left_cam, right_cam)

@@ -17,20 +17,19 @@ class Drone:
     # The number of old destinations in order to calculate a mean destination (prediction).
     OLD_DEST_NUM = 4
 
-    def __init__(self, ident: int, text_color, radius,
+    def __init__(self, ident: int, text_color,
                  iface_ip: str = '192.168.10.2'):
         """
         Initializes the drone.
         :param ident: a unique id number for the drone.
         :param text_color: the color that will be representing the drone in displays.
-        :param radius: the radius of the drone.
         :param iface_ip: the ip of the interface that connects to the specific drone.
         """
-        self.recognizable_object = RecognizableObject(text_color, radius, "drone" + str(ident))
+        self.recognizable_object = RecognizableObject(text_color, "drone" + str(ident))
         self.drone_control = TelloDroneControl(iface_ip)
         self.home = (0, 0)
         self.ident = ident
-        self.tookoff = self.start = self.first_seek = self.active = False
+        self.tookoff = self.start = self.active = False
         self.state = ON_GROUND()
         self.x_0 = 0
         self.y_0 = 0
@@ -126,15 +125,12 @@ class Drone:
 
     def start_track(self):
         """
-        Sets the drone to start tracking.
-        If this is the first time the function sets the drone started to seek and saves it's initial x,y coordinates.
+        Sets the drone to start tracking, and it's initial xy coordinates.
         """
         if self.tookoff:
             self.start = True
-            if not self.first_seek:
-                self.first_seek = True
-                self.x_0 = self.x
-                self.y_0 = self.y
+            self.x_0 = self.x
+            self.y_0 = self.y
 
     def stop_track(self):
         """
@@ -158,6 +154,7 @@ class Drone:
         self.start_hit_timer = datetime.now()
         self.start_hit_vx = self.vx
         self.start_hit_vy = self.vy
+        print("hit v0: (%.0f, %.0f)" % (self.vx, self.vy))
 
     def set_home(self, coords):
         """
@@ -245,8 +242,13 @@ class Drone:
         Moves the drone in the away from the other drone in the xy plain while descending.
         :param other_drone: the other drone's Drone object.
         """
-        dest_x = 2 * self.x - other_drone.x  # add vector other_drone-self to the location vector of self
-        dest_y = 2 * self.y - other_drone.y
+        SPEED_FACTOR = 100
+        vec = [self.x - other_drone.x, self.y - other_drone.y] # vector drone minus vector other_drone
+        abs_vector = np.sqrt(vec[0]**2 + vec[1]**2)
+        vec[0] = SPEED_FACTOR * vec[0] / abs_vector
+        vec[1] = SPEED_FACTOR * vec[1] / abs_vector
+        dest_x = self.x + vec[0]
+        dest_y = self.y + vec[1]
         self.drone_control.track_descending(dest_x, dest_y, self.recognizable_object)
         self.dest_coords = (dest_x, dest_y, self.default_height)
 

@@ -162,9 +162,9 @@ def main():
     right_cam = C920_ORI_1
     left_cam = C920_ORI_2
 
-    drone_1 = Drone(1, (0, 191, 255), 7, iface_ip="192.168.10.2")
-    drone_2 = Drone(2, (38, 38, 200), 7, iface_ip="192.168.10.10")
-    balloon = RecognizableObject((255, 54, 89), 11.3, "balloon")
+    drone_1 = Drone(1, (0, 191, 255), iface_ip="192.168.10.2")
+    drone_2 = Drone(2, (38, 38, 200), iface_ip="192.168.10.10")
+    balloon = RecognizableObject((255, 54, 89), "balloon")
 
     distance = 111.9
     capture_video(drone_1, drone_2, balloon, distance, left_cam, right_cam)

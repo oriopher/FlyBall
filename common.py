@@ -35,9 +35,9 @@ def image_with_circle(cam, show_img, coords_phys, rad_phys, color=(240, 240, 240
     return show_img
 
 
-def reachability(distance, offset=0.6):
+def reachability(distance, offset=0):
     # distance in cm, only one axis
-    plot = np.array([[0, 0.9],
+    plot = np.array([[0, 0.85],
                      [2, 2],
                      [30, 2.76],
                      [50, 2.76],
@@ -99,12 +99,12 @@ def display_frames(balloon, drones, left_cam, right_cam, borders):
     left_img = image_to_show(left_cam.last_capture.image,
                              [recognizable_object.frame_left for recognizable_object in recognizable_objects], True)
 
-    # for drone in drones:
-    #     if np.any(drone.dest_coords):
-    #         left_img = image_with_circle(left_cam, left_img, drone.dest_coords, rad_phys=7, thickness=2)
+    for drone in drones:
+        if np.any(drone.dest_coords):
+            left_img = image_with_circle(left_cam, left_img, drone.dest_coords, rad_phys=7, thickness=2)
 
     left_img = borders.draw_borders(left_img, recognizable_objects, color_in=(0, 240, 0), color_out=(0, 0, 240))
-    scale_percent = 150 # percent of original size
+    scale_percent = 120 # percent of original size
     width = int(left_img.shape[1] * scale_percent / 100)
     height = int(left_img.shape[0] * scale_percent / 100)
     dim = (width, height)
