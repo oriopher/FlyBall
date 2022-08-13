@@ -3,7 +3,7 @@ import cv2
 import os
 from consts import *
 
-from xy_display import get_xy_display
+from xy_display import XYDisplay
 
 def first_on_second_off(drone1, drone2):
     drone1.active, drone2.active = True, False
@@ -103,7 +103,7 @@ def display_frames(balloon, drones, left_cam, right_cam, borders):
         if np.any(drone.dest_coords):
             left_img = image_with_circle(left_cam, left_img, drone.dest_coords, rad_phys=7, thickness=2)
 
-    left_img = borders.draw_borders(left_img, recognizable_objects, color_in=(0, 240, 0), color_out=(0, 0, 240))
+    left_img = borders._draw_borders(left_img, recognizable_objects, color_in=(0, 240, 0), color_out=(0, 0, 240))
     scale_percent = 120 # percent of original size
     width = int(left_img.shape[1] * scale_percent / 100)
     height = int(left_img.shape[0] * scale_percent / 100)
@@ -124,7 +124,7 @@ def display_frames(balloon, drones, left_cam, right_cam, borders):
             obstacle = drone.obstacle
             break
     
-    xy_display = get_xy_display(borders, balloon, drones, obstacle)
+    xy_display = XYDisplay.get_xy_display(borders, balloon, drones, obstacle)
     cv2.imshow('XY Display', xy_display)
 
 

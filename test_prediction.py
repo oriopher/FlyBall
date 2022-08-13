@@ -31,7 +31,7 @@ def display_frames_pred(balloon, left_cam, right_cam, borders, pred_coords):
                               texts_vel, (240, 150, 240))
     cv2.imshow("right_cam", right_img)
     
-    xy_display = get_xy_display(borders, balloon, [])
+    xy_display = XYDisplay.get_xy_display(borders, balloon, [])
     cv2.imshow('XY Display', xy_display)
 
 
