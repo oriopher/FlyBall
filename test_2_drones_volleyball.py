@@ -6,82 +6,102 @@ from common import load_colors, save_colors, display_frames
 from borders import Borders
 from camera import Camera
 import faulthandler
+from gui import Gui
 
-def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableObject, drone_1: Drone, drone_2: Drone) -> bool:
-    key = cv2.waitKey(1) & 0xFF
+def interactive_loop(borders: Borders, gui: Gui, left_cam: Camera, right_cam: Camera, cam_distance, balloon: RecognizableObject, drone_1: Drone, drone_2: Drone) -> bool:
+    event, values = gui.window.read(timeout=1)
     str_colors_changed = "Color bounds changed"
+    distance = cam_distance
 
     # the 'v' button is set as the detect color of recognizable_object in the left_cam cam
-    if key == ord('v'):
+    if event == 'v' or event == 'Balloon color (L)':
         balloon.detect_color(True)
         print(str_colors_changed)
 
     # the 'n' button is set as the detect color of recognizable_object in the right_cam cam
-    elif key == ord('n'):
+    elif event == 'n' or event == 'Balloon color (R)':
         balloon.detect_color(False)
         print(str_colors_changed)
 
     # the 's' button is set as the detect color of drone_1 in the left_cam cam
-    elif key == ord('s'):
+    elif event == 's' or event == 'Drone 1 color (L)':
         drone_1.detect_color(True)
         print(str_colors_changed)
 
     # the 'f' button is set as the detect color of drone_1 in the right_cam cam
-    elif key == ord('f'):
+    elif event == 'f' or event == 'Drone 1 color (R)':
         drone_1.detect_color(False)
         print(str_colors_changed)
 
     # the 'w' button is set as the detect color of drone_2 in the left_cam cam
-    elif key == ord('w'):
+    elif event == 'w' or event == 'Drone 2 color (L)':
         drone_2.detect_color(True)
         print(str_colors_changed)
 
     # the 'e' button is set as the detect color of drone_2 in the right_cam cam
-    elif key == ord('e'):
+    elif event == 'e' or event == 'Drone 2 color (R)':
         drone_2.detect_color(False)
         print(str_colors_changed)
 
-    elif key == ord('t'):
+    elif event == 't' or event == 'Take Off':
         drone_1.tookoff = True
         drone_2.tookoff = True
 
-    elif key == ord('y'):
+    elif event == 'y' or event == 'Go Home':
         drone_1.start_track()
         drone_2.start_track()
 
     # the 'q' button is set as the quitting button
-    elif key == ord('q'):
-        return False
+    elif event == 'q' or event == 'Quit' or event == Gui.WINDOW_CLOSED:
+        return False, distance
 
     # the 'p' button is set as the save text_colors to file
-    elif key == ord('p'):
+    elif event == 'p' or event == 'Save Colors':
         save_colors(COLORS_FILENAME, [balloon, drone_1.recognizable_object, drone_2.recognizable_object])
 
     # the 'k' button is set as the read text_colors from file
-    elif key == ord('k'):
+    elif event == 'k' or event == 'Load Colors':
         load_colors(COLORS_FILENAME, [balloon, drone_1.recognizable_object, drone_2.recognizable_object])
 
     # the 'j' button is set as the saving the borders. can save 4 coordinates
-    elif key == ord('j'):
+    elif event == 'j' or event == 'Set Borders':
         borders.set_image(balloon, left_cam)
         print("Saved the %.0f coordinate: (%.0f,%.0f)" % (borders.index, balloon.x, balloon.y))
+        gui.update_borders_button(borders.index)
         if borders.index == 4:
             borders.save_borders(BORDERS_FILENAME)
             drone_1.set_home((borders.x_middle_1, borders.y_middle))
             drone_2.set_home((borders.x_middle_2, borders.y_middle))
+            gui.show_homes_gui(drone_1.home, drone_2.home)
             # drone_2.default_height = drone_q.default_height + 30 # for safety we can delete this when seek middle works
 
     # the 'r' button is set as the read text_colors from file
-    elif key == ord('r'):
+    elif event == 'r' or event == 'Load Borders':
         borders.load_borders(BORDERS_FILENAME)
         drone_1.set_home((borders.x_middle_1, borders.y_middle))
         drone_2.set_home((borders.x_middle_2, borders.y_middle))
+        gui.show_homes_gui(drone_1.home, drone_2.home)
 
-    elif key == ord('z'):
+    elif event == 'z' or event == 'Start Play':
         drone_1.testing = 1
         drone_2.testing = 1
 
-    return True
+    elif event == 'flip_left':
+        left_cam.flip = -1 if values['flip_left'] else 1
+        left_cam.is_flipped = values['flip_left']
+
+    elif event == 'flip_right':
+        right_cam.flip = -1 if values['flip_right'] else 1
+        right_cam.is_flipped = values['flip_right']
+
+    elif event == 'recieved_input':
+        distance = gui.update_val(left_cam, right_cam, drone_1, drone_2, distance, values)
+
+    elif event == 'SLIDER_H' or event == 'SLIDER_S' or event == 'SLIDER_V' or event == 'SLIDER_T':
+        recognizable_objects = [balloon] + [drone_1.recognizable_object, drone_2.recognizable_object]
+        gui.update_hsv(recognizable_objects, event, values)
+    
+    return True, distance
 
 
 def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, cameras_distance, left: Camera, right: Camera):
@@ -89,6 +109,9 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
     continue_loop = True
 
     borders = Borders()
+    gui = Gui()
+    gui.show_gui()
+
     drones = [drone_1, drone_2]
     recognizable_objects = [balloon] + [drone.recognizable_object for drone in drones]
     load_colors(COLORS_FILENAME, recognizable_objects)
@@ -97,11 +120,13 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
     if borders.set_borders:
         drone_1.set_home((borders.x_middle_1, borders.y_middle))
         drone_2.set_home((borders.x_middle_2, borders.y_middle))
-    
+        gui.show_homes_gui(drone_1.home, drone_2.home)
+
     drone_1.active = True
     drone_1.set_home((90, 350))
     drone_2.set_home((7, 365))
-    
+    gui.show_homes_gui(drone_1.home, drone_2.home)    
+
     while continue_loop:
         # Capture the video frame by frame
         if not left.capture():
@@ -113,7 +138,7 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
             # Process frames
             recognizable_object.detect_and_set_coordinates(left, right, cameras_distance)
             
-        display_frames(balloon, drones, left, right, borders)
+        gui.display_frames_gui(balloon, drones, left, right, borders)
 
         # Set Obstacle
         for drone in drones:
@@ -129,8 +154,9 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
                 drone.state = drone.state.next(transition)
                 print("drone", drone.ident, " state:", drone.state)
                 drone.state.setup(drone, drones[1-i], balloon, borders)
+        gui.update_states(str(drone_1.state), str(drone_2.state))
 
-        continue_loop = interactive_loop(borders, left, balloon, drone_1, drone_2)
+        continue_loop, distance = interactive_loop(borders, gui, left, right, cameras_distance, balloon, drone_1, drone_2)
 
     for i in range(3):
         for drone in drones:
@@ -152,8 +178,9 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
 
 
 def main():
-    right_cam = C920_NIR_2
-    left_cam = C920_NIR_1
+
+    right_cam = Camera(56, 39, 2, False)
+    left_cam = Camera(56, 39, 0, False)
 
     drone_1 = Drone(1, (0, 191, 255), iface_ip="192.168.10.10")
     drone_2 = Drone(2, (38, 38, 200), iface_ip="192.168.10.2")
