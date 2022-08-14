@@ -5,8 +5,6 @@ from utils.consts import *
 from quadrangles.borders import Borders
 from images.camera import Camera
 
-COLORS_FILENAME = "human_drone_colors.txt"
-
 
 def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableObject, drone_1: Drone) -> bool:
     key = cv2.waitKey(1) & 0xFF
