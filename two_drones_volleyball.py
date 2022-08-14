@@ -1,15 +1,16 @@
 import cv2
 
 from utils.consts import *
-from recognizable.recognizable_object import RecognizableObject
-from drone.drone import Drone
-from utils.common import load_colors, save_colors, display_frames
-from quadrangles.borders import Borders
-from images.camera import Camera
+from recognizable_object import RecognizableObject
+from drone import Drone
+from utils.config_utils import load_colors, save_colors
+from borders import Borders
+from camera import Camera
 import faulthandler
 from gui import Gui
 
-def interactive_loop(borders, gui, left_cam, balloon, drone_1, drone_2):
+
+def interactive_loop(borders, gui, left_cam, right_cam, cam_distance, balloon, drone_1, drone_2):
     event, values = gui.window.read(timeout=1)
     str_colors_changed = "Color bounds changed"
     distance = cam_distance
@@ -95,7 +96,7 @@ def interactive_loop(borders, gui, left_cam, balloon, drone_1, drone_2):
         right_cam.flip = -1 if values['flip_right'] else 1
         right_cam.is_flipped = values['flip_right']
 
-    elif event == 'recieved_input':
+    elif event == 'received_input':
         distance = gui.update_val(left_cam, right_cam, drone_1, drone_2, distance, values)
 
     elif event == 'SLIDER_H' or event == 'SLIDER_S' or event == 'SLIDER_V' or event == 'SLIDER_T':

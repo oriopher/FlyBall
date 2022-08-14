@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.integrate import odeint
 
-from recognizable.recognizable_object import RecognizableObject
+from recognizable_object import RecognizableObject
 
 
 class NumericBallPredictor:

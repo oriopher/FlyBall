@@ -2,11 +2,11 @@ from datetime import datetime
 import numpy as np
 
 from utils.consts import DRONE_DEFAULT_HEIGHT
-from quadrangles.obstacle import Obstacle
-from recognizable.recognizable_object import RecognizableObject
+from obstacle import Obstacle
+from recognizable_object import RecognizableObject
 # from loop_state_machine_human_drone import ON_GROUND
 # from loop_state_machine_passive_test import ON_GROUND
-from volleyball.loop_state_machine_2_drones_volleyball import ON_GROUND
+from loop_state_machine_two_drones_volleyball import ON_GROUND
 from tello_drone_control import TelloDroneControl
 
 

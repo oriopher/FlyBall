@@ -1,4 +1,4 @@
-from utils.common import display_frames
+from utils.image_utils import display_frames
 import PySimpleGUI as sg
 import cv2
 

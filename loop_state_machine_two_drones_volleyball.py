@@ -1,7 +1,7 @@
 from datetime import datetime
 import numpy as np
 
-from state_machine.loop_state_machine import State2Drones
+from loop_state_machine import State2Drones
 from prediction.prediction import NumericBallPredictor
 from utils.common import reachability, first_on_second_off
 from utils.consts import DRONE_MIN_HEIGHT

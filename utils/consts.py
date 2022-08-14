@@ -1,4 +1,4 @@
-from images.camera import Camera
+from camera import Camera
 
 FLOOR_HEIGHT = -114
 DRONE_HEIGHT = 14

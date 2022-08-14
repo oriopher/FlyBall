@@ -1,8 +1,9 @@
 import os
-from images.camera import Camera
-from recognizable.recognizable_object import RecognizableObject
-from quadrangles.quadrangle import Quadrangle
 import numpy as np
+
+from camera import Camera
+from recognizable_object import RecognizableObject
+from quadrangle import Quadrangle
 
 
 class Borders:

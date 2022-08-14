@@ -1,11 +1,11 @@
 import cv2
 
-from recognizable.recognizable_object import RecognizableObject
-from drone.drone import Drone
+from recognizable_object import RecognizableObject
+from drone import Drone
 from utils.config_utils import *
 from utils.consts import *
-from quadrangles.borders import Borders
-from images.camera import Camera
+from borders import Borders
+from camera import Camera
 
 
 def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableObject, drone_1: Drone) -> bool:

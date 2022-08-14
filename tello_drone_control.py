@@ -1,6 +1,8 @@
-from drone.drone_control import DroneControl
 import numpy as np
+
 from tello import Tello
+
+from drone_control import DroneControl
 
 
 class TelloDroneControl(DroneControl):

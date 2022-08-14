@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 
-from user_interface.xy_display import XYDisplay
+from xy_display import XYDisplay
 
 
 def phys_to_left_pix_img(x_cm, y_cm, z_cm, cam):

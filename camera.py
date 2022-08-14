@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 
-from images.frame import Frame
+from frame import Frame
 
 
 class Camera:

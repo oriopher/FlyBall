@@ -1,14 +1,14 @@
 import numpy as np
 import cv2
 
-from recognizable.recognizable_object import RecognizableObject
+from recognizable_object import RecognizableObject
 from utils.image_utils import image_to_show, image_with_circle
 from utils.config_utils import save_colors, load_colors
-from user_interface.xy_display import XYDisplay
+from xy_display import XYDisplay
 from utils.consts import *
-from quadrangles.borders import Borders
-from images.camera import Camera
-from predictions.prediction import NumericBallPredictor
+from borders import Borders
+from camera import Camera
+from prediction import NumericBallPredictor
 from datetime import datetime
 
 
