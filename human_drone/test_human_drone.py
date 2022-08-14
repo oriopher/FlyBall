@@ -1,9 +1,8 @@
-import cv2, numpy as np
-from recognizable_object import RecognizableObject
+from recognizable.recognizable_object import RecognizableObject
 from drone import Drone
-from common import *
-from borders import Borders
-from camera import Camera
+from utils.common import *
+from quadrangles.borders import Borders
+from images.camera import Camera
 
 COLORS_FILENAME = "human_drone_colors.txt"
 

@@ -1,6 +1,6 @@
 import os
-from camera import Camera
-from recognizable_object import RecognizableObject
+from images.camera import Camera
+from recognizable.recognizable_object import RecognizableObject
 from quadrangle import Quadrangle
 import numpy as np
 

@@ -1,11 +1,10 @@
 from datetime import datetime
-from pickle import FALSE
-from consts import DRONE_MIN_HEIGHT
-from loop_state_machine import State
-from prediction import NumericBallPredictor
 import numpy as np
-from common import reachability, first_on_second_off
-from consts import DRONE_MIN_HEIGHT
+
+from state_machine.loop_state_machine import State
+from prediction import NumericBallPredictor
+from utils.common import reachability, first_on_second_off
+from utils.consts import DRONE_MIN_HEIGHT
 
 
 # INVARIANT: at all time one drone is active and one is inactive.

@@ -1,4 +1,4 @@
-from camera import Camera
+from images.camera import Camera
 
 FLOOR_HEIGHT = -114
 DRONE_HEIGT = 14
@@ -18,5 +18,5 @@ C920_NIR_2 = Camera(56, 39, 3, False)
 C920_ORI_1 = Camera(56, 39, 7, False)
 C920_ORI_2 = Camera(56, 39, 6, False)
 
-COLORS_FILENAME = "color_bounds.txt"
-BORDERS_FILENAME = "borders.txt"
+COLORS_FILENAME = "../color_bounds.txt"
+BORDERS_FILENAME = "../borders.txt"

@@ -2,8 +2,8 @@ from scipy.sparse import csr_matrix
 from scipy.sparse.csgraph._shortest_path import dijkstra
 from scipy.spatial import distance_matrix
 
-from common import calc_linear_eq
-from quadrangle import Quadrangle
+from utils.common import calc_linear_eq
+from quadrangles.quadrangle import Quadrangle
 import numpy as np
 
 """

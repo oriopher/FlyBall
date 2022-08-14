@@ -1,9 +1,9 @@
 from datetime import datetime
 import numpy as np
 
-from loop_state_machine import State
+from state_machine.loop_state_machine import State
 from prediction import NumericBallPredictor
-from common import reachability, FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
+from utils.common import reachability, FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
 
 MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
 

@@ -1,6 +1,5 @@
-import numpy as np
-from common import FLOOR_HEIGHT
-from loop_state_machine import State
+from utils.common import FLOOR_HEIGHT
+from state_machine.loop_state_machine import State
 
 MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
 X_DEST = 90

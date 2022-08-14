@@ -1,9 +1,8 @@
 import numpy as np
 import cv2
 import os
-from consts import *
 
-from xy_display import XYDisplay
+from user_interface.xy_display import XYDisplay
 
 def first_on_second_off(drone1, drone2):
     drone1.active, drone2.active = True, False

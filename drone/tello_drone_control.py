@@ -1,4 +1,4 @@
-from drone_control import DroneControl
+from drone.drone_control import DroneControl
 import numpy as np
 from tello import Tello
 
