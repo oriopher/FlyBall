@@ -2,6 +2,9 @@ import datetime
 
 
 class Frame:
+    """
+    A class representing a frame captured form a camera.
+    """
     SEARCH_RANGE_SCALE_A = -0.25
     SEARCH_RANGE_SCALE_B = 140
 

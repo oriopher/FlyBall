@@ -3,7 +3,7 @@ import numpy as np
 
 from state_machine.loop_state_machine import State1Drone
 from prediction.prediction import NumericBallPredictor
-from utils.common import reachability
+from utils.drone_utils import reachability
 from utils.consts import FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
 
 MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30

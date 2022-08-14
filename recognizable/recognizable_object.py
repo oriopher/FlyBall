@@ -1,5 +1,5 @@
 from images.camera import Camera
-from object_in_frame import ObjectInFrame
+from recognizable.object_in_frame import ObjectInFrame
 import numpy as np
 import datetime
 

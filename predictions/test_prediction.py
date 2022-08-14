@@ -1,9 +1,14 @@
+import numpy as np
+import cv2
+
 from recognizable.recognizable_object import RecognizableObject
-from utils.common import *
+from utils.image_utils import image_to_show, image_with_circle
+from utils.config_utils import save_colors, load_colors
+from user_interface.xy_display import XYDisplay
 from utils.consts import *
 from quadrangles.borders import Borders
 from images.camera import Camera
-from prediction.prediction import NumericBallPredictor
+from predictions.prediction import NumericBallPredictor
 from datetime import datetime
 
 
@@ -108,7 +113,7 @@ def capture_video(balloon: RecognizableObject, cameras_distance, left: Camera, r
             
         display_frames_pred(balloon, left, right, borders, pred_coords)
 
-        if borders.in_borders(balloon) and start_test[0] == 1:
+        if borders.is_set and borders.in_borders(balloon) and start_test[0] == 1:
             pred = NumericBallPredictor(balloon)
             start_pred_timer = datetime.now()
             start_test[0] = 2

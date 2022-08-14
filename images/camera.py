@@ -1,10 +1,13 @@
 import numpy as np
 import cv2
 
-from frame import Frame
+from images.frame import Frame
 
 
 class Camera:
+    """
+    A class representing a camera.
+    """
 
     def __init__(self, fov_horz, fov_vert, index, is_flipped=False):
         """

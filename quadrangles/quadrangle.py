@@ -2,7 +2,7 @@ import numpy as np
 import cv2
 from scipy.spatial import distance as dist
 
-from utils.common import phys_to_left_pix
+from utils.image_utils import phys_to_left_pix
 from utils.consts import FLOOR_HEIGHT
 import CGALPY
 

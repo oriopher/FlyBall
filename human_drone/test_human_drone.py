@@ -1,6 +1,8 @@
+import cv2
+
 from recognizable.recognizable_object import RecognizableObject
 from drone.drone import Drone
-from utils.common import *
+from utils.config_utils import *
 from utils.consts import *
 from quadrangles.borders import Borders
 from images.camera import Camera
