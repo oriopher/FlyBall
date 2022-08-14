@@ -7,7 +7,7 @@ from camera import Camera
 from prediction import NumericBallPredictor
 from datetime import datetime
 
-COLORS_FILENAME = "pred_colors.txt"
+COLORS_FILENAME = "prediction/color_bounds.txt"
 
 
 def display_frames_pred(balloon, left_cam, right_cam, borders, pred_coords):

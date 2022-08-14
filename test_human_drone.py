@@ -5,7 +5,7 @@ from common import *
 from borders import Borders
 from camera import Camera
 
-COLORS_FILENAME = "human_drone_colors.txt"
+COLORS_FILENAME = "human_drone/color_bounds.txt"
 
 
 def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableObject, drone_1: Drone) -> bool:
@@ -95,7 +95,10 @@ def capture_video(drone_1: Drone, balloon: RecognizableObject, cameras_distance,
             # Process frames
             recognizable_object.detect_and_set_coordinates(left, right, cameras_distance)
             
-        display_frames(balloon, drones, left, right, borders)
+        left_img, right_img, xy_display = display_frames(balloon, drones, left, right, borders)
+        cv2.imshow("Left", left_img)
+        cv2.imshow("Right", right_img)
+        cv2.imshow("XY Display", xy_display)
 
         # State Machine
         state.run(drone_1, balloon, borders)
@@ -122,7 +125,7 @@ def main():
     left_cam = C920_NIR_1
     right_cam = C920_NIR_2
 
-    drone_1 = Drone(1, (0, 191, 255), iface_ip="192.168.10.10")
+    drone_1 = Drone(1, (0, 191, 255), iface_ip="192.168.10.2")
     balloon = RecognizableObject((255, 54, 89), "balloon")
 
     distance = 111.9

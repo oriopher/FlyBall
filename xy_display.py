@@ -1,8 +1,8 @@
 import numpy as np
 import cv2
 
-NUM_PIXELS_X = 480
-NUM_PIXELS_Y = 640
+NUM_PIXELS_X = 512
+NUM_PIXELS_Y = 512
 MARGINS = 30
 GRID_DIFF = 10
 

@@ -8,6 +8,8 @@ from camera import Camera
 import faulthandler
 from gui import Gui
 
+COLORS_FILENAME = "volleyball/color_bounds.txt"
+
 def interactive_loop(borders: Borders, gui: Gui, left_cam: Camera, right_cam: Camera, cam_distance, balloon: RecognizableObject, drone_1: Drone, drone_2: Drone) -> bool:
     event, values = gui.window.read(timeout=1)
     str_colors_changed = "Color bounds changed"
@@ -77,7 +79,7 @@ def interactive_loop(borders: Borders, gui: Gui, left_cam: Camera, right_cam: Ca
 
     # the 'r' button is set as the read text_colors from file
     elif event == 'r' or event == 'Load Borders':
-        borders.load_borders(BORDERS_FILENAME)
+        borders.load_borders(BORDERS_FILENAME, left_cam)
         drone_1.set_home((borders.x_middle_1, borders.y_middle))
         drone_2.set_home((borders.x_middle_2, borders.y_middle))
         gui.show_homes_gui(drone_1.home, drone_2.home)
@@ -116,11 +118,6 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
     recognizable_objects = [balloon] + [drone.recognizable_object for drone in drones]
     load_colors(COLORS_FILENAME, recognizable_objects)
     borders.load_borders(BORDERS_FILENAME, left)
-
-    if borders.set_borders:
-        drone_1.set_home((borders.x_middle_1, borders.y_middle))
-        drone_2.set_home((borders.x_middle_2, borders.y_middle))
-        gui.show_homes_gui(drone_1.home, drone_2.home)
 
     drone_1.active = True
     drone_1.set_home((90, 350))
@@ -179,8 +176,8 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
 
 def main():
 
-    right_cam = Camera(56, 39, 2, False)
-    left_cam = Camera(56, 39, 0, False)
+    right_cam = C920_NIR_1
+    left_cam = C920_NIR_2
 
     drone_1 = Drone(1, (0, 191, 255), iface_ip="192.168.10.10")
     drone_2 = Drone(2, (38, 38, 200), iface_ip="192.168.10.2")
