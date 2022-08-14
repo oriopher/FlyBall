@@ -106,30 +106,18 @@ def display_frames(balloon, drones, left_cam, right_cam, borders):
         if np.any(drone.dest_coords):
             left_img = image_with_circle(left_cam, left_img, drone.dest_coords, rad_phys=7, thickness=2)
 
-    left_img = borders._draw_borders(left_img, recognizable_objects, color_in=(0, 240, 0), color_out=(0, 0, 240))
-    scale_percent = 120  # percent of original size
-    width = int(left_img.shape[1] * scale_percent / 100)
-    height = int(left_img.shape[0] * scale_percent / 100)
-    dim = (width, height)
-
-    # resize image
-    left_img = cv2.resize(left_img, dim, interpolation=cv2.INTER_AREA)
-    cv2.imshow("left_cam", left_img)
-
     right_img = image_to_show(right_cam.last_capture.image,
                               [recognizable_object.frame_right for recognizable_object in recognizable_objects], True,
                               texts_coor, (240, 150, 240))
-    cv2.imshow("right_cam", right_img)
 
     obstacle = None
     for drone in drones:
         if drone.start and drone.active:
             obstacle = drone.obstacle
             break
-
+    
     xy_display = XYDisplay.get_xy_display(borders, balloon, drones, obstacle)
-    cv2.imshow('XY Display', xy_display)
-
+    return left_img, right_img, xy_display
 
 def calc_linear_eq(coor1, coor2):
     # line parallel to y axis
