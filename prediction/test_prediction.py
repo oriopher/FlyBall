@@ -1,8 +1,9 @@
 from recognizable.recognizable_object import RecognizableObject
 from utils.common import *
+from utils.consts import *
 from quadrangles.borders import Borders
 from images.camera import Camera
-from prediction import NumericBallPredictor
+from prediction.prediction import NumericBallPredictor
 from datetime import datetime
 
 COLORS_FILENAME = "pred_colors.txt"

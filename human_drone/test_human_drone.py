@@ -1,6 +1,7 @@
 from recognizable.recognizable_object import RecognizableObject
-from drone import Drone
+from drone.drone import Drone
 from utils.common import *
+from utils.consts import *
 from quadrangles.borders import Borders
 from images.camera import Camera
 
@@ -54,13 +55,13 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
         borders.set_corner(balloon, left_cam)
         print("Saved the %.0f point: (%.0f,%.0f)" % (borders.index, balloon.x, balloon.y))
         if borders.index == 4:
-            borders.write_borders(BORDERS_FILENAME)
-            drone_1.set_home((borders.x_middle, borders.y_middle))
+            borders.save_borders(BORDERS_FILENAME)
+            drone_1.set_home((borders.x_middle_1, borders.y_middle))
 
     # the 'r' button is set as the read text_color from file
     elif key == ord('r'):
-        borders.read_borders(BORDERS_FILENAME)
-        drone_1.set_home((borders.x_middle, borders.y_middle))
+        borders.load_borders(BORDERS_FILENAME, left_cam)
+        drone_1.set_home((borders.x_middle_1, borders.y_middle))
 
     elif key == ord('z'):
         drone_1.testing = 1
@@ -96,7 +97,7 @@ def capture_video(drone_1: Drone, balloon: RecognizableObject, cameras_distance,
             
         display_frames(balloon, drones, left, right, borders)
 
-        # State Machine
+        # State2Drones Machine
         state.run(drone_1, balloon, borders)
         transition = state.to_transition(drone_1, balloon, borders)
         if transition:

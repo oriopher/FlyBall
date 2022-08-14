@@ -1,20 +1,20 @@
 from datetime import datetime
 import numpy as np
 
-from state_machine.loop_state_machine import State
-from prediction import NumericBallPredictor
+from state_machine.loop_state_machine import State2Drones
+from prediction.prediction import NumericBallPredictor
 from utils.common import reachability, first_on_second_off
 from utils.consts import DRONE_MIN_HEIGHT
 
 
 # INVARIANT: at all time one drone is active and one is inactive.
 
-class ON_GROUND(State):
+class ON_GROUND(State2Drones):
     def __str__(self):
         return "On Ground"
 
     def setup(self, drone, other_drone, balloon, borders):
-        drone.active = drone.ident < other_drone.ident  # arbitrarly choose who is active and who is passive
+        drone.active = drone.ident < other_drone.ident  # arbitrarily choose who is active and who is passive
 
     def next(self, state=1):
         return HOVERING()
@@ -30,7 +30,7 @@ class ON_GROUND(State):
         return
 
 
-class HOVERING(State):
+class HOVERING(State2Drones):
     def __str__(self):
         return "Hovering"
 
@@ -45,7 +45,7 @@ class HOVERING(State):
         return
 
 
-class WAITING(State):
+class WAITING(State2Drones):
     def __str__(self):
         return "Waiting"
 
@@ -66,7 +66,7 @@ class WAITING(State):
         drone.go_home(other_drone.obstacle)
 
 
-class STANDING_BY(State):
+class STANDING_BY(State2Drones):
     XY_VEL_BOUND = 30
 
     def __str__(self):
@@ -107,7 +107,7 @@ class STANDING_BY(State):
         drone.go_home(other_drone.obstacle)
 
 
-class SEARCHING_PREDICTION(State):
+class SEARCHING_PREDICTION(State2Drones):
     Z_OFFSET = 50
     XY_VEL_BOUND = 30
 
@@ -157,7 +157,7 @@ class SEARCHING_PREDICTION(State):
         drone.track_3d(x_dest, y_dest, z_dest)
 
 
-class SEARCHING(State):
+class SEARCHING(State2Drones):
     Z_OFFSET = 50
 
     def __str__(self):
@@ -195,7 +195,7 @@ class SEARCHING(State):
         drone.track_3d(x_dest, y_dest, z_dest)
 
 
-class HITTING(State):
+class HITTING(State2Drones):
     def __str__(self):
         return "Hitting"
 
@@ -224,7 +224,7 @@ class HITTING(State):
         drone.track_hitting(x_dest, y_dest, z_dest)
 
 
-class DESCENDING(State):
+class DESCENDING(State2Drones):
     def __str__(self):
         return "Descending"
 
@@ -240,7 +240,7 @@ class DESCENDING(State):
         # drone.track_descending_2drones(other_drone)
 
 
-class PREPARE_AND_AVOID(State):
+class PREPARE_AND_AVOID(State2Drones):
     def __str__(self):
         return "Prepare and Avoid"
 

@@ -1,11 +1,13 @@
 import cv2
+
 from utils.consts import *
 from recognizable.recognizable_object import RecognizableObject
-from drone import Drone
+from drone.drone import Drone
 from utils.common import load_colors, save_colors, display_frames
 from quadrangles.borders import Borders
 from images.camera import Camera
 import faulthandler
+
 
 def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableObject, drone_1: Drone, drone_2: Drone) -> bool:
     key = cv2.waitKey(1) & 0xFF
@@ -73,7 +75,7 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
 
     # the 'r' button is set as the read text_color from file
     elif key == ord('r'):
-        borders.load_borders(BORDERS_FILENAME)
+        borders.load_borders(BORDERS_FILENAME, left_cam)
         drone_1.set_home((borders.x_middle_1, borders.y_middle))
         drone_2.set_home((borders.x_middle_2, borders.y_middle))
 
@@ -120,7 +122,7 @@ def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, 
             if drone.start:
                 drone.set_obstacle(left)
 
-        # State Machine
+        # State2Drones Machine
         for i, drone in enumerate(drones):
             drone.state.run(drone, drones[1-i], balloon, borders)
             transition = drone.state.to_transition(drone, drones[1-i], balloon, borders)

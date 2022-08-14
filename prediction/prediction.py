@@ -10,14 +10,14 @@ class NumericBallPredictor:
     that solves the balloon's equations of motion using a numeric ODE solver.
     """
     # r = (0.65+0.71)/4/np.pi  # in meters
-    r = (0.70+0.75)/4/np.pi  # in meters
+    r = (0.70 + 0.75) / 4 / np.pi  # in meters
     g = 9.807  # Gravitational constant
     rho = 1.183  # Air density kg/m^3
     V = 4 / 3 * np.pi * r ** 3  # Balloon Volume
     disp_air_mass = V * rho
     C_d = 0.78  # Dimensionless drag constant
     A = np.pi * r ** 2  # Balloon cross section in m^2
-    B = 0.5*rho*A*C_d  # A parameter of drag force
+    B = 0.5 * rho * A * C_d  # A parameter of drag force
     # balloon_weight = 1.5 * 10 ** -3  # kg
     balloon_weight = 1.75 * 10 ** -3  # kg
     m = disp_air_mass + balloon_weight  # Balloon mass.
@@ -64,7 +64,7 @@ class NumericBallPredictor:
         :return: a list of the values of the variables of the ODE at the inputted wanted times.
         """
         return odeint(NumericBallPredictor._derivative_func, np.array([self.v_xy_0, self.v_z_0, 0, self.z_0]), times,
-                     args=(self.B, self.m, self.rho, self.V, self.g))
+                      args=(self.B, self.m, self.rho, self.V, self.g))
 
     def _solution_to_coords(self, sol):
         """
@@ -89,7 +89,8 @@ class NumericBallPredictor:
         sol = self._prepare_predictions(np.linspace(0, time, 2))
         return self._solution_to_coords(sol)[:, 1]
 
-    def get_optimal_hitting_point(self, start_time=0, end_time=3, time_precision=0.01, xy_vel_bound=5/100, z_bound=30/100):
+    def get_optimal_hitting_point(self, start_time=0, end_time=3, time_precision=0.01, xy_vel_bound=5 / 100,
+                                  z_bound=30 / 100):
         """
         Predict an optimal hitting point, which is the first point upholding the following criteria:
         * the balloon's velocity in the XY plains is bellow an inputted bound
@@ -130,30 +131,3 @@ class NumericBallPredictor:
         preds = self._prepare_predictions(np.insert(times, 0, 0))[1:]
         mask = np.all([preds[:, 3] >= z_bound, np.abs(preds[:, 0]) <= xy_vel_bounds], axis=0)
         return times[mask], preds[mask]
-
-    # def get_prediction_height(self, height, vel_limit=30):
-    #     seconds = 4
-    #     fps = 50
-    #     times = np.linspace(0,seconds,seconds*fps)
-    #
-    #     return self.get_prediction_height_rec(times, 0, seconds*fps-1, height, 1/fps, vel_limit)
-    #
-    # def get_prediction_height_rec(self, times, left, right, height, jump=0.03, vel_limit=30):
-    #     if left >= right - 1:
-    #         return left, self.get_prediction(times[left])
-    #
-    #     middle = int(left/2 + right/2)
-    #     x1, y1, z1 = self.get_prediction(times[middle])
-    #     x2, y2, z2 = self.get_prediction(times[middle+1])
-    #
-    #     if z2 > z1:
-    #         return self.get_prediction_height_rec(times, middle, right, height, jump, vel_limit)
-    #
-    #     if abs(x2-x1)/jump < vel_limit and abs(y2-y1)/jump < vel_limit:
-    #         return middle, (x1, y1, z1)
-    #
-    #     if z2 >= height:
-    #         return self.get_prediction_height_rec(times, middle, right, height, jump, vel_limit)
-    #     if z1 <= height:
-    #         return self.get_prediction_height_rec(times, left, middle, height, jump, vel_limit)
-

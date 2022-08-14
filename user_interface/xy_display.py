@@ -34,7 +34,7 @@ class XYDisplay:
 
             xy_display = XYDisplay._draw_grid(xy_display, limits)
 
-            # calculats coordinates in pixels
+            # calculates coordinates in pixels
             for i, recognizable_object in enumerate(recognizable_object):
                 xy_display = XYDisplay._add_2d_object(recognizable_object.x, recognizable_object.y,
                                                       recognizable_object.text_colors,

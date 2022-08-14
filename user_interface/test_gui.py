@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import cv2
 import PySimpleGUI as sg
+
 from quadrangles.borders import Borders
 from user_interface.gui import Gui
 from color_bounds import ColorBounds
@@ -8,20 +9,7 @@ from image_3d import Image3D
 from loop_status import Status
 from images.camera import Camera
 
-ORI_WEB = Camera(51.3, 0, False)
-ORI_PHONE = Camera(66.9, 0, False)
-NIR_PHONE = Camera(67, 2, False)
-MAYA_WEB = Camera(61, 0, True)
-EFRAT_WEB = Camera(61, 2, False)
-EFRAT_PHONE = Camera(64, 3, False)
 
-NIR_PHONE_NIR = Camera(67, 3, False)
-EFRAT_PHONE_NIR = Camera(77, 2, False)
-
-COLORS_FILENAME = "../color_bounds.txt"
-
-FLOOR_HEIGHT = -80
-DRONE_DEFAULT_HEIGHT = FLOOR_HEIGHT + 50
 
 
 def interactive_loop(image_3d: Image3D, colors: ColorBounds, borders: Borders, window, loop_status: Status, left_cam: Camera) -> bool:

@@ -2,7 +2,8 @@ import numpy as np
 import cv2
 from scipy.spatial import distance as dist
 
-from utils.common import phys_to_left_pix, FLOOR_HEIGHT
+from utils.common import phys_to_left_pix
+from utils.consts import FLOOR_HEIGHT
 import CGALPY
 
 Ker = CGALPY.Ker
@@ -135,7 +136,7 @@ class Quadrangle:
         :param left_cam: the left cameras Camera object.
         """
         # calculate the coordinates pixels location on frame
-        if left_cam.last_capture == None:
+        if left_cam.last_capture is None:
             return
         for i in range(len(self._pixels_coordinates)):
             if self.coordinates[i][1] != 0:
@@ -198,4 +199,3 @@ class Quadrangle:
         # return the coordinates in top-left, top-right,
         # bottom-right, and bottom-left order
         return np.array([br, bl, tr, tl])
-

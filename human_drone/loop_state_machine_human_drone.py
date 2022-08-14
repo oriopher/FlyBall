@@ -1,14 +1,15 @@
 from datetime import datetime
 import numpy as np
 
-from state_machine.loop_state_machine import State
-from prediction import NumericBallPredictor
-from utils.common import reachability, FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
+from state_machine.loop_state_machine import State1Drone
+from prediction.prediction import NumericBallPredictor
+from utils.common import reachability
+from utils.consts import FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
 
 MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
 
 
-class ON_GROUND(State):
+class ON_GROUND(State1Drone):
     def __str__(self):
         return "On Ground"
 
@@ -26,7 +27,7 @@ class ON_GROUND(State):
         return
 
 
-class HOVERING(State):
+class HOVERING(State1Drone):
     def __str__(self):
         return "Hovering"
 
@@ -40,7 +41,7 @@ class HOVERING(State):
         return
 
 
-class WAITING(State):
+class WAITING(State1Drone):
     def __str__(self):
         return "Waiting"
 
@@ -56,7 +57,8 @@ class WAITING(State):
     def run(self, drone, balloon, borders):
         drone.go_home()
 
-class STANDING_BY(State):
+
+class STANDING_BY(State1Drone):
     def __str__(self):
         return "Standing By"
 
@@ -70,7 +72,7 @@ class STANDING_BY(State):
         drone.go_home()
 
 
-class SEARCHING_PREDICTION(State):
+class SEARCHING_PREDICTION(State1Drone):
     Z_OFFSET = 50
     XY_VEL_BOUND = 30
 
@@ -120,7 +122,7 @@ class SEARCHING_PREDICTION(State):
         drone.track_3d(x_dest, y_dest, z_dest)
 
 
-class SEARCHING(State):
+class SEARCHING(State1Drone):
     Z_OFFSET = 50
 
     def __str__(self):
@@ -164,7 +166,7 @@ class SEARCHING(State):
         drone.track_3d(x_dest, y_dest, z_dest)
 
 
-class HITTING(State):
+class HITTING(State1Drone):
     def __str__(self):
         return "Hitting"
 
@@ -176,13 +178,9 @@ class HITTING(State):
 
     def to_transition(self, drone, balloon, borders):
         Z_LIMIT = 15
-        # XY_LIMIT = 40
 
-        x_rel = balloon.x - drone.x
-        y_rel = balloon.y - drone.y
         z_rel = balloon.z - drone.z
 
-        # transition = not (abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT) or (z_rel < Z_LIMIT)
         transition = z_rel < Z_LIMIT
         return transition
 
@@ -194,7 +192,7 @@ class HITTING(State):
         drone.track_hitting(x_dest, y_dest, z_dest)
 
 
-class DESCENDING(State):
+class DESCENDING(State1Drone):
     def __str__(self):
         return "Descending"
 

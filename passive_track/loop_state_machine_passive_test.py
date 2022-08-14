@@ -1,5 +1,5 @@
-from utils.common import FLOOR_HEIGHT
-from state_machine.loop_state_machine import State
+from utils.consts import FLOOR_HEIGHT
+from state_machine.loop_state_machine import State2Drones
 
 MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
 X_DEST = 90
@@ -8,7 +8,7 @@ X_START = 40
 Y_START = 230
 
 
-class ON_GROUND(State):
+class ON_GROUND(State2Drones):
     def __str__(self):
         return "On Ground"
 
@@ -22,7 +22,7 @@ class ON_GROUND(State):
         return
 
 
-class HOVERING(State):
+class HOVERING(State2Drones):
     def __str__(self):
         return "Hovering"
 
@@ -36,7 +36,7 @@ class HOVERING(State):
         return
 
 
-class WAITING(State):
+class WAITING(State2Drones):
     def __str__(self):
         return "Waiting"
 
@@ -51,7 +51,7 @@ class WAITING(State):
         drone.track_2d(x_dest, y_dest)
 
 
-class STANDING_BY(State):
+class STANDING_BY(State2Drones):
     def __str__(self):
         return "Standing By"
 
@@ -65,4 +65,3 @@ class STANDING_BY(State):
         obstacle = other_drone.obstacle
         x_dest, y_dest = obstacle.get_preparation_dest()
         drone.track_2d(x_dest, y_dest, obstacle)
-

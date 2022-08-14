@@ -4,12 +4,15 @@ import os
 
 from user_interface.xy_display import XYDisplay
 
+
 def first_on_second_off(drone1, drone2):
     drone1.active, drone2.active = True, False
     print(drone1.ident, "active")
 
+
 def phys_to_left_pix_img(x_cm, y_cm, z_cm, cam):
-    return phys_to_left_pix(x_cm, y_cm, z_cm, cam.last_capture.x_n_pix, cam.last_capture.z_n_pix, cam.fov_horz, cam.fov_vert)
+    return phys_to_left_pix(x_cm, y_cm, z_cm, cam.last_capture.x_n_pix, cam.last_capture.z_n_pix, cam.fov_horz,
+                            cam.fov_vert)
 
 
 def phys_to_left_pix(x_cm, y_cm, z_cm, x_n_pix, z_n_pix, cam_fov_horz, cam_fov_vert):
@@ -26,7 +29,8 @@ def image_with_circle(cam, show_img, coords_phys, rad_phys, color=(240, 240, 240
     if not np.any(coords_phys):
         return show_img
     x_phys, y_phys, z_phys = coords_phys
-    radius = phys_to_left_pix_img(x_phys + rad_phys, y_phys, z_phys, cam)[0] - phys_to_left_pix_img(x_phys, y_phys, z_phys, cam)[0]
+    radius = phys_to_left_pix_img(x_phys + rad_phys, y_phys, z_phys, cam)[0] - \
+             phys_to_left_pix_img(x_phys, y_phys, z_phys, cam)[0]
     coordinates = phys_to_left_pix_img(x_phys, y_phys, z_phys, cam)
     if radius > 0:
         show_img = cv2.circle(show_img, coordinates, radius, color, thickness=thickness)
@@ -103,13 +107,13 @@ def display_frames(balloon, drones, left_cam, right_cam, borders):
             left_img = image_with_circle(left_cam, left_img, drone.dest_coords, rad_phys=7, thickness=2)
 
     left_img = borders._draw_borders(left_img, recognizable_objects, color_in=(0, 240, 0), color_out=(0, 0, 240))
-    scale_percent = 120 # percent of original size
+    scale_percent = 120  # percent of original size
     width = int(left_img.shape[1] * scale_percent / 100)
     height = int(left_img.shape[0] * scale_percent / 100)
     dim = (width, height)
-  
+
     # resize image
-    left_img = cv2.resize(left_img, dim, interpolation = cv2.INTER_AREA)
+    left_img = cv2.resize(left_img, dim, interpolation=cv2.INTER_AREA)
     cv2.imshow("left_cam", left_img)
 
     right_img = image_to_show(right_cam.last_capture.image,
@@ -122,7 +126,7 @@ def display_frames(balloon, drones, left_cam, right_cam, borders):
         if drone.start and drone.active:
             obstacle = drone.obstacle
             break
-    
+
     xy_display = XYDisplay.get_xy_display(borders, balloon, drones, obstacle)
     cv2.imshow('XY Display', xy_display)
 
