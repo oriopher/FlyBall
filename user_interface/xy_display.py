@@ -6,8 +6,8 @@ class XYDisplay:
     """
     A class for a 2D display of the XY plain of the game.
     """
-    NUM_PIXELS_X = 512
-    NUM_PIXELS_Y = 512
+    NUM_PIXELS_X = 480
+    NUM_PIXELS_Y = 640
     MARGINS = 30
     GRID_DIFF = 10
 
@@ -98,9 +98,9 @@ class XYDisplay:
         :param y_upper_limit: the upper y limit of the display.
         :return: the x,y coordinates in pixels.
         """
-        x_pix = int(((x - x_low_limit) / (x_upper_limit - x_low_limit)) * XYDisplay.NUM_PIXELS_X)
-        y_pix = abs(XYDisplay.NUM_PIXELS_Y - int(((y - y_low_limit) / (y_upper_limit - y_low_limit))
-                                                 * XYDisplay.NUM_PIXELS_Y))
+        x_pix = int(((x - x_low_limit) / (x_upper_limit - x_low_limit)) * XYDisplay.NUM_PIXELS_Y)
+        y_pix = abs(XYDisplay.NUM_PIXELS_X - int(((y - y_low_limit) /
+                                                  (y_upper_limit - y_low_limit)) * XYDisplay.NUM_PIXELS_X))
 
         return x_pix, y_pix
 
@@ -113,17 +113,17 @@ class XYDisplay:
         :return: the display with a grid.
         """
         x_lower_limit, x_upper_limit, y_lower_limit, y_upper_limit = limits
-        pix_in_cm_x = XYDisplay.NUM_PIXELS_X / (x_upper_limit - x_lower_limit)
-        pix_in_cm_y = XYDisplay.NUM_PIXELS_Y / (y_upper_limit - y_lower_limit)
+        pix_in_cm_x = XYDisplay.NUM_PIXELS_Y / (x_upper_limit - x_lower_limit)
+        pix_in_cm_y = XYDisplay.NUM_PIXELS_X / (y_upper_limit - y_lower_limit)
         grid_length_x = int(XYDisplay.GRID_DIFF * pix_in_cm_x)
         grid_length_y = int(XYDisplay.GRID_DIFF * pix_in_cm_y)
 
         # draws grid on frame
-        for i in range(grid_length_x, XYDisplay.NUM_PIXELS_X, grid_length_x):
-            img = cv2.line(img, (i, 0), (i, XYDisplay.NUM_PIXELS_Y), (211, 211, 211), 1, 1)  # horizontal
+        for i in range(grid_length_x, XYDisplay.NUM_PIXELS_Y, grid_length_x):
+            img = cv2.line(img, (i, 0), (i, XYDisplay.NUM_PIXELS_X), (211, 211, 211), 1, 1)  # horizontal
 
-        for i in range(grid_length_y, XYDisplay.NUM_PIXELS_Y, grid_length_y):
-            img = cv2.line(img, (0, i), (XYDisplay.NUM_PIXELS_X, i), (211, 211, 211), 1, 1)  # vertical
+        for i in range(grid_length_y, XYDisplay.NUM_PIXELS_X, grid_length_y):
+            img = cv2.line(img, (0, i), (XYDisplay.NUM_PIXELS_Y, i), (211, 211, 211), 1, 1)  # vertical
 
         return img
 
