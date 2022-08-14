@@ -221,10 +221,6 @@ class Drone:
         self.dest_coords = (dest_x, dest_y, dest_z)
         self.drone_control.track_hitting(dest_x, dest_y, dest_z, self.recognizable_object)
 
-    def track_hitting2(self, dest_x, dest_y, dest_z):
-        self.dest_coords = (dest_x, dest_y, dest_z)
-        self.drone_control.track_hitting2(dest_x, dest_y, dest_z, self.recognizable_object, self.start_hit_vx, self.start_hit_vy)
-
     def track_descending(self, obstacle=None):
         """
         Moves the drone in the direction of its home in the xy plain while descending.
