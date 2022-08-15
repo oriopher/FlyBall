@@ -85,8 +85,8 @@ def interactive_loop(borders, gui, left_cam, right_cam, cam_distance, balloon, d
         gui.show_homes_gui(drone_1.home, drone_2.home)
 
     elif event == 'z' or event == 'Start Play':
-        drone_1.testing = 1
-        drone_2.testing = 1
+        drone_1.game_start = 1
+        drone_2.game_start = 1
 
     elif event == 'flip_left':
         left_cam.flip = -1 if values['flip_left'] else 1

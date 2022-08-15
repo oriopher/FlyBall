@@ -8,7 +8,15 @@ from borders import Borders
 from camera import Camera
 
 
-def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableObject, drone_1: Drone) -> bool:
+def interactive_loop(borders, left_cam, balloon, drone_1):
+    """
+    The interactive loop for receiving commands from the user.
+    :param borders: the Borders.
+    :param left_cam: the left Camera.
+    :param balloon: the balloon's RecognizableObject.
+    :param drone_1: the Drone
+    :return: whether to continue or not.
+    """
     key = cv2.waitKey(1) & 0xFF
     str_colors_changed = "Color bounds changed"
 
@@ -64,12 +72,20 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
         drone_1.set_home((borders.x_middle_1, borders.y_middle))
 
     elif key == ord('z'):
-        drone_1.testing = 1
+        drone_1.game_start = 1
 
     return True
 
 
-def capture_video(drone_1: Drone, balloon: RecognizableObject, cameras_distance, left: Camera, right: Camera):
+def game_loop(drone_1: Drone, balloon: RecognizableObject, cameras_distance, left: Camera, right: Camera):
+    """
+    Runs the loop of the game - capturing frames from the video cameras and controlling the drone accordingly.
+    :param drone_1: the Drone.
+    :param balloon: the RecognizableObject of the balloon.
+    :param cameras_distance: the distance between the cameras.
+    :param left: the Camera of the left camera.
+    :param right: the Camera of the right camera.
+    """
 
     continue_loop = True
 
@@ -126,7 +142,7 @@ def main():
     balloon = RecognizableObject((255, 54, 89), "balloon")
 
     distance = 111.9
-    capture_video(drone_1, balloon, distance, left_cam, right_cam)
+    game_loop(drone_1, balloon, distance, left_cam, right_cam)
 
 
 if __name__ == "__main__":

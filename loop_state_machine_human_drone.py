@@ -10,6 +10,9 @@ MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
 
 
 class ON_GROUND(State1Drone):
+    """
+    A State representing the drone is on ground, and waiting for the user to command the drone to take off.
+    """
     def __str__(self):
         return "On Ground"
 
@@ -28,6 +31,10 @@ class ON_GROUND(State1Drone):
 
 
 class HOVERING(State1Drone):
+    """
+    A State representing the drone is hovering right after takeoff,
+    and waiting for the user to command the drone to start movement.
+    """
     def __str__(self):
         return "Hovering"
 
@@ -42,6 +49,9 @@ class HOVERING(State1Drone):
 
 
 class WAITING(State1Drone):
+    """
+    A State representing the drone is waiting for the user to start the game in its home (and move to it).
+    """
     def __str__(self):
         return "Waiting"
 
@@ -49,8 +59,8 @@ class WAITING(State1Drone):
         return STANDING_BY()
 
     def to_transition(self, drone, balloon, borders):
-        if drone.testing:
-            drone.testing = 0
+        if drone.game_start:
+            drone.game_start = 0
             return 1
         return 0
 
@@ -59,6 +69,9 @@ class WAITING(State1Drone):
 
 
 class STANDING_BY(State1Drone):
+    """
+    A State representing the drone is standing by in its home and waiting for the balloon to enter the borders.
+    """
     def __str__(self):
         return "Standing By"
 
@@ -73,6 +86,11 @@ class STANDING_BY(State1Drone):
 
 
 class SEARCHING_PREDICTION(State1Drone):
+    """
+    A State representing the drone is searching and moving to the optimal hitting point prediction in the xy plain.
+    Transitions to Searching state when the balloon is slow enough.
+    or to STANDING_BY if the balloon dropped bellow the drone, or exited the borders.
+    """
     Z_OFFSET = 50
     XY_VEL_BOUND = 30
 
@@ -123,6 +141,11 @@ class SEARCHING_PREDICTION(State1Drone):
 
 
 class SEARCHING(State1Drone):
+    """
+    A State representing the drone is tracking to the reachable prediction of the balloon in the xy plain.
+    Transitions to HITTING state when the balloon is low enough.
+    or to STANDING_BY if the balloon dropped bellow the drone, or exited the borders.
+    """
     Z_OFFSET = 50
 
     def __str__(self):
@@ -167,6 +190,10 @@ class SEARCHING(State1Drone):
 
 
 class HITTING(State1Drone):
+    """
+    A State representing the drone is tracking to hit the balloon.
+    Transitions to DESCENDING state right before hitting (known by height difference) the balloon.
+    """
     def __str__(self):
         return "Hitting"
 
@@ -193,6 +220,10 @@ class HITTING(State1Drone):
 
 
 class DESCENDING(State1Drone):
+    """
+    A State representing the drone is decelerating its upward trajectory and descending to a default height.
+    Transitions to WAITING when the drone is low enough.
+    """
     def __str__(self):
         return "Descending"
 

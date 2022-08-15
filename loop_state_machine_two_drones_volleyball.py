@@ -57,8 +57,8 @@ class WAITING(State2Drones):
             first_on_second_off(drone, other_drone)
 
     def to_transition(self, drone, other_drone, balloon, borders):
-        if drone.testing:
-            drone.testing = 0
+        if drone.game_start:
+            drone.game_start = 0
             return 1
         return 0
 
