@@ -14,7 +14,7 @@ def interactive_loop(borders, left_cam, balloon, drone_1):
     :param borders: the Borders.
     :param left_cam: the left Camera.
     :param balloon: the balloon's RecognizableObject.
-    :param drone_1: the Drone
+    :param drone_1: the Drone.
     :return: whether to continue or not.
     """
     key = cv2.waitKey(1) & 0xFF

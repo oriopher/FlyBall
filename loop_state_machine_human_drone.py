@@ -12,6 +12,7 @@ MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
 class ON_GROUND(State1Drone):
     """
     A State representing the drone is on ground, and waiting for the user to command the drone to take off.
+    Transitions to HOVERING.
     """
     def __str__(self):
         return "On Ground"
@@ -34,6 +35,7 @@ class HOVERING(State1Drone):
     """
     A State representing the drone is hovering right after takeoff,
     and waiting for the user to command the drone to start movement.
+    Transitions to WAITING.
     """
     def __str__(self):
         return "Hovering"
@@ -51,6 +53,7 @@ class HOVERING(State1Drone):
 class WAITING(State1Drone):
     """
     A State representing the drone is waiting for the user to start the game in its home (and move to it).
+    Transitions to STANDING_BY.
     """
     def __str__(self):
         return "Waiting"
@@ -71,6 +74,7 @@ class WAITING(State1Drone):
 class STANDING_BY(State1Drone):
     """
     A State representing the drone is standing by in its home and waiting for the balloon to enter the borders.
+    Transitions to SEARCHING_PREDICTION.
     """
     def __str__(self):
         return "Standing By"

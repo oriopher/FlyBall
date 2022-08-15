@@ -2,14 +2,18 @@ from datetime import datetime
 import numpy as np
 
 from loop_state_machine import State2Drones
-from prediction.prediction import NumericBallPredictor
-from utils.common import reachability, first_on_second_off
+from prediction import NumericBallPredictor
+from utils.drone_utils import reachability, first_on_second_off
 from utils.consts import DRONE_MIN_HEIGHT
 
 
 # INVARIANT: at all time one drone is active and one is inactive.
 
 class ON_GROUND(State2Drones):
+    """
+    A State representing the drone is on ground, and waiting for the user to command the drone to take off.
+    Transitions to HOVERING.
+    """
     def __str__(self):
         return "On Ground"
 
@@ -31,6 +35,11 @@ class ON_GROUND(State2Drones):
 
 
 class HOVERING(State2Drones):
+    """
+    A State representing the drone is hovering right after takeoff,
+    and waiting for the user to command the drone to start movement.
+    Transitions to WAITING.
+    """
     def __str__(self):
         return "Hovering"
 
@@ -46,6 +55,11 @@ class HOVERING(State2Drones):
 
 
 class WAITING(State2Drones):
+    """
+    A State representing the drone is waiting for the user to start the game,
+    in its home (and move to it, drone 2 is set to be passive and avoid drone 1).
+    Transitions to STANDING_BY.
+    """
     def __str__(self):
         return "Waiting"
 
@@ -67,6 +81,10 @@ class WAITING(State2Drones):
 
 
 class STANDING_BY(State2Drones):
+    """
+    A State representing the drone is standing by in its home and waiting for the balloon to enter the borders.
+    Transitions to SEARCHING_PREDICTION if the drone is active, and to PREPARE_AND_AVOID if it's passive.
+    """
     XY_VEL_BOUND = 30
 
     def __str__(self):
@@ -74,27 +92,6 @@ class STANDING_BY(State2Drones):
 
     def next(self, state=1):
         return SEARCHING_PREDICTION() if state == 1 else PREPARE_AND_AVOID()
-
-    # def to_transition(self, drone, other_drone, balloon, borders):
-    #     if not borders.in_borders(balloon):
-    #         return 0
-    #     pred = NumericBallPredictor(balloon)
-    #     pred_time, pred_coords = pred.get_optimal_hitting_point(z_bound=drone.z / 100,
-    #                                                         xy_vel_bound=self.XY_VEL_BOUND / 100)                                                    
-
-    #     x_rel = pred_coords[0] - drone.x
-    #     y_rel = pred_coords[1] - drone.y
-    #     x_rel_other = pred_coords[0] - other_drone.x
-    #     y_rel_other = pred_coords[1] - other_drone.y
-
-    #     if (x_rel**2 + y_rel**2) == (x_rel_other**2 + y_rel_other**2):
-    #         return 1 if drone.active else 2
-    #     elif (x_rel**2 + y_rel**2) < (x_rel_other**2 + y_rel_other**2):
-    #         first_on_second_off(drone, other_drone)
-    #         return 1
-    #     else:
-    #         first_on_second_off(other_drone, drone)
-    #         return 2
 
     def to_transition(self, drone, other_drone, balloon, borders):
         if not borders.in_borders(balloon):
@@ -108,6 +105,11 @@ class STANDING_BY(State2Drones):
 
 
 class SEARCHING_PREDICTION(State2Drones):
+    """
+    A State representing the drone is searching and moving to the optimal hitting point prediction in the xy plain.
+    Transitions to Searching state when the balloon is slow enough.
+    or to WAITING if the balloon dropped bellow the drone, or exited the borders.
+    """
     Z_OFFSET = 50
     XY_VEL_BOUND = 30
 
@@ -158,6 +160,11 @@ class SEARCHING_PREDICTION(State2Drones):
 
 
 class SEARCHING(State2Drones):
+    """
+    A State representing the drone is tracking to the reachable prediction of the balloon in the xy plain.
+    Transitions to HITTING state when the balloon is low enough.
+    or to WAITING if the balloon dropped bellow the drone, or exited the borders.
+    """
     Z_OFFSET = 50
 
     def __str__(self):
@@ -196,6 +203,10 @@ class SEARCHING(State2Drones):
 
 
 class HITTING(State2Drones):
+    """
+    A State representing the drone is tracking to hit the balloon.
+    Transitions to DESCENDING state right before hitting the balloon and switching the activity of the drones.
+    """
     def __str__(self):
         return "Hitting"
 
@@ -225,6 +236,11 @@ class HITTING(State2Drones):
 
 
 class DESCENDING(State2Drones):
+    """
+    A State representing the drone is decelerating its upward trajectory and
+    descending to a default height while avoiding the other drone.
+    Transitions to PREPARE_AND_AVOID when the drone is low enough.
+    """
     def __str__(self):
         return "Descending"
 
@@ -237,10 +253,15 @@ class DESCENDING(State2Drones):
 
     def run(self, drone, other_drone, balloon, borders):
         drone.track_descending(other_drone.obstacle)
-        # drone.track_descending_2drones(other_drone)
 
 
 class PREPARE_AND_AVOID(State2Drones):
+    """
+    A state representing the drone is passive and moving to the preparation location (while avoiding the other drone).
+    Transitions to SEARCHING_PREDICTION if the the drone switched to being active
+    and the balloon is lower than the other drone, while moving upward,
+    or to WAITING if the other drone state transitioned to the WAITING state.
+    """
     def __str__(self):
         return "Prepare and Avoid"
 
@@ -256,8 +277,6 @@ class PREPARE_AND_AVOID(State2Drones):
         return 0
 
     def run(self, drone, other_drone, balloon, borders):
-        HEIGHT_PREPARATION_FACTOR = 0.5
-
         if not drone.active:
             x_dest, y_dest = other_drone.obstacle.get_preparation_dest()
             z_dest = DRONE_MIN_HEIGHT

@@ -11,6 +11,18 @@ from gui import Gui
 
 
 def interactive_loop(borders, gui, left_cam, right_cam, cam_distance, balloon, drone_1, drone_2):
+    """
+    The interactive loop for receiving commands from the user.
+    :param gui: the GUI.
+    :param borders: the Borders.
+    :param left_cam: the left Camera.
+    :param right_cam: the right Camera.
+    :param cam_distance: the distance between the cameras.
+    :param balloon: the balloon's RecognizableObject.
+    :param drone_1: the first Drone.
+    :param drone_2: the second Drone.
+    :return: whether to continue or not, and the distance between the cameras.
+    """
     event, values = gui.window.read(timeout=1)
     str_colors_changed = "Color bounds changed"
     distance = cam_distance
@@ -106,8 +118,16 @@ def interactive_loop(borders, gui, left_cam, right_cam, cam_distance, balloon, d
     return True, distance
 
 
-def capture_video(drone_1: Drone, drone_2: Drone,  balloon: RecognizableObject, cameras_distance, left: Camera, right: Camera):
-
+def game_loop(drone_1, drone_2, balloon, cameras_distance, left, right):
+    """
+    Runs the loop of the game - capturing frames from the video cameras and controlling the drone accordingly.
+    :param drone_1: the first Drone.
+    :param drone_2: the second Drone.
+    :param balloon: the RecognizableObject of the balloon.
+    :param cameras_distance: the distance between the cameras.
+    :param left: the Camera of the left camera.
+    :param right: the Camera of the right camera.
+    """
     continue_loop = True
 
     borders = Borders()
@@ -188,7 +208,7 @@ def main():
     balloon = RecognizableObject((255, 54, 89), "balloon")
 
     distance = 111.9
-    capture_video(drone_1, drone_2, balloon, distance, left_cam, right_cam)
+    game_loop(drone_1, drone_2, balloon, distance, left_cam, right_cam)
 
 
 if __name__ == "__main__":
