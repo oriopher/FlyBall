@@ -5,7 +5,6 @@ from recognizable_object import RecognizableObject
 from drone import Drone
 from utils.config_utils import load_colors, save_colors
 from borders import Borders
-from camera import Camera
 import faulthandler
 from gui import Gui
 
@@ -200,6 +199,9 @@ def game_loop(drone_1, drone_2, balloon, cameras_distance, left, right):
 
 
 def main():
+    """
+    A game of 2 drones playing volleyball with the balloon.
+    """
     right_cam = C920_NIR_2
     left_cam = C920_NIR_1
 

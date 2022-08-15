@@ -7,12 +7,19 @@ from utils.config_utils import save_colors, load_colors
 from xy_display import XYDisplay
 from utils.consts import *
 from borders import Borders
-from camera import Camera
 from prediction import NumericBallPredictor
 from datetime import datetime
 
 
 def display_frames_pred(balloon, left_cam, right_cam, borders, pred_coords):
+    """
+    Displays the frame for predictions.
+    :param balloon: the balloon's RecognizableObject.
+    :param left_cam: the left camera's Camera.
+    :param right_cam: the right camera's Camera.
+    :param borders: the Borders.
+    :param pred_coords: the coordinates of the prediction.
+    """
     recognizable_objects = [balloon]
     texts_coor = ["c({:.0f},{:.0f},{:.0f})".format(balloon.x, balloon.y, balloon.z)]
     texts_vel = [
@@ -37,7 +44,15 @@ def display_frames_pred(balloon, left_cam, right_cam, borders, pred_coords):
     cv2.imshow('XY Display', xy_display)
 
 
-def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableObject, start_test) -> bool:
+def interactive_loop(borders, left_cam, balloon, start_test):
+    """
+    The interactive loop for receiving commands from the user.
+    :param borders: the Borders.
+    :param left_cam: the left camera's Camera.
+    :param balloon: the balloon's RecognizableObject.
+    :param start_test: whether the test is started or not.
+    :return: whether to continue the loop or not.
+    """
     key = cv2.waitKey(1) & 0xFF
     str_colors_changed = "Color bounds changed"
 
@@ -83,7 +98,14 @@ def interactive_loop(borders: Borders, left_cam: Camera, balloon: RecognizableOb
     return True
 
 
-def capture_video(balloon: RecognizableObject, cameras_distance, left: Camera, right: Camera):
+def test_prediction_loop(balloon, cameras_distance, left, right):
+    """
+    Runs the loop of the test - capturing frames from the video cameras and presenting predictions when wanted.
+    :param balloon: the RecognizableObject of the balloon.
+    :param cameras_distance: the distance between the cameras.
+    :param left: the Camera of the left camera.
+    :param right: the Camera of the right camera.
+    """
 
     continue_loop = True
     pred = None
@@ -132,13 +154,16 @@ def capture_video(balloon: RecognizableObject, cameras_distance, left: Camera, r
 
 
 def main():
+    """
+    A test for the prediction's of the balloon location, presenting the prediction wen requested.
+    """
     left_cam = C920_NIR_1
     right_cam = C920_NIR_2
 
     balloon = RecognizableObject((255, 54, 89), "balloon")
 
     distance = 111.9
-    capture_video(balloon, distance, left_cam, right_cam)
+    test_prediction_loop(balloon, distance, left_cam, right_cam)
 
 
 if __name__ == "__main__":

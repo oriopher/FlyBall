@@ -6,6 +6,7 @@ from utils.config_utils import *
 from utils.consts import *
 from borders import Borders
 from camera import Camera
+from utils.image_utils import display_frames
 
 
 def interactive_loop(borders, left_cam, balloon, drone_1):
@@ -135,6 +136,9 @@ def game_loop(drone_1: Drone, balloon: RecognizableObject, cameras_distance, lef
 
 
 def main():
+    """
+    A game of 1 drone hitting a balloon a human throws to it.
+    """
     left_cam = C920_NIR_1
     right_cam = C920_NIR_2
 
