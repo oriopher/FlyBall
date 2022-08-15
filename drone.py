@@ -154,7 +154,7 @@ class Drone:
         self.start_hit_timer = datetime.now()
         self.start_hit_vx = self.vx
         self.start_hit_vy = self.vy
-        print("hit v0: (%.0f, %.0f)" % (self.vx, self.vy))
+        print("hit v0: ({:.0f}, {:.0f})".format(self.vx, self.vy))
 
     def set_home(self, coords):
         """

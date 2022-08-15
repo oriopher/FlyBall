@@ -2,11 +2,22 @@ import numpy as np
 
 
 def first_on_second_off(drone1, drone2):
+    """
+    Sets one drones activity and sets off the activity of a second drone.
+    :param drone1: the drone that has its activity set on.
+    :param drone2: the drone that has its activity set off.
+    """
     drone1.active, drone2.active = True, False
     print(drone1.ident, "active")
 
 
 def reachability(distance, offset=0):
+    """
+    Estimates the it will take a drone to pass a certain distance (interpolated from measurements).
+    :param distance: the distance the drone should pass.
+    :param offset: a time offset to add to the result.
+    :return: the time it will take the drone to reach the point with inputted distance.
+    """
     # distance in cm, only one axis
     plot = np.array([[0, 0.85],
                      [2, 2],

@@ -1,6 +1,6 @@
 class State2Drones:
     """
-    A base class for states for the drones state machine in the main loop (a drone is per drone).
+    A base class for states for the drones state machine in the main loop (a state is per drone).
     """
     def next(self, state=1):
         """
@@ -55,7 +55,7 @@ class State2Drones:
 
 class State1Drone:
     """
-    A base class for states for the drones state machine in the main loop (a drone is per drone).
+    A base class for states for a single drone's state machine in the main loop.
     """
     def next(self, state=1):
         """

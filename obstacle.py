@@ -289,7 +289,7 @@ class Obstacle:
     @staticmethod
     def _calc_exit_coor_below(a, b, x, y, distance):
         """
-        Calculated an exit coordinate (line in _exit_coord_via_line) bellow the line.
+        Calculated an exit coordinate (like in _exit_coord_via_line) bellow the line.
         :param a: the slope of the line.
         :param b: the free coefficient of the line.
         :param x: the x coordinate of the point.
