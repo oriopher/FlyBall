@@ -112,7 +112,10 @@ def game_loop(drone_1: Drone, balloon: RecognizableObject, cameras_distance, lef
             # Process frames
             recognizable_object.detect_and_set_coordinates(left, right, cameras_distance)
             
-        display_frames(balloon, drones, left, right, borders)
+        left_img, right_img, xy_display = display_frames(balloon, drones, left, right, borders)
+        cv2.imshow("Left", left_img)
+        cv2.imshow("Right", right_img)
+        cv2.imshow("XY Display", xy_display)
 
         # State2Drones Machine
         state.run(drone_1, balloon, borders)
@@ -142,7 +145,7 @@ def main():
     left_cam = C920_NIR_1
     right_cam = C920_NIR_2
 
-    drone_1 = Drone(1, (0, 191, 255), iface_ip="192.168.10.10")
+    drone_1 = Drone(1, (0, 191, 255), iface_ip="192.168.10.2")
     balloon = RecognizableObject((255, 54, 89), "balloon")
 
     distance = 111.9

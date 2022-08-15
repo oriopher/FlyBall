@@ -90,7 +90,7 @@ def interactive_loop(borders, gui, left_cam, right_cam, cam_distance, balloon, d
 
     # the 'r' button is set as the read text_colors from file
     elif event == 'r' or event == 'Load Borders':
-        borders.load_borders(BORDERS_FILENAME)
+        borders.load_borders(BORDERS_FILENAME, left_cam)
         drone_1.set_home((borders.x_middle_1, borders.y_middle))
         drone_2.set_home((borders.x_middle_2, borders.y_middle))
         gui.show_homes_gui(drone_1.home, drone_2.home)
@@ -137,11 +137,6 @@ def game_loop(drone_1, drone_2, balloon, cameras_distance, left, right):
     recognizable_objects = [balloon] + [drone.recognizable_object for drone in drones]
     load_colors(COLORS_FILENAME, recognizable_objects)
     borders.load_borders(BORDERS_FILENAME, left)
-
-    if borders.is_set:
-        drone_1.set_home((borders.x_middle_1, borders.y_middle))
-        drone_2.set_home((borders.x_middle_2, borders.y_middle))
-        gui.show_homes_gui(drone_1.home, drone_2.home)
 
     drone_1.active = True
     drone_1.set_home((90, 350))
@@ -202,8 +197,8 @@ def main():
     """
     A game of 2 drones playing volleyball with the balloon.
     """
-    right_cam = C920_NIR_2
-    left_cam = C920_NIR_1
+    right_cam = C920_NIR_1
+    left_cam = C920_NIR_2
 
     drone_1 = Drone(1, (0, 191, 255), iface_ip="192.168.10.10")
     drone_2 = Drone(2, (38, 38, 200), iface_ip="192.168.10.2")

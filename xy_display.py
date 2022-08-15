@@ -6,8 +6,8 @@ class XYDisplay:
     """
     A class for a 2D display of the XY plain of the game.
     """
-    NUM_PIXELS_X = 480
-    NUM_PIXELS_Y = 640
+    NUM_PIXELS_X = 512
+    NUM_PIXELS_Y = 512
     MARGINS = 30
     GRID_DIFF = 10
 
