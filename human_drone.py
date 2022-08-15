@@ -62,7 +62,7 @@ def interactive_loop(borders, left_cam, balloon, drone_1):
     # the 'j' button is set as the saving the borders. can save 4 coordinates
     elif key == ord('j'):
         borders.set_corner(balloon, left_cam)
-        print("Saved the %.0f point: (%.0f,%.0f)" % (borders.index, balloon.x, balloon.y))
+        print("Saved the {:.0f} point: ({:.0f},{:.0f})".format(borders.index, balloon.x, balloon.y))
         if borders.index == 4:
             borders.save_borders(BORDERS_FILENAME)
             drone_1.set_home((borders.x_middle_1, borders.y_middle))

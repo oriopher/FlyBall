@@ -79,7 +79,7 @@ def interactive_loop(borders, gui, left_cam, right_cam, cam_distance, balloon, d
     # the 'j' button is set as the saving the borders. can save 4 coordinates
     elif event == 'j' or event == 'Set Borders':
         borders.set_corner(balloon, left_cam)
-        print("Saved the %.0f coordinate: (%.0f,%.0f)" % (borders.index, balloon.x, balloon.y))
+        print("Saved the {:.0f} coordinate: ({:.0f},{:.0f})".format(borders.index, balloon.x, balloon.y))
         gui.update_borders_button(borders.index)
         if borders.index == 4:
             borders.save_borders(BORDERS_FILENAME)
