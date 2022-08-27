@@ -1,210 +1,259 @@
-import datetime
+from datetime import datetime
 import numpy as np
 
-from common import DRONE_DEFAULT_HEIGHT
+from utils.consts import DRONE_DEFAULT_HEIGHT
+from obstacle import Obstacle
 from recognizable_object import RecognizableObject
-from loop_state_machine import ON_GROUND, STANDING_BY
-from tello import Tello
+# from loop_state_machine_human_drone import ON_GROUND
+# from loop_state_machine_passive_test import ON_GROUND
+from loop_state_machine_two_drones_volleyball import ON_GROUND
+from tello_drone_control import TelloDroneControl
 
 
-class Drone(RecognizableObject):
+class Drone:
+    """
+    A class for the drone.
+    """
+    # The number of old destinations in order to calculate a mean destination (prediction).
     OLD_DEST_NUM = 4
 
-    def __init__(self, ident: int, text_colors: tuple[int, int, int], radius: int ,middle: tuple[int, int] = (0, 0),
+    def __init__(self, ident: int, text_color,
                  iface_ip: str = '192.168.10.2'):
-        super().__init__(text_colors, radius, "drone" + str(ident))
-        self.iface_ip = iface_ip
-        self.tello = None
-        self.middle = middle
-        self.id = ident
-        self.tookoff = self.start = self.first_seek = False
+        """
+        Initializes the drone.
+        :param ident: a unique id number for the drone.
+        :param text_color: the color that will be representing the drone in displays.
+        :param iface_ip: the ip of the interface that connects to the specific drone.
+        """
+        self.recognizable_object = RecognizableObject(text_color, "drone" + str(ident))
+        self.drone_control = TelloDroneControl(iface_ip)
+        self.home = (0, 0)
+        self.ident = ident
+        self.tookoff = self.start = self.active = False
         self.state = ON_GROUND()
         self.x_0 = 0
         self.y_0 = 0
         self.dest_coords = (0, 0, 0)
         self.old_dest_coords = None
-        self.start_hit_timer = self.end_hit_timer = None
+        self.start_hit_timer = None
         self.drone_search_pred_coords = (0, 0, 0)
         self.drone_search_pred_time = 0
         self.testing = 0
+        self.active = False
+        self.default_height = DRONE_DEFAULT_HEIGHT
+        self.obstacle = None
+        self.start_hit_vx = 0
+        self.start_hit_vy = 0
 
-    def battery_status(self, to_print):
-        if to_print:
-            print("battery = ", self.tello.get_battery(), "%")
+    @property
+    def x(self):
+        """
+        :return: the x point of the drone.
+        """
+        return self.recognizable_object.x
 
-    def takeoff(self, battery=True):
-        if not self.tello:
-            self.tello = Tello(iface_ip=self.iface_ip)
-        self.tello.connect()
-        self.battery_status(battery)
-        self.tello.takeoff()
-        self.tookoff = True
+    @property
+    def y(self):
+        """
+        :return: the y point of the drone.
+        """
+        return self.recognizable_object.y
 
-    def land(self, battery=True):
-        self.tello.land()
-        self.battery_status(battery)
+    @property
+    def z(self):
+        """
+        :return: the z point of the drone.
+        """
+        return self.recognizable_object.z
 
-    def send_rc_control(self, left_right_velocity: int, forward_backward_velocity: int, up_down_velocity: int,
-                        yaw_velocity: int):
-        self.tello.send_rc_control(left_right_velocity, forward_backward_velocity, up_down_velocity, yaw_velocity)
+    @property
+    def vx(self):
+        """
+        :return: the drones velocity in the x axis.
+        """
+        return self.recognizable_object.vx
 
-    def wait_rc_control(self):
-        while not self.tello.send_rc_control:
-            continue
-        return
+    @property
+    def vy(self):
+        """
+        :return: the drones velocity in the y axis.
+        """
+        return self.recognizable_object.vy
 
-    def get_battery(self):
-        return self.tello.get_battery()
+    @property
+    def vz(self):
+        """
+        :return: the drones velocity in the z axis.
+        """
+        return self.recognizable_object.vz
+
+    @property
+    def battery(self):
+        """
+        :return: a string showing the drones battery percentage.
+        """
+        return "drone{} battery = {:d}%".format(self.ident, self.drone_control.get_battery())
+
+    def detect_color(self, is_left):
+        """
+        Detects the drones balloon colors in one camera.
+        :param is_left: whether to detect in the left camera.
+        """
+        self.recognizable_object.detect_color(is_left)
+
+    def takeoff(self):
+        """
+        Commands the drone to takeoff.
+        """
+        self.drone_control.connect()
+        print(self.battery)
+        self.drone_control.takeoff()
+
+    def land(self):
+        """
+        Commands the drone to land.
+        """
+        self.drone_control.land()
+        self.tookoff = False
+        print(self.battery)
+
+    def stop(self):
+        """
+        Commands the drone to stop.
+        """
+        self.drone_control.stop()
 
     def start_track(self):
+        """
+        Sets the drone to start tracking, and it's initial xy coordinates.
+        """
         if self.tookoff:
             self.start = True
-            if not self.first_seek:
-                self.first_seek = True
-                self.x_0 = self.x
-                self.y_0 = self.y
+            self.x_0 = self.x
+            self.y_0 = self.y
 
     def stop_track(self):
+        """
+        Indicates to the drone to stop tracking.
+        """
         if self.start:
             self.start = False
 
-    def stop_hit(self):
-        if self.hit:
-            self.hit = False
-            self.state = STANDING_BY()
-
-    def set_dest_coords(self, coords: tuple[float, float, float]):
-        self.dest_coords = coords
-
     def search_pred_start(self):
-        self.drone_search_pred_time = datetime.datetime.now()
+        """
+        Resets the search prediction parameters of the drone.
+        """
+        self.drone_search_pred_time = datetime.now()
         self.drone_search_pred_coords = (self.x, self.y, self.z)
         self.old_dest_coords = np.zeros((0, 3))
-        
-    def start_hit(self):
-        self.start_hit_timer = datetime.datetime.now()
 
-    def set_middle(self, middle: tuple[float, float]):
-        self.middle = middle
+    def start_hit(self):
+        """
+        Resets the hitting parameters of the drone.
+        """
+        self.start_hit_timer = datetime.now()
+        self.start_hit_vx = self.vx
+        self.start_hit_vy = self.vy
+        print("hit v0: ({:.0f}, {:.0f})".format(self.vx, self.vy))
+
+    def set_home(self, coords):
+        """
+        Sets the drones home location.
+        :param coords: the coordinates of the home.
+        """
+        self.home = coords
 
     def new_pred(self, coords):
+        """
+        Calculates a new prediction for the drone to track using the old predictions.
+        :param coords: the coordinates of a new prediction.
+        :return: the average prediction.
+        """
         if len(self.old_dest_coords) >= self.OLD_DEST_NUM:
             self.old_dest_coords = self.old_dest_coords[1:]
         self.old_dest_coords = np.vstack([self.old_dest_coords, coords])
         return np.mean(self.old_dest_coords, axis=0)
 
-    def track_3d(self, dest_x: float, dest_y: float, dest_z: float):
-        x_cm_rel = dest_x - self.x
-        y_cm_rel = dest_y - self.y
-        z_cm_rel = dest_z - self.z
-        self.set_dest_coords((dest_x, dest_y, dest_z))
+    def track_3d(self, dest_x, dest_y, dest_z, obstacle=None):
+        """
+        Moves the drone in the direction of the wanted destination.
+        If the drone is not active and an obstacle is passed to the function - bypass it.
+        :param dest_x: the desired x point.
+        :param dest_y: the desired y point.
+        :param dest_z: the desired z point
+        :param obstacle: an Obstacle the drone should avoid if its not active.
+        """
+        if not self.active and obstacle:
+            # print('original dest: ', dest_x, dest_y)
+            dest_x, dest_y = obstacle.bypass_obstacle_coordinates((self.x, self.y), (dest_x, dest_y))
+            # print("dest: ", dest_x, dest_y)
+            # print("location: ", self.x, self.y)
+            # print(obstacle.coordinates)
+        if self.dest_coords != (0, 0, 0):
+            self.drone_control.track_3d(dest_x, dest_y, dest_z, self.recognizable_object)
+        self.dest_coords = (dest_x, dest_y, dest_z)
 
-        left_right = self.velocity_control_function(x_cm_rel, self.vx, 'x')
-        for_back = self.velocity_control_function(y_cm_rel, self.vy, 'y')
-        up_down = self.velocity_control_function(z_cm_rel, self.vz, 'z')
-        if self.tello.send_rc_control:
-            self.send_rc_control(left_right, for_back, up_down, 0)
+    def track_2d(self, dest_x, dest_y, obstacle=None):
+        """
+        Moves the drone in the direction of the wanted destination in the xy plain, z destination is the default height.
+        If the drone is not active and an obstacle is passed to the function - bypass it.
+        :param dest_x: the desired x point.
+        :param dest_y: the desired y point.
+        :param obstacle: an Obstacle the drone should avoid if its not active.
+        """
+        self.track_3d(dest_x, dest_y, self.default_height, obstacle)
 
-    def track_balloon(self, balloon: RecognizableObject):
-        self.track_2d(balloon.x, balloon.y)
+    def go_home(self, obstacle=None):
+        """
+        Moves the drone in the direction of its home in the xy plain, z destination is the default height.
+        If the drone is not active and an obstacle is passed to the function - bypass it.
+        :param obstacle: an Obstacle the drone should avoid if its not active.
+        """
+        self.track_2d(*self.home, obstacle)
 
-    def seek_middle(self):
-        self.track_2d(*self.middle)
+    def track_hitting(self, dest_x, dest_y, dest_z):
+        """
+        Moves the drone in the direction of the wanted destination in order to hit the balloon.
+        :param dest_x: the desired x point.
+        :param dest_y: the desired y point.
+        :param dest_z: the desired z point
+        """
+        self.dest_coords = (dest_x, dest_y, dest_z)
+        self.drone_control.track_hitting(dest_x, dest_y, dest_z, self.recognizable_object)
 
-    def track_2d(self, dest_x: int, dest_y: int):
-        self.track_3d(dest_x, dest_y, DRONE_DEFAULT_HEIGHT)
+    def track_descending(self, obstacle=None):
+        """
+        Moves the drone in the direction of its home in the xy plain while descending.
+        If the drone is not active and an obstacle is passed to the function - bypass it.
+        :param obstacle: an Obstacle the drone should avoid if its not active.
+        """
+        dest_x, dest_y = self.home
+        if not self.active and obstacle:
+            dest_x, dest_y = obstacle.bypass_obstacle_coordinates((self.x, self.y), (dest_x, dest_y))
+        self.drone_control.track_descending(dest_x, dest_y, self.recognizable_object)
+        self.dest_coords = (dest_x, dest_y, self.default_height)
 
-    @staticmethod
-    def velocity_control_function(cm_rel, real_velocity, direction):
-        # this function assumes the drone is looking at the cameras.
+    def track_descending_2drones(self, other_drone):
+        """
+        Moves the drone in the away from the other drone in the xy plain while descending.
+        :param other_drone: the other drone's Drone object.
+        """
+        SPEED_FACTOR = 100
+        vec = [self.x - other_drone.x, self.y - other_drone.y]  # vector drone minus vector other_drone
+        abs_vector = np.sqrt(vec[0]**2 + vec[1]**2)
+        vec[0] = SPEED_FACTOR * vec[0] / abs_vector
+        vec[1] = SPEED_FACTOR * vec[1] / abs_vector
+        dest_x = self.x + vec[0]
+        dest_y = self.y + vec[1]
+        self.drone_control.track_descending(dest_x, dest_y, self.recognizable_object)
+        self.dest_coords = (dest_x, dest_y, self.default_height)
 
-        # These parameters achieve a hit within 2-3 seconds using lin + sqrt.
-        # there is a plot of this function in the documentation.
-        # MIN_VEL = 9 # under this speed the tello receives this as 0
-        # LOWER_BOUND = 5 # when the drone is closer than this we will just let it stop
-        # if direction == 'z':
-        #     MAX_VEL = 30
-        #     A_SQRT = 2
-        #     A_LINEAR = 0.9
-        #     B = 1.2
-        #     STOPPING_VEL = 0
-        #     C = 0
-        # elif direction == 'x' or direction == 'y':
-        #     STOPPING_VEL = 20
-        #     MAX_VEL = 60
-        #     A_SQRT = 3
-        #     A_LINEAR = 1
-        #     B = 0.7
-        #     C = 5
-        # else:
-        #     return 0
-
-        MIN_VEL = 9  # under this speed the tello receives this as 0
-        LOWER_BOUND = 5  # when the drone is closer than this we will just let it stop
-
-        STOPPING_VEL = 30  # The velocity applied in order to stop faster
-        MAX_VEL = 70
-        A_SQRT = 3
-        A_LINEAR = 1
-        C = 5
-        B = 0.6  # Associated with the stopping distance
-
-        if direction == 'z':
-            STOPPING_VEL = 0
-            B = 0.3
-            A_LINEAR = 1.5
-            LOWER_BOUND = 2
-
-        limit = max(B * abs(real_velocity), LOWER_BOUND)
-
-        if abs(cm_rel) < limit:
-            if abs(cm_rel) < LOWER_BOUND:
-                velocity = 0
-            else:
-                velocity = np.sign(real_velocity) * STOPPING_VEL
-
-        else:
-            # velocity_pot = int(min(A * (abs(cm_rel) - limit) + MIN_VEL, MAX_VEL))
-            velocity_pot = int(
-                min(max(A_SQRT * np.sqrt(abs(cm_rel) - limit), A_LINEAR * (abs(cm_rel) - limit) - C) + MIN_VEL,
-                    MAX_VEL))
-            velocity = -np.sign(cm_rel) * velocity_pot
-
-        if direction == 'x':
-            return int(velocity)
-        elif direction == 'y':
-            return int(velocity)
-        elif direction == 'z':
-            return -int(velocity)
-
-    def track_hitting(self, dest_x: float, dest_y: float, dest_z: float):
-        self.set_dest_coords((dest_x, dest_y, dest_z))
-        rx = dest_x - self.x
-        ry = dest_y - self.y
-        rz = dest_z - self.z
-        r = np.sqrt(rx ** 2 + ry ** 2 + rz ** 2)
-        theta = np.arccos(rz / r)
-        phi = np.arctan2(ry, rx)
-        MAX_VEL = 100
-        MIN_VEL = 9
-        A = 1.7
-        vz = MAX_VEL
-        vx = min(int(A * (vz-MIN_VEL) * np.tan(theta) * np.cos(phi)) + MIN_VEL, MAX_VEL)
-        vy = min(int(A * (vz-MIN_VEL) * np.tan(theta) * np.sin(phi)) + MIN_VEL, MAX_VEL)
-
-        left_right, for_back, up_down = -vx, -vy, vz
-        if self.tello.send_rc_control:
-            self.send_rc_control(left_right, for_back, up_down, 0)
-
-    
-    def track_descending(self):
-        dest_x, dest_y, dest_z = self.middle[0], self.middle[1], DRONE_DEFAULT_HEIGHT
-
-        x_cm_rel = dest_x - self.x
-        y_cm_rel = dest_y - self.y
-
-        left_right = self.velocity_control_function(x_cm_rel, self.vx, 'x')
-        for_back = self.velocity_control_function(y_cm_rel, self.vy, 'y')
-        up_down = -100
-        if self.tello.send_rc_control:
-            self.send_rc_control(left_right, for_back, up_down, 0)
+    def set_obstacle(self, left_cam):
+        """
+        Sets the obstacle the drone and its destination creates in the space.
+        :param left_cam: the left camera's Camera object.
+        """
+        if self.dest_coords == (0, 0, 0):
+            self.obstacle = None
+            return
+        self.obstacle = Obstacle(self, left_cam)

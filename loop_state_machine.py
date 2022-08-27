@@ -1,284 +1,104 @@
-from datetime import datetime
-from prediction import NumericBallPredictor
-import numpy as np
-from common import reachability, FLOOR_HEIGHT, DRONE_DEFAULT_HEIGHT
-
-MIN_SAFE_HEIGHT = FLOOR_HEIGHT + 30
-X_OFFSET = 0
-Y_OFFSET = 0
-
-class State:
+class State2Drones:
+    """
+    A base class for states for the drones state machine in the main loop (a state is per drone).
+    """
     def next(self, state=1):
+        """
+        :param state: a number representing the next state received from the transition function.
+        :return: the next state of the drone.
+        """
         raise NotImplemented
 
-    def to_transition(self, *args, **kwargs):
+    def to_transition(self, drone, other_drone, balloon, borders):
+        """
+        The states transition function.
+        :param drone: the current drone's Drone object.
+        :param other_drone: the other drone's Drone object.
+        :param balloon: the balloons RecognizableObject.
+        :param borders: the Borders of the game.
+        :return: 0 or False if the drone should stay in the current state.
+        True or a number if the drone should transition (the number helps the next function decide to which state).
+        """
         raise NotImplemented
 
-    def run(self, *args, **kwargs):
+    def run(self, drone, other_drone, balloon, borders):
+        """
+        The main logic of the state.
+        :param drone: the current drone's Drone object.
+        :param other_drone: the other drone's Drone object.
+        :param balloon: the balloons RecognizableObject.
+        :param borders: the Borders of the game.
+        """
         raise NotImplemented
 
-    def setup(self, *args, **kwargs):
+    def setup(self, drone, other_drone, balloon, borders):
+        """
+        Initializations at the begging of the state (not always implemented).
+        :param drone: the current drone's Drone object.
+        :param other_drone: the other drone's Drone object.
+        :param balloon: the balloons RecognizableObject.
+        :param borders: the Borders of the game.
+        """
         pass
 
-    def cleanup(self, state, *args, **kwargs):
+    def cleanup(self, transition, drone, other_drone, balloon, borders):
+        """
+        Cleanups at the end of the state (not always implemented).
+        :param transition: the result of the transition function indicating the next state.
+        :param drone: the current drone's Drone object.
+        :param other_drone: the other drone's Drone object.
+        :param balloon: the balloons RecognizableObject.
+        :param borders: the Borders of the game.
+        """
         pass
 
 
-class ON_GROUND(State):
-    def __str__(self):
-        return "On Ground"
-
+class State1Drone:
+    """
+    A base class for states for a single drone's state machine in the main loop.
+    """
     def next(self, state=1):
-        return HOVERING()
+        """
+        :param state: a number representing the next state received from the transition function.
+        :return: the next state of the drone.
+        """
+        raise NotImplemented
 
-    def to_transition(self, *args, **kwargs):
-        return kwargs['drone'].tookoff
+    def to_transition(self, drone, balloon, borders):
+        """
+        The states transition function.
+        :param drone: the current drone's Drone object.
+        :param balloon: the balloons RecognizableObject.
+        :param borders: the Borders of the game.
+        :return: 0 or False if the drone should stay in the current state.
+        True or a number if the drone should transition (the number helps the next function decide to which state).
+        """
+        raise NotImplemented
 
-    def run(self, *args, **kwargs):
-        return
+    def run(self, drone, balloon, borders):
+        """
+        The main logic of the state.
+        :param drone: the current drone's Drone object.
+        :param balloon: the balloons RecognizableObject.
+        :param borders: the Borders of the game.
+        """
+        raise NotImplemented
 
+    def setup(self, drone, balloon, borders):
+        """
+        Initializations at the begging of the state (not always implemented).
+        :param drone: the current drone's Drone object.
+        :param balloon: the balloons RecognizableObject.
+        :param borders: the Borders of the game.
+        """
+        pass
 
-class HOVERING(State):
-    def __str__(self):
-        return "Hovering"
-
-    def next(self, state=1):
-        print("Waiting")
-        return WAITING()
-
-    def to_transition(self, *args, **kwargs):
-        return kwargs['drone'].start
-
-    def run(self, **kwargs):
-        return
-
-
-class WAITING(State):
-    def __str__(self):
-        return "Waiting"
-
-    def next(self, state=1):
-        print("Stand By")
-        return STANDING_BY()
-
-    def to_transition(self, *args, **kwargs):
-        drone = kwargs['drone']
-        if drone.testing:
-            drone.testing = 0
-            return 1
-        return 0
-
-    def run(self, *args, **kwargs):
-        borders = kwargs['borders']
-        drone = kwargs['drone']
-
-        if borders.set_borders:
-            x_dest, y_dest = drone.middle
-            drone.seek_middle()
-        else:
-            x_dest, y_dest = drone.x_0, drone.y_0
-            drone.track_2d(x_dest, y_dest)
-        z_dest = DRONE_DEFAULT_HEIGHT
-
-
-class STANDING_BY(State):
-    def __str__(self):
-        return "Standing By"
-
-    def next(self, state=1):
-        print("Search Prediction")
-        return SEARCHING_PREDICTION()
-
-    def to_transition(self, *args, **kwargs):
-        borders = kwargs['borders']
-        balloon = kwargs['balloon']
-
-        return borders.in_borders(balloon)
-
-    def run(self, *args, **kwargs):
-        borders = kwargs['borders']
-        drone = kwargs['drone']
-
-        if borders.set_borders:
-            x_dest, y_dest = drone.middle
-            drone.seek_middle()
-        else:
-            x_dest, y_dest = drone.x_0, drone.y_0
-            drone.track_2d(x_dest, y_dest)
-        z_dest = DRONE_DEFAULT_HEIGHT
-
-
-class SEARCHING_PREDICTION(State):
-    Z_OFFSET = 50
-    XY_VEL_BOUND = 30
-
-    def __str__(self):
-        return "Searching Prediction"
-
-    def next(self, state=1):
-        if state == 1:
-            print("Searching")
-        else:
-            print("Stand By")
-        return SEARCHING() if state == 1 else STANDING_BY()
-
-    def setup(self, *args, **kwargs):
-        drone = kwargs['drone']
-        drone.search_pred_start()
-
-    def to_transition(self, *args, **kwargs):
-        balloon = kwargs['balloon']
-        drone = kwargs['drone']
-        borders = kwargs['borders']
-
-        if np.sqrt(balloon.vx ** 2 + balloon.vy ** 2) <= self.XY_VEL_BOUND \
-                and balloon.z >= drone.z:
-            return 1
-        if balloon.vz <= 0 and balloon.z >= drone.z:
-            return 1
-        if balloon.vz <= 0 and balloon.z <= drone.z:
-            return 2
-        if not (borders.in_borders(balloon) and borders.in_borders(drone)):
-            return 2
-        return 0
-
-    def run(self, *args, **kwargs):
-        drone = kwargs['drone']
-        balloon = kwargs['balloon']
-
-        pred = NumericBallPredictor(balloon)
-        pred_time, pred_coords = pred.get_optimal_hitting_point(z_bound=drone.z / 100,
-                                                                xy_vel_bound=self.XY_VEL_BOUND / 100)
-
-        if np.any(pred_coords):
-            x_dest, y_dest, z_dest = drone.new_pred(pred_coords)
-            x_dest += X_OFFSET
-            y_dest += Y_OFFSET
-        else:
-            x_dest, y_dest, z_dest = drone.dest_coords
-        # x_dest = recognizable_object.get_phys_balloon(0)
-        # y_dest = recognizable_object.get_phys_balloon(1)
-        # z_dest = Z_HIT
-
-        x_to_target = abs(x_dest - drone.drone_search_pred_coords[0])
-        y_to_target = abs(y_dest - drone.drone_search_pred_coords[1])
-        time_to_hit_from_start = max(reachability(x_to_target), reachability(y_to_target))
-        time_until_hit = time_to_hit_from_start + (drone.drone_search_pred_time - datetime.now()).total_seconds()
-        pred_time, pred_coords = pred.get_optimal_hitting_point(z_bound=drone.z / 100,
-                                                                xy_vel_bound=self.XY_VEL_BOUND / 100,
-                                                                start_time=time_until_hit)
-        if not np.any(pred_coords):  # if pred_coords != (0,0,0)
-            z_dest = pred_coords[2] - self.Z_OFFSET
-            if z_dest < MIN_SAFE_HEIGHT:
-                z_dest = MIN_SAFE_HEIGHT
-
-        drone.track_3d(x_dest, y_dest, z_dest)
-
-
-class SEARCHING(State):
-    Z_OFFSET = 50
-
-    def __str__(self):
-        return "Searching"
-
-    def next(self, state=1):
-        if state == 1:
-            print("Hitting")
-        else:
-            print("Stand By")
-        return HITTING() if state == 1 else STANDING_BY()
-
-    def to_transition(self, *args, **kwargs):
-        UPPER_LIMIT = 110
-        LOWER_LIMIT = 20
-        XY_LIMIT = 30
-        VEL_LIMIT = 30
-
-        drone = kwargs['drone']
-        balloon = kwargs['balloon']
-        borders = kwargs['borders']
-
-        x_rel = balloon.x - drone.x + X_OFFSET
-        y_rel = balloon.y - drone.y + Y_OFFSET
-        z_rel = balloon.z - drone.z
-
-        if z_rel < UPPER_LIMIT and balloon.vz <= 0:
-            return 1
-        if abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT and LOWER_LIMIT < z_rel < UPPER_LIMIT \
-                and abs(drone.vx) < VEL_LIMIT and abs(drone.vy) < VEL_LIMIT \
-                and balloon.vz <= 0:
-            return 1
-        if balloon.vz <= 0 and balloon.z <= drone.z:
-            return 2
-        if not (borders.in_borders(balloon) and borders.in_borders(drone)):
-            return 2
-        return 0
-
-    def run(self, *args, **kwargs):
-        drone = kwargs['drone']
-        balloon = kwargs['balloon']
-
-        pred = NumericBallPredictor(balloon)
-        x_dest, y_dest, z_dest = pred.get_prediction(reachability(distance=0, offset=0))
-        # x_dest, y_dest, z_dest = balloon.x, balloon.y, drone.z
-        x_dest += X_OFFSET
-        y_dest += Y_OFFSET
-        z_dest = drone.z
-        drone.track_3d(x_dest, y_dest, z_dest)
-
-
-class HITTING(State):
-    def __str__(self):
-        return "Hitting"
-
-    def next(self, state=1):
-        return DESCENDING()
-
-    def setup(self, *args, **kwargs):
-        drone = kwargs['drone']
-        drone.start_hit()
-
-    def to_transition(self, *args, **kwargs):
-        Z_LIMIT = 15
-        # XY_LIMIT = 40 
-
-        drone = kwargs['drone']
-        balloon = kwargs['balloon']
-        x_rel = balloon.x - drone.x
-        y_rel = balloon.y - drone.y
-        z_rel = balloon.z - drone.z
-
-        # transition = not (abs(x_rel) < XY_LIMIT and abs(y_rel) < XY_LIMIT) or (z_rel < Z_LIMIT)
-        transition = z_rel < Z_LIMIT
-        return transition
-
-    def run(self, *args, **kwargs):
-        drone = kwargs['drone']
-        balloon = kwargs['balloon']
-
-        time_since_hitting = (datetime.now() - drone.start_hit_timer).total_seconds()
-        pred = NumericBallPredictor(balloon)
-        x_dest, y_dest, z_dest = pred.get_prediction(reachability(0, 0) - time_since_hitting)
-
-        drone.track_hitting(x_dest, y_dest, z_dest)
-
-
-class DESCENDING(State):
-    def __str__(self):
-        return "Descending"
-
-    def next(self, state=1):
-        return WAITING()
-
-    def to_transition(self, *args, **kwargs):
-        Z_OFFSET = 15
-        drone = kwargs['drone']
-        return drone.z < DRONE_DEFAULT_HEIGHT + Z_OFFSET
-
-    def run(self, *args, **kwargs):
-        drone = kwargs['drone']
-        # left_right, for_back = 0, 0
-        # up_down = -100
-        # drone.wait_rc_control()
-        # drone.send_rc_control(left_right, for_back, up_down, 0)
-        drone.track_descending()
+    def cleanup(self, transition, drone, balloon, borders):
+        """
+        Cleanups at the end of the state (not always implemented).
+        :param transition: the result of the transition function indicating the next state.
+        :param drone: the current drone's Drone object.
+        :param balloon: the balloons RecognizableObject.
+        :param borders: the Borders of the game.
+        """
+        pass

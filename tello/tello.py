@@ -1,4 +1,6 @@
-"""Library for interacting with DJI Ryze Tello drones.
+"""
+Library for interacting with DJI Ryze Tello drones.
+Modified by FlyBall to interact with different drone simultaneously.
 """
 
 # coding=utf-8
@@ -8,9 +10,8 @@ import time
 from threading import Thread
 from typing import Optional, Union, Type, Dict
 
-import cv2 # type: ignore
+import cv2  # type: ignore
 from .enforce_types import enforce_types
-
 
 
 @enforce_types
@@ -76,8 +77,8 @@ class Tello:
     FLOAT_STATE_FIELDS = ('baro', 'agx', 'agy', 'agz')
 
     state_field_converters: Dict[str, Union[Type[int], Type[float]]]
-    state_field_converters = {key : int for key in INT_STATE_FIELDS}
-    state_field_converters.update({key : float for key in FLOAT_STATE_FIELDS})
+    state_field_converters = {key: int for key in INT_STATE_FIELDS}
+    state_field_converters.update({key: float for key in FLOAT_STATE_FIELDS})
 
     # VideoCapture object
     cap: Optional[cv2.VideoCapture] = None
@@ -90,22 +91,23 @@ class Tello:
                  host=TELLO_IP,
                  retry_count=RETRY_COUNT,
                  iface_ip='192.168.10.2'):
-
+        # Added iface_ip to choose the network card from which the drone is contacted.
 
         self.address = (host, Tello.CONTROL_UDP_PORT)
         self.stream_on = False
         self.retry_count = retry_count
         self.last_received_command_timestamp = time.time()
         self.last_rc_control_timestamp = time.time()
+        # Removed initializations of static variables and moved to here, for connecting to different drones.
         self.threads_initialized = False
         self.drones: Optional[dict] = {}
         self.client_socket: socket.socket
         self.iface_ip = iface_ip
 
-
         if not self.threads_initialized:
             # Run Tello command responses UDP receiver on background
             self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            # binding the socket to the chosen network interface (by ip).
             self.client_socket.bind((iface_ip, Tello.CONTROL_UDP_PORT))
             response_receiver_thread = Thread(target=Tello.udp_response_receiver, args=[self])
             response_receiver_thread.daemon = True
@@ -388,7 +390,7 @@ class Tello:
         return self.get_state_field('bat')
 
     def get_udp_video_address(self) -> str:
-        """Internal method, you normally wouldn't call this youself.
+        """Internal method, you normally wouldn't call this yourself.
         """
         address_schema = 'udp://@{ip}:{port}'  # + '?overrun_nonfatal=1&fifo_size=5000'
         address = address_schema.format(ip=self.VS_UDP_IP, port=self.VS_UDP_PORT)
@@ -425,7 +427,7 @@ class Tello:
         """Send command to Tello and wait for its response.
         Internal method, you normally wouldn't call this yourself.
         Return:
-            bool/str: str with response text on success, False when unsuccessfull.
+            bool/str: str with response text on success, False when unsuccessful.
         """
         # Commands very consecutive makes the drone not respond to them.
         # So wait at least self.TIME_BTW_COMMANDS seconds
@@ -484,7 +486,7 @@ class Tello:
             self.LOGGER.debug("Command attempt #{} failed for command: '{}'".format(i, command))
 
         self.raise_result_error(command, response)
-        return False # never reached
+        return False  # never reached
 
     def send_read_command(self, command: str) -> str:
         """Send given command to Tello and wait for its response.
@@ -521,7 +523,7 @@ class Tello:
         return float(response)
 
     def raise_result_error(self, command: str, response: str) -> bool:
-        """Used to reaise an error after an unsuccessful command
+        """Used to raise an error after an unsuccessful command
         Internal method, you normally wouldn't call this yourself.
         """
         tries = 1 + self.retry_count
@@ -568,7 +570,7 @@ class Tello:
     def takeoff(self):
         """Automatic takeoff.
         """
-        # Something it takes a looooot of time to take off and return a succesful takeoff.
+        # Something it takes a looooot of time to take off and return a successful takeoff.
         # So we better wait. Otherwise, it would give us an error on the following calls.
         self.send_control_command("takeoff", timeout=Tello.TAKEOFF_TIMEOUT)
         self.is_flying = True
@@ -582,7 +584,7 @@ class Tello:
     def streamon(self):
         """Turn on video streaming. Use `tello.get_frame_read` afterwards.
         Video Streaming is supported on all tellos when in AP mode (i.e.
-        when your computer is connected to Tello-XXXXXX WiFi ntwork).
+        when your computer is connected to Tello-XXXXXX WiFi network).
         Currently Tello EDUs do not support video streaming while connected
         to a WiFi-network.
 
@@ -605,10 +607,10 @@ class Tello:
         self.send_control_command("emergency")
 
     def move(self, direction: str, x: int):
-        """Tello fly up, down, left_cam, right_cam, forward or back with distance x cm.
+        """Tello fly up, down, left, right, forward or back with distance x cm.
         Users would normally call one of the move_x functions instead.
         Arguments:
-            direction: up, down, left_cam, right_cam, forward or back
+            direction: up, down, left, right, forward or back
             x: 20-500
         """
         self.send_control_command("{} {}".format(direction, x))
@@ -628,18 +630,18 @@ class Tello:
         self.move("down", x)
 
     def move_left(self, x: int):
-        """Fly x cm left_cam.
+        """Fly x cm left.
         Arguments:
             x: 20-500
         """
-        self.move("left_cam", x)
+        self.move("left", x)
 
     def move_right(self, x: int):
-        """Fly x cm right_cam.
+        """Fly x cm right.
         Arguments:
             x: 20-500
         """
-        self.move("right_cam", x)
+        self.move("right", x)
 
     def move_forward(self, x: int):
         """Fly x cm forward.
@@ -673,17 +675,17 @@ class Tello:
         """Do a flip maneuver.
         Users would normally call one of the flip_x functions instead.
         Arguments:
-            direction: l (left_cam), r (right_cam), f (forward) or b (back)
+            direction: l (left), r (right), f (forward) or b (back)
         """
         self.send_control_command("flip {}".format(direction))
 
     def flip_left(self):
-        """Flip to the left_cam.
+        """Flip to the left.
         """
         self.flip("l")
 
     def flip_right(self):
-        """Flip to the right_cam.
+        """Flip to the right.
         """
         self.flip("r")
 
@@ -809,11 +811,12 @@ class Tello:
                         yaw_velocity: int):
         """Send RC control via four channels. Command is sent every self.TIME_BTW_RC_CONTROL_COMMANDS seconds.
         Arguments:
-            left_right_velocity: -100~100 (left_cam/right_cam)
+            left_right_velocity: -100~100 (left/right)
             forward_backward_velocity: -100~100 (forward/backward)
             up_down_velocity: -100~100 (up/down)
             yaw_velocity: -100~100 (yaw)
         """
+
         def clamp100(x: int) -> int:
             return max(-100, min(100, x))
 
